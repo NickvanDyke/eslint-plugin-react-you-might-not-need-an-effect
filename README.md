@@ -68,10 +68,11 @@ When possible, also suggests the more idiomatic pattern.
 
 While the effect may be unnecessary, we cannot reliably determine that when it:
 
-- Uses internal state to handle events
+- Uses external state
 - Calls external functions
+- Uses internal state to handle events
 
-This plugin minimizes false positives and accepts inevitable false negatives. But the ways to (mis)use an effect are practically endless, so please open an issue if you experience either in the real world!
+This plugin minimizes false positives and accepts inevitable false negatives. See the [tests](./test) for valid and invalid uses. But the ways to (mis)use an effect are practically endless, so please open an issue if you experience falsities or crashes in the real world!
 
 ## 📖 Learn More
 
