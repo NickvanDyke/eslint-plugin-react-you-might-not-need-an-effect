@@ -275,8 +275,8 @@ new MyRuleTester().run("/deriving-state", {
       ],
     },
     {
-      // Assumes the function is pure because it's called on state
-      name: "From props via function",
+      // Assumes the function is pure because it's called on internal state
+      name: "From props via member function",
       code: js`
         function DoubleList({ list }) {
           const [doubleList, setDoubleList] = useState([]);
@@ -300,7 +300,7 @@ new MyRuleTester().run("/deriving-state", {
     },
     {
       // Assumes the function is pure because it's called on state
-      name: "From internal state via function",
+      name: "From internal state via member function",
       code: js`
         function DoubleList() {
           const [list, setList] = useState([]);
@@ -330,8 +330,7 @@ new MyRuleTester().run("/deriving-state", {
           const [doubleList, setDoubleList] = useState([]);
 
           useEffect(() => {
-            // I think it doesn't warn about derived state because doubleList is not a function call, so we filter it out
-            // TODO: But ideally it should
+            // TODO: I think it doesn't warn about derived state because doubleList is not a function call, so we filter it out
             doubleList.push(...list);
           }, [list]);
         }
@@ -437,7 +436,7 @@ new MyRuleTester().run("/deriving-state", {
       ],
     },
     {
-      name: "Partially update complex state from props with callback setter callback",
+      name: "Partially update complex state from props with callback setter",
       todo: true,
       code: js`
         function Form({ firstName, lastName }) {
