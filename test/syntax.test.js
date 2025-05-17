@@ -28,6 +28,63 @@ const code = ({
 new MyRuleTester().run("/syntax", {
   valid: [
     {
+      name: "Empty effect",
+      code: js`
+        function Component() {
+          useEffect(() => {}, []);
+        }
+      `,
+    },
+    {
+      name: "Two components with overlapping names",
+      // Not a super realistic example
+      code: js`
+        function ComponentOne() {
+          const [data, setData] = useState();
+        }
+
+        function ComponentTwo() {
+          const setData = (data) => {
+            console.log(data);
+          }
+
+          useEffect(() => {
+            setData('hello');
+          }, []);
+        }
+      `,
+    },
+    {
+      // We don't follow functions right now
+      name: "Passing non-anonymous function to effect",
+      code: js`
+        function Form({ onClose }) {
+          const [name, setName] = useState();
+          const [isOpen, setIsOpen] = useState(true);
+
+          useEffect(onClose, [isOpen]);
+        }
+      `,
+    },
+    {
+      name: "Variable name shadows state name",
+      code: js`
+        function CountrySelect({ translation }) {
+          const [countries, setCountries] = useState();
+
+          useEffect(() => {
+            // Verify that the shadowing variable is not considered a state ref
+            const countries = getCountries(translation);
+            setCountries(countries);
+          },
+            // Important to the test: Leads us to check useState initializers,
+            // so we can verify that we don't try to find a useState for the shadowing variable
+            [translation]
+          );
+        }
+      `,
+    },
+    {
       name: "Member call expression side effect without args",
       code: code({
         effectBody: js`
