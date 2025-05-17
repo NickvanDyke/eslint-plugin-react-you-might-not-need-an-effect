@@ -1,5 +1,4 @@
-import { MyRuleTester } from "./rule-tester.js";
-const js = String.raw;
+import { MyRuleTester, js } from "./rule-tester.js";
 
 // Uses taken from the real world, as opposed to contrived examples
 new MyRuleTester().run("/real-world", {

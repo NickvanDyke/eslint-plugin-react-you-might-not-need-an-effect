@@ -1,5 +1,4 @@
-import { MyRuleTester } from "./rule-tester.js";
-const js = String.raw;
+import { MyRuleTester, js } from "./rule-tester.js";
 
 new MyRuleTester().run("/derived-state", {
   valid: [
@@ -494,5 +493,5 @@ new MyRuleTester().run("/derived-state", {
         },
       ],
     },
-  ]
+  ],
 });

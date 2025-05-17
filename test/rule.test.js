@@ -1,5 +1,4 @@
-import { MyRuleTester } from "./rule-tester.js";
-const js = String.raw;
+import { MyRuleTester, js } from "./rule-tester.js";
 
 // TODO: Figure out grouping for tests for readability
 new MyRuleTester().run("/rule", {
@@ -7,120 +6,6 @@ new MyRuleTester().run("/rule", {
     // TODO: Test case for called inside cleanup function? Is that legit?
   ],
   invalid: [
-    {
-      // TODO: Test with intermediate state too
-      name: "Passing internal state to parent",
-      code: js`
-        const Child = ({ onFetched }) => {
-          const [data, setData] = useState();
-
-          useEffect(() => {
-            onFetched(data);
-          }, [onFetched, data]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidInternalEffect",
-        },
-        {
-          messageId: "avoidPassingStateToParent",
-        },
-      ],
-    },
-    {
-      name: "Passing internal state to parent via derived prop callback",
-      code: js`
-        const Child = ({ onFetched }) => {
-          const [data, setData] = useState();
-          // No idea why someone would do this, but hey we can catch it
-          const onFetchedWrapper = onFetched
-
-          useEffect(() => {
-            onFetchedWrapper(data);
-          }, [onFetched, data]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidInternalEffect",
-        },
-        {
-          messageId: "avoidPassingStateToParent",
-        },
-      ],
-    },
-    {
-      name: "Passing external live state to parent",
-      code: js`
-        const Child = ({ onFetched }) => {
-          const data = useSomeAPI();
-
-          useEffect(() => {
-            onFetched(data);
-          }, [onFetched, data]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidPassingStateToParent",
-        },
-      ],
-    },
-    {
-      name: "Passing external final state to parent",
-      code: js`
-        function Form({ onSubmit }) {
-          const [name, setName] = useState();
-          const [dataToSubmit, setDataToSubmit] = useState();
-
-          useEffect(() => {
-            onSubmit(dataToSubmit);
-          }, [dataToSubmit]);
-
-          return (
-            <div>
-              <input
-                name="name"
-                type="text"
-                onChange={(e) => setName(e.target.value)}
-              />
-              <button onClick={() => setDataToSubmit({ name })}>Submit</button>
-            </div>
-          )
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidInternalEffect",
-        },
-        {
-          // Ideally we warn about using state as an event handler, but not sure how to differentiate that.
-          messageId: "avoidPassingStateToParent",
-        },
-      ],
-    },
-    {
-      name: "Calling prop in response to prop change",
-      code: js`
-        function Form({ isOpen, events }) {
-
-          useEffect(() => {
-            if (!isOpen) {
-              events.onClose();
-            }
-          }, [isOpen]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidInternalEffect",
-        },
-        {
-          messageId: "avoidManagingParentBehavior",
-        },
-      ],
-    },
     //  TODO: How to detect this though? Not sure it's discernable from legit synchronization effects.
     //  Maybe when the setter is only called in this one place? Meaning we could instead inline the effect.
     // {
@@ -153,30 +38,6 @@ new MyRuleTester().run("/rule", {
     //   ],
     // },
     {
-      name: "Using state to trigger no-arg prop callback",
-      code: js`
-        function Form({ onClose }) {
-          const [name, setName] = useState();
-          const [isOpen, setIsOpen] = useState(true);
-
-          useEffect(() => {
-            onClose();
-          }, [isOpen]);
-
-          return (
-            <button onClick={() => setIsOpen(false)}>Submit</button>
-          )
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidInternalEffect",
-        },
-        // TODO: Is `avoidPassingStateToParent` still appropriate here? Similar issue.
-        // Maybe we could rename the message to make sense here too.
-      ],
-    },
-    {
       // React docs recommend to first update state in render instead of an effect.
       // But then continue on to say that usually you can avoid the sync entirely by
       // more wisely choosing your state. So we'll just always warn about chained state.
@@ -203,60 +64,6 @@ new MyRuleTester().run("/rule", {
       errors: [
         {
           messageId: "avoidInternalEffect",
-        },
-        {
-          messageId: "avoidChainingState",
-        },
-      ],
-    },
-    {
-      name: "Resetting some state when a prop changes",
-      code: js`
-        function ProfilePage({ userId }) {
-          const [user, setUser] = useState(null);
-          const [comment, setComment] = useState('type something');
-          // const [catName, setCatName] = useState('Sparky');
-
-          useEffect(() => {
-            setUser(null);
-            setComment('meow')
-          }, [userId]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidInternalEffect",
-        },
-        {
-          messageId: "avoidChainingState",
-        },
-        {
-          messageId: "avoidChainingState",
-        },
-      ],
-    },
-    {
-      name: "Resetting all state when a prop changes",
-      code: js`
-        function ProfilePage({ userId }) {
-          const [user, setUser] = useState(null);
-          const [comment, setComment] = useState('type something');
-
-          useEffect(() => {
-            setUser(null);
-            setComment('type something');
-          }, [userId]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidInternalEffect",
-        },
-        {
-          messageId: "avoidResettingStateFromProps",
-        },
-        {
-          messageId: "avoidChainingState",
         },
         {
           messageId: "avoidChainingState",

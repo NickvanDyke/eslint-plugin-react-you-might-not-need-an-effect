@@ -2,6 +2,9 @@ import assert from "node:assert";
 import { RuleTester } from "eslint";
 import { name as ruleName, rule as myRule } from "../src/rule.js";
 
+// For syntax highlighting inside code under test
+export const js = String.raw;
+
 // Generic name I know, but it does a couple things, and multiple-inheritance is annoying:
 //
 // Normalizes whitespaces between the expected and actual `output` for tests with fixes.

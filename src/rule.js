@@ -86,6 +86,8 @@ export const rule = {
       if (
         effectFnRefs.concat(depsRefs).every((ref) => isPropRef(context, ref))
       ) {
+        // TODO: Generalize this to not need the entire effect?
+        // Basically combine it with `avoidPassingStateToParent`.
         context.report({
           node: node,
           messageId: "avoidManagingParentBehavior",

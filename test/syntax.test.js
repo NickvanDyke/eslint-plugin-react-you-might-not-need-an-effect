@@ -1,5 +1,4 @@
-import { MyRuleTester } from "./rule-tester.js";
-const js = String.raw;
+import { MyRuleTester, js } from "./rule-tester.js";
 
 // TODO: Should maybe do away with this... it helps writing but not readable
 const code = ({
