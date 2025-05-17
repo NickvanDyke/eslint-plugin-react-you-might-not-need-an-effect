@@ -1,6 +1,6 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 
-new MyRuleTester().run("/derived-state", {
+new MyRuleTester().run("/deriving-state", {
   valid: [
     {
       name: "Compute in render from internal state",
@@ -490,6 +490,29 @@ new MyRuleTester().run("/derived-state", {
         {
           messageId: "avoidDerivedState",
           data: { state: "formData" },
+        },
+      ],
+    },
+    {
+      name: "Derived state in larger, otherwise legit effect",
+      todo: true,
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            console.log(name);
+
+            setFullName(firstName + ' ' + lastName;);
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
         },
       ],
     },

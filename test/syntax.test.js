@@ -301,5 +301,28 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: 2,
     },
+    {
+      name: "Using prop in state initializer",
+      code: js`
+        function List({ items }) {
+          // Verify that 'setSelection' is not considered a prop ref
+          // just because 'items' is on its definition path.
+          // If it did, it'd flag 'avoidManagingParentBehavior'.
+          const [selection, setSelection] = useState(items[0]);
+
+          useEffect(() => {
+            setSelection(null);
+          }, [items]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInternalEffect",
+        },
+        {
+          messageId: "avoidChainingState",
+        },
+      ],
+    },
   ],
 });

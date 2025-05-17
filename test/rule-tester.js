@@ -5,7 +5,7 @@ import { name as ruleName, rule as myRule } from "../src/rule.js";
 // For syntax highlighting inside code under test
 export const js = String.raw;
 
-// Generic name I know, but it does a couple things, and multiple-inheritance is annoying:
+// Generic name I know, but it does a couple things, and inheritance is annoying.
 //
 // Normalizes whitespaces between the expected and actual `output` for tests with fixes.
 // Because formatting seriously complicates the fixer implementation and most people have a formatter anyway.
