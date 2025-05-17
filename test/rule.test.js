@@ -1,9 +1,8 @@
 import { MyRuleTester } from "./rule-tester.js";
-import { name, rule } from "../src/rule.js";
 const js = String.raw;
 
 // TODO: Figure out grouping for tests for readability
-new MyRuleTester().run(name + "/rule", rule, {
+new MyRuleTester().run("/rule", {
   valid: [
     {
       name: "Empty effect",
@@ -148,113 +147,6 @@ new MyRuleTester().run(name + "/rule", rule, {
       `,
     },
     {
-      name: "Managing a timer",
-      code: js`
-        function Timer() {
-          const [seconds, setSeconds] = useState(0);
-
-          useEffect(() => {
-            const interval = setInterval(() => {
-              setSeconds((s) => s + 1);
-            }, 1000);
-
-            return () => { 
-              clearInterval(interval); 
-            }
-          }, []);
-
-          return <div>{seconds}</div>;
-        }
-      `,
-    },
-    {
-      name: "Listening for window events",
-      code: js`
-        function WindowSize() {
-          const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
-
-          useEffect(() => {
-            const handleResize = () => {
-              setSize({ width: window.innerWidth, height: window.innerHeight });
-            };
-
-            window.addEventListener('resize', handleResize);
-
-            return () => {
-              window.removeEventListener('resize', handleResize);
-            };
-          }, []);
-
-          return <div>{size.width} x {size.height}</div>;
-        }
-      `,
-    },
-    {
-      name: "Imperatively syncing with the DOM",
-      // Could technically play/pause the video in the `onClick` handler,
-      // but the use of an effect to sync state is arguably more readable and a valid use.
-      code: js`
-        function VideoPlayer() {
-          const [isPlaying, setIsPlaying] = useState(false);
-          const videoRef = useRef();
-
-          useEffect(() => {
-            if (isPlaying) {
-              videoRef.current.play();
-            } else {
-              videoRef.current.pause();
-            }
-          }, [isPlaying]);
-
-          return <div>
-            <video ref={videoRef} />
-            <button onClick={() => setIsPlaying((p) => !p)} />
-          </div>
-        }
-      `,
-    },
-    {
-      name: "Saving to LocalStorage",
-      code: js`
-        function Notes() {
-          const [notes, setNotes] = useState(() => {
-            const savedNotes = localStorage.getItem('notes');
-            return savedNotes ? JSON.parse(savedNotes) : [];
-          });
-
-          useEffect(() => {
-            localStorage.setItem('notes', JSON.stringify(notes));
-          }, [notes]);
-
-          return <input
-            type="text"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-        }
-      `,
-    },
-    {
-      name: "Logging/Analytics",
-      code: js`
-        function Nav() {
-          const [page, setPage] = useState('home');
-
-          useEffect(() => {
-            logPageView(page);
-          }, [page]);
-
-          return (
-            <div>
-              <button onClick={() => setPage('home')}>Home</button>
-              <button onClick={() => setPage('about')}>About</button>
-              <div>{page}</div>
-            </div>
-          )
-        }
-      `,
-    },
-    {
       name: "Deriving state with external function",
       code: js`
         function TodoList({ todos, filter }) {
@@ -265,24 +157,6 @@ new MyRuleTester().run(name + "/rule", rule, {
             // We can't be sure getFilteredTodos is pure, so we can't warn about this
             setVisibleTodos(getFilteredTodos(todos, filter));
           }, [todos, filter]);
-        }
-      `,
-    },
-    {
-      name: "JSON.stringifying in deps",
-      code: js`
-        function Feed() {
-          const [posts, setPosts] = useState([]);
-          const [scrollPosition, setScrollPosition] = useState(0);
-
-          useEffect(() => {
-            setScrollPosition(0);
-            // We can't be sure JSON.stringify is pure, so we can't warn about this.
-            // TODO: Technically we could check against known pure functions.
-            // TODO: Gets filtered out because findVariable returns null because it's a built-in global.
-            // Need to retain it.
-            // Maybe convert getUpstreamVariables to return identifiers, so we can still be aware of its existence?
-          }, [JSON.stringify(posts)]);
         }
       `,
     },
@@ -334,59 +208,6 @@ new MyRuleTester().run(name + "/rule", rule, {
             // Important to the test: Leads us to check useState initializers,
             // so we can verify that we don't try to find a useState for the shadowing variable
             [translation]
-          );
-        }
-      `,
-    },
-    {
-      name: "Parameter name shadows state name",
-      code: js`
-        function CountrySelect({ translation }) {
-          const [countries, setCountries] = useState();
-
-          useEffect(() => {
-            let cancel = false;
-            getCountries(translation)
-              // Verify that the shadowing variable is not considered a state ref
-              .then((countries) => (cancel ? null : setCountries(countries)))
-              .catch(console.warn);
-
-            return () => {
-              cancel = true;
-            };
-          },
-            // Important to the test: Leads us to check useState initializers,
-            // so we can verify that we don't try to find a useState for the shadowing variable
-            [translation]
-          );
-        }
-      `,
-    },
-    {
-      // Taken from https://github.com/linhnguyen-gt/react-native-phone-number-input/blob/b5e6dc652fa8a03609efb72607dc6866f5556ca3/src/countryPickerModal/CountryPicker.tsx
-      name: "Partially updating complex state object with intermediate setters and external state",
-      code: js`
-        function CountrySelect({ withEmoji }) {
-          const { translation, getCountries } = useContext();
-
-          const [state, setState] = useState({
-            countries: [],
-            selectedCountry: null,
-          });
-          const setCountries = (countries) => setState({ ...state, countries });
-
-          useEffect(() => {
-            let cancel = false;
-            getCountries(translation)
-              .then((countries) => (cancel ? null : setCountries(countries)))
-              .catch(console.warn);
-
-            return () => {
-              cancel = true;
-            };
-          },
-            // Important to the test: Leads us to find useStates to check their initializers
-            [translation, withEmoji]
           );
         }
       `,

@@ -1,7 +1,8 @@
 import assert from "node:assert";
 import { RuleTester } from "eslint";
+import { name as ruleName, rule as myRule } from "../src/rule.js";
 
-// Generic name I know, but it does a couple things, and inheritance is annoying:
+// Generic name I know, but it does a couple things, and multiple-inheritance is annoying:
 //
 // Normalizes whitespaces between the expected and actual `output` for tests with fixes.
 // Because formatting seriously complicates the fixer implementation and most people have a formatter anyway.
@@ -24,7 +25,7 @@ export class MyRuleTester extends RuleTester {
     });
   }
 
-  run(ruleName, rule, tests) {
+  run(variation, tests) {
     const originalStrictEqual = assert.strictEqual;
     try {
       assert.strictEqual = (actual, expected, ...rest) => {
@@ -51,7 +52,7 @@ export class MyRuleTester extends RuleTester {
         invalid: invalid.filter((test) => !test.todo),
       };
 
-      super.run(ruleName, rule, filteredTests);
+      super.run(ruleName + variation, myRule, filteredTests);
     } finally {
       // Restore the original strictEqual function to avoid unintended effects
       assert.strictEqual = originalStrictEqual;

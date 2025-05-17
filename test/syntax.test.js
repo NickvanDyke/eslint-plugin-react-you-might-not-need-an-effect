@@ -1,5 +1,4 @@
 import { MyRuleTester } from "./rule-tester.js";
-import { name, rule } from "../src/rule.js";
 const js = String.raw;
 
 // TODO: Should maybe do away with this... it helps writing but not readable
@@ -26,7 +25,7 @@ const code = ({
 // Syntax variations that are semantically equivalent
 // TODO: Could dynamically generate variations: https://mochajs.org/#dynamically-generating-tests
 // Could be overkill; they shouldn't affect each other (supposedly, but I guess that's the point of tests!)
-new MyRuleTester().run(name + "/syntax", rule, {
+new MyRuleTester().run("/syntax", {
   valid: [
     {
       name: "Member call expression side effect without args",
