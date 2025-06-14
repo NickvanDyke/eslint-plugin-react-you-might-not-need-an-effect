@@ -13,7 +13,9 @@ import {
   isState,
   isProp,
   isHOCProp,
+  countStateSetterCalls,
 } from "./util/react.js";
+import { arraysEqual } from "./util/javascript.js";
 
 export const name = "you-might-not-need-an-effect";
 
@@ -95,8 +97,8 @@ export const rule = {
               });
             }
 
-            // TODO: Make more readable
-            const isArgsInternal = callExpr.arguments
+            // TODO: Make more readable (and performant)
+            const isAllArgsInternal = callExpr.arguments
               .flatMap((arg) => getDownstreamRefs(context, arg))
               .flatMap((ref) =>
                 getUpstreamReactVariables(context, ref.identifier),
@@ -106,7 +108,7 @@ export const rule = {
                   isState(variable) ||
                   (isProp(variable) && !isHOCProp(variable)),
               );
-            const isArgsExternal = callExpr.arguments
+            const isSomeArgsExternal = callExpr.arguments
               .flatMap((arg) => getDownstreamRefs(context, arg))
               .flatMap((ref) =>
                 getUpstreamReactVariables(context, ref.identifier),
@@ -116,7 +118,24 @@ export const rule = {
                   (!isState(variable) && !isProp(variable)) ||
                   isHOCProp(variable),
               );
-            const isDepsInternal = depsRefs
+            const isAllArgsInDeps = callExpr.arguments
+              .flatMap((arg) => getDownstreamRefs(context, arg))
+              // Need to do this prematurely here because we call notEmptyEvery on the refs,
+              // not on the upstream variables (which also filters out parameters)
+              // TODO: Think about how to centralize that.
+              .filter((ref) =>
+                ref.resolved.defs.every((def) => def.type !== "Parameter"),
+              )
+              .notEmptyEvery((argRef) =>
+                depsRefs.some((depRef) =>
+                  // If they have the same upstream variables, they're equivalent
+                  arraysEqual(
+                    getUpstreamReactVariables(context, argRef.identifier),
+                    getUpstreamReactVariables(context, depRef.identifier),
+                  ),
+                ),
+              );
+            const isAllDepsInternal = depsRefs
               .flatMap((ref) =>
                 getUpstreamReactVariables(context, ref.identifier),
               )
@@ -126,12 +145,14 @@ export const rule = {
                   (isProp(variable) && !isHOCProp(variable)),
               );
 
-            if (isArgsInternal) {
-              // TODO: Can also warn if this is the only call to the setter,
-              // even if the arg is external (and not retrieved in the effect)...
-              // Does it matter whether the args are in the deps array?
-              // I guess so, to differentiate between derived and chain state updates?
-              // What about internal vs in deps? Changes behavior, but meaningfully?
+            if (
+              isAllArgsInternal ||
+              // They are always in sync, regardless of source - could compute during render
+              // TODO: Should we *always* check that the args are in deps?
+              // Should/could that replace isArgsInternal?
+              // Should it be chained state when not?
+              (isAllArgsInDeps && countStateSetterCalls(ref) === 1)
+            ) {
               context.report({
                 node: callExpr,
                 messageId: messageIds.avoidDerivedState,
@@ -139,7 +160,11 @@ export const rule = {
               });
             }
 
-            if (!isArgsInternal && !isArgsExternal && isDepsInternal) {
+            if (
+              !isAllArgsInternal &&
+              !isSomeArgsExternal &&
+              isAllDepsInternal
+            ) {
               context.report({
                 node: callExpr,
                 messageId: messageIds.avoidChainingState,

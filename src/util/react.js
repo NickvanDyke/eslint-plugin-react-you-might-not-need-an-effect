@@ -229,7 +229,10 @@ const countUseStates = (context, componentNode) => {
   return count;
 };
 
-// Returns the component or custom hook that contains the `useEffect` node.
+export const countStateSetterCalls = (stateSetterRef) =>
+  stateSetterRef.resolved.references.length - 1; // -1 for the initial declaration
+
+// Returns the component or custom hook that contains the `useEffect` node
 const findContainingNode = (node) => {
   if (!node) {
     return undefined;
@@ -260,7 +263,3 @@ export const getUpstreamReactVariables = (context, node) =>
       isProp(variable) ||
       variable.defs.every((def) => def.type !== "Parameter"),
   );
-
-Array.prototype.notEmptyEvery = function (predicate) {
-  return this.length > 0 && this.every(predicate);
-};

@@ -92,32 +92,6 @@ new MyRuleTester().run("/syntax", {
       `,
     },
     {
-      name: "Destructured array skips element in arrow function params",
-      code: js`
-        function FilteredPosts() {
-          const posts = useSomeAPI();
-          const [filteredPosts, setFilteredPosts] = useState([]);
-
-          useEffect(() => {
-            // Resulting AST node looks like:
-            // {
-            //   "type": "ArrayPattern",
-            //   "elements": [
-            //     null, <-- Must handle this!
-            //     {
-            //       "type": "Identifier",
-            //       "name": "second"
-            //     }
-            //   ]
-            // }
-            setFilteredPosts(
-              posts.filter(([, value]) => value !== "")
-            );
-          }, [posts]);
-        }
-      `,
-    },
-    {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
       name: "External IIFE",
       code: js`
@@ -551,6 +525,39 @@ new MyRuleTester().run("/syntax", {
       errors: [
         {
           messageId: messageIds.avoidInitializingState,
+        },
+      ],
+    },
+    {
+      name: "Destructured array skips element in arrow function params",
+      code: js`
+        function FilteredPosts() {
+          const posts = useSomeAPI();
+          const [filteredPosts, setFilteredPosts] = useState([]);
+
+          useEffect(() => {
+            // Resulting AST node looks like:
+            // {
+            //   "type": "ArrayPattern",
+            //   "elements": [
+            //     null, <-- Must handle this!
+            //     {
+            //       "type": "Identifier",
+            //       "name": "second"
+            //     }
+            //   ]
+            // }
+            setFilteredPosts(
+              // TODO: Need to filter out parameter refs before comparing args and deps
+              posts.filter(([, value]) => value !== "")
+            );
+          }, [posts]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "filteredPosts" },
         },
       ],
     },

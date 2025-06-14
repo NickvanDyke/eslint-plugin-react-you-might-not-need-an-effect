@@ -240,23 +240,6 @@ new MyRuleTester().run("/deriving-state", {
       `,
     },
     {
-      name: "From internal and external state",
-      code: js`
-        import { getPrefixFor } from 'library';
-        import { useState } from 'react';
-
-        function Component() {
-          const [name, setName] = useState();
-          const [prefixedName, setPrefixedName] = useState();
-          const prefix = getPrefixFor(name);
-
-          useEffect(() => {
-            setPrefixedName(prefix + name);
-          }, [name, prefix])
-        }
-      `,
-    },
-    {
       name: "From derived internal and external state",
       code: js`
         import { getPrefixFor } from 'library';
@@ -265,12 +248,12 @@ new MyRuleTester().run("/deriving-state", {
         function Component() {
           const [name, setName] = useState();
           const [prefixedName, setPrefixedName] = useState();
-          const prefix = getPrefixFor(name);
-          const newValue = prefix + name;
 
           useEffect(() => {
+            const prefix = getPrefixFor(name);
+            const newValue = prefix + name; // Make it a little more interesting
             setPrefixedName(newValue);
-          }, [newValue])
+          }, [name])
         }
       `,
     },
@@ -462,18 +445,12 @@ new MyRuleTester().run("/deriving-state", {
     },
     {
       name: "From external state with single setter call",
-      todo: true,
       code: js`
         function Feed() {
-          const { data: posts } = useQuery('/posts');
+          const { data: posts } = fetch('/posts');
           const [selectedPost, setSelectedPost] = useState();
 
           useEffect(() => {
-            // This is the only place that modifies the state,
-            // thus they will always be in sync and it could be computed during render
-            // Difficult bit is that a single state setter call is legit when the 
-            // external state is initialized inside the effect (i.e. retrieved from external system)
-            // Hopefully 'isDirectCall' will mostly catch that now.
             setSelectedPost(posts[0]);
           }, [posts]);
         }
@@ -487,7 +464,6 @@ new MyRuleTester().run("/deriving-state", {
     },
     {
       name: "From derived external state with single setter call",
-      todo: true,
       code: js`
         function Form() {
           const name = useQuery('/name');
