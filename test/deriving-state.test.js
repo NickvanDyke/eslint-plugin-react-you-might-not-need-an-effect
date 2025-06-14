@@ -84,7 +84,7 @@ new MyRuleTester().run("/deriving-state", {
           const [results, setResults] = useState();
 
           useEffect(() => {
-            fetch('/search').then((data) => {
+            fetch('/search?query=' + query).then((data) => {
               setResults(data);
             });
           }, [query]);
