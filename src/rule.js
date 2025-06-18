@@ -14,6 +14,7 @@ import {
   isProp,
   isHOCProp,
   countStateSetterCalls,
+  isFnRef,
 } from "./util/react.js";
 import { arraysEqual } from "./util/javascript.js";
 
@@ -74,21 +75,15 @@ export const rule = {
             isState(variable) || (isProp(variable) && !isHOCProp(variable)),
         );
 
-      if (isAllDepsInternal) {
-        context.report({
-          node,
-          messageId: messageIds.avoidEventHandler,
-        });
-      }
+      // if (isAllDepsInternal) {
+      //   context.report({
+      //     node,
+      //     messageId: messageIds.avoidEventHandler,
+      //   });
+      // }
 
       effectFnRefs
-        .filter(
-          (ref) =>
-            isStateSetter(context, ref) ||
-            (isPropCallback(context, ref) &&
-              // Don't analyze HOC prop callbacks -- we don't have control over them to lift state or logic
-              !isHOCProp(ref.resolved)),
-        )
+        .filter(isFnRef)
         // Non-direct calls are likely inside a callback passed to an external system like `window.addEventListener`,
         // or a Promise chain that (probably) retrieves external data.
         // Note we'll still analyze derived setters because isStateSetter considers that.
@@ -175,7 +170,11 @@ export const rule = {
                 messageId: messageIds.avoidChainingState,
               });
             }
-          } else if (isPropCallback(context, ref)) {
+          } else if (
+            isPropCallback(context, ref) &&
+            // Don't analyze HOC prop callbacks -- we don't have control over them to lift state or logic
+            !isHOCProp(ref.resolved)
+          ) {
             // I'm pretty sure we can flag this regardless of the arguments, including none...
             //
             // Because we are either:
