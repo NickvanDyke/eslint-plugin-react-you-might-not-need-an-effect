@@ -92,6 +92,17 @@ export const rule = {
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
+          if (isAllDepsInternal && !isStateSetter(context, ref)) {
+            // TODO: Hmmm, I believe it's always possible to refactor to no effect.
+            // But it's arguable whether that's more readable.
+            // React docs say it can be valid to sync internal to external state.
+            // Not sure atm how we could differentiate...
+            context.report({
+              node: callExpr,
+              messageId: messageIds.avoidEventHandler,
+            });
+          }
+
           if (isStateSetter(context, ref)) {
             const useStateNode = getUseStateNode(context, ref);
             const stateName = (
