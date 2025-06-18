@@ -67,6 +67,20 @@ export const rule = {
         return;
       }
 
+      const isAllDepsInternal = depsRefs
+        .flatMap((ref) => getUpstreamReactVariables(context, ref.identifier))
+        .notEmptyEvery(
+          (variable) =>
+            isState(variable) || (isProp(variable) && !isHOCProp(variable)),
+        );
+
+      if (isAllDepsInternal) {
+        context.report({
+          node,
+          messageId: messageIds.avoidEventHandler,
+        });
+      }
+
       effectFnRefs
         .filter(
           (ref) =>
@@ -134,15 +148,6 @@ export const rule = {
                     getUpstreamReactVariables(context, depRef.identifier),
                   ),
                 ),
-              );
-            const isAllDepsInternal = depsRefs
-              .flatMap((ref) =>
-                getUpstreamReactVariables(context, ref.identifier),
-              )
-              .notEmptyEvery(
-                (variable) =>
-                  isState(variable) ||
-                  (isProp(variable) && !isHOCProp(variable)),
               );
 
             if (
