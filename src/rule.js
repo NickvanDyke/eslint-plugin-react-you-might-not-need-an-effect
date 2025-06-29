@@ -1,5 +1,9 @@
 import { messageIds, messages } from "./messages.js";
-import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
+import {
+  findDownstreamIfs,
+  getCallExpr,
+  getDownstreamRefs,
+} from "./util/ast.js";
 import {
   findPropUsedToResetAllState,
   isUseEffect,
@@ -14,6 +18,7 @@ import {
   isProp,
   isHOCProp,
   countStateSetterCalls,
+  isFnRef,
 } from "./util/react.js";
 import { arraysEqual } from "./util/javascript.js";
 
@@ -67,14 +72,38 @@ export const rule = {
         return;
       }
 
-      effectFnRefs
-        .filter(
-          (ref) =>
-            isStateSetter(context, ref) ||
-            (isPropCallback(context, ref) &&
-              // Don't analyze HOC prop callbacks -- we don't have control over them to lift state or logic
-              !isHOCProp(ref.resolved)),
+      const isAllDepsInternal = depsRefs
+        .flatMap((ref) => getUpstreamReactVariables(context, ref.identifier))
+        .notEmptyEvery(
+          (variable) =>
+            isState(variable) || (isProp(variable) && !isHOCProp(variable)),
+        );
+
+      findDownstreamIfs(context, node)
+        // An event-handling effect (invalid) and a synchronizing effect (valid)
+        // look quite similar. But the latter should act on *all* possible states,
+        // whereas the former waits for a specific state (from the event).
+        // Technically synchronizing effects can be inlined too.
+        // But an effect is arguably more readable (for once), and recommended by the React docs.
+        .filter((ifNode) => !ifNode.alternate)
+        .filter((ifNode) =>
+          getDownstreamRefs(context, ifNode.test)
+            .flatMap((ref) =>
+              getUpstreamReactVariables(context, ref.identifier),
+            )
+            // TODO: Include non-HOC props, but probably with a different message -
+            // the state would need to be lifted to inline the effect logic
+            .notEmptyEvery((variable) => isState(variable)),
         )
+        .forEach((ifNode) => {
+          context.report({
+            node: ifNode.test,
+            messageId: messageIds.avoidEventHandler,
+          });
+        });
+
+      effectFnRefs
+        .filter(isFnRef)
         // Non-direct calls are likely inside a callback passed to an external system like `window.addEventListener`,
         // or a Promise chain that (probably) retrieves external data.
         // Note we'll still analyze derived setters because isStateSetter considers that.
@@ -135,15 +164,6 @@ export const rule = {
                   ),
                 ),
               );
-            const isAllDepsInternal = depsRefs
-              .flatMap((ref) =>
-                getUpstreamReactVariables(context, ref.identifier),
-              )
-              .notEmptyEvery(
-                (variable) =>
-                  isState(variable) ||
-                  (isProp(variable) && !isHOCProp(variable)),
-              );
 
             if (
               isAllArgsInternal ||
@@ -170,20 +190,15 @@ export const rule = {
                 messageId: messageIds.avoidChainingState,
               });
             }
-          } else if (isPropCallback(context, ref)) {
+          } else if (
+            isPropCallback(context, ref) &&
+            // Don't analyze HOC prop callbacks -- we don't have control over them to lift state or logic
+            !isHOCProp(ref.resolved)
+          ) {
             // I'm pretty sure we can flag this regardless of the arguments, including none...
-            //
             // Because we are either:
             // 1. Passing live state updates to the parent
             // 2. Using state as an event handler to pass final state to the parent
-            //
-            // Both are bad. However I'm not yet sure how we could differentiate #2 to give a better warning.
-            //
-            // TODO: Can we thus safely assume that state is used as an event handler when the ref is a prop?
-            // Normally we can't warn about that because we don't know what the event handler does externally.
-            // But when it's a prop, it's internal.
-            // I guess it could still be valid when the dep is external state? Or in that case,
-            // the issue is the state should be lifted to the parent?
             context.report({
               node: callExpr,
               messageId: messageIds.avoidParentChildCoupling,

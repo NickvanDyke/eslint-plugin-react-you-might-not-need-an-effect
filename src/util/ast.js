@@ -31,6 +31,16 @@ const getDownstreamIdentifiers = (context, rootNode) => {
   return identifiers;
 };
 
+export const findDownstreamIfs = (context, node) => {
+  const ifs = [];
+  traverse(context, node, (n) => {
+    if (n.type === "IfStatement") {
+      ifs.push(n);
+    }
+  });
+  return ifs;
+};
+
 export const getUpstreamVariables = (
   context,
   node,

@@ -75,9 +75,6 @@ new MyRuleTester().run("/deriving-state", {
     },
     {
       name: "Sync external state",
-      // Technically we could trigger the network call in `input.onChange`,
-      // but the use of an effect to sync state is arguably more readable and a valid use.
-      // Especially when we already store the input's controlled state.
       code: js`
         function Search() {
           const [query, setQuery] = useState();

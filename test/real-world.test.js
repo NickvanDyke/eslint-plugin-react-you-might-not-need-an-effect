@@ -179,40 +179,6 @@ new MyRuleTester().run("/real-world", {
       `,
     },
     {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/7
-      name: "Klarna",
-      code: js`
-        function Klarna({ klarnaAppId }) {
-          const [countryCode] = useState(qs.parse('countryCode=meow'));
-          const [result, setResult] = useState();
-          const klarnaEnabled = useSelector('idk') && shouldKlarnaBeEnabled(countryCode);
-          const currentLocale = getCurrentLocale(useGetCurrentLanguage());
-
-          const loadSignInWithKlarna = (klarnaAppId, klarnaEnvironment, countryCode, currentLocale) => {
-            const klarnaResult = doSomething();
-            setResult(klarnaResult);
-          };
-
-          useEffect(() => {
-            if (klarnaEnabled) {
-              return loadSignInWithKlarna(
-                  klarnaAppId,
-                  klarnaEnvironment,
-                  countryCode?.toUpperCase(),
-                  currentLocale,
-              );
-            }
-          }, [
-            countryCode,
-            klarnaAppId,
-            klarnaEnabled,
-            klarnaEnvironment,
-            currentLocale,
-          ]);
-        }
-      `,
-    },
-    {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/10
       name: "navigation.setOptions",
       code: js`
@@ -332,6 +298,45 @@ new MyRuleTester().run("/real-world", {
         {
           // TODO: Because the initial state is internal, derived state would be a better flag.
           messageId: messageIds.avoidResettingStateFromProps,
+        },
+      ],
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/7
+      name: "Klarna",
+      code: js`
+        function Klarna({ klarnaAppId }) {
+          const [countryCode] = useState(qs.parse('countryCode=meow'));
+          const [result, setResult] = useState();
+          const klarnaEnabled = useSelector('idk') && shouldKlarnaBeEnabled(countryCode);
+          const currentLocale = getCurrentLocale(useGetCurrentLanguage());
+
+          const loadSignInWithKlarna = (klarnaAppId, klarnaEnvironment, countryCode, currentLocale) => {
+            const klarnaResult = doSomething();
+            setResult(klarnaResult);
+          };
+
+          useEffect(() => {
+            if (klarnaEnabled) {
+              return loadSignInWithKlarna(
+                  klarnaAppId,
+                  klarnaEnvironment,
+                  countryCode?.toUpperCase(),
+                  currentLocale,
+              );
+            }
+          }, [
+            countryCode,
+            klarnaAppId,
+            klarnaEnabled,
+            klarnaEnvironment,
+            currentLocale,
+          ]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidEventHandler,
         },
       ],
     },
