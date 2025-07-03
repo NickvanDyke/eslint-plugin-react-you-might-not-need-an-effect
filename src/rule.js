@@ -1,6 +1,6 @@
 import { messageIds, messages } from "./messages.js";
 import {
-  findDownstreamIfs,
+  findDownstreamNodes,
   getCallExpr,
   getDownstreamRefs,
 } from "./util/ast.js";
@@ -79,10 +79,9 @@ export const rule = {
             isState(variable) || (isProp(variable) && !isHOCProp(variable)),
         );
 
-      findDownstreamIfs(context, node)
+      findDownstreamNodes(context, node, "IfStatement")
         // An event-handling effect (invalid) and a synchronizing effect (valid)
-        // look quite similar. But the latter should act on *all* possible states,
-        // whereas the former waits for a specific state (from the event).
+        // look quite similar. But the latter should act on *all* possible states,        // whereas the former waits for a specific state (from the event).
         // Technically synchronizing effects can be inlined too.
         // But an effect is arguably more readable (for once), and recommended by the React docs.
         .filter((ifNode) => !ifNode.alternate)

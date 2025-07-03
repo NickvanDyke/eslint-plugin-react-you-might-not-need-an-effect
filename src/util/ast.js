@@ -21,24 +21,14 @@ export const traverse = (context, node, visit, visited = new Set()) => {
     .forEach((child) => traverse(context, child, visit, visited));
 };
 
-const getDownstreamIdentifiers = (context, rootNode) => {
-  const identifiers = [];
-  traverse(context, rootNode, (node) => {
-    if (node.type === "Identifier") {
-      identifiers.push(node);
+export const findDownstreamNodes = (context, topNode, type) => {
+  const nodes = [];
+  traverse(context, topNode, (node) => {
+    if (node.type === type) {
+      nodes.push(node);
     }
   });
-  return identifiers;
-};
-
-export const findDownstreamIfs = (context, node) => {
-  const ifs = [];
-  traverse(context, node, (n) => {
-    if (n.type === "IfStatement") {
-      ifs.push(n);
-    }
-  });
-  return ifs;
+  return nodes;
 };
 
 export const getUpstreamVariables = (
@@ -65,7 +55,7 @@ export const getUpstreamVariables = (
   const upstreamVariables = variable.defs
     .filter((def) => !!def.node.init)
     .filter((def) => filter(def.node))
-    .flatMap((def) => getDownstreamIdentifiers(context, def.node.init))
+    .flatMap((def) => findDownstreamNodes(context, def.node.init, "Identifier"))
     .flatMap((identifier) =>
       getUpstreamVariables(context, identifier, filter, visited),
     );
@@ -75,7 +65,7 @@ export const getUpstreamVariables = (
 };
 
 export const getDownstreamRefs = (context, node) =>
-  getDownstreamIdentifiers(context, node)
+  findDownstreamNodes(context, node, "Identifier")
     .map((identifier) => getRef(context, identifier))
     .filter(Boolean);
 
