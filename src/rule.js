@@ -126,29 +126,23 @@ export const rule = {
               });
             }
 
-            // TODO: Make more readable (and performant)
-            const isAllArgsInternal = callExpr.arguments
-              .flatMap((arg) => getDownstreamRefs(context, arg))
-              .flatMap((ref) =>
-                getUpstreamReactVariables(context, ref.identifier),
-              )
-              .notEmptyEvery(
-                (variable) =>
-                  isState(variable) ||
-                  (isProp(variable) && !isHOCProp(variable)),
-              );
-            const isSomeArgsExternal = callExpr.arguments
-              .flatMap((arg) => getDownstreamRefs(context, arg))
-              .flatMap((ref) =>
-                getUpstreamReactVariables(context, ref.identifier),
-              )
-              .some(
-                (variable) =>
-                  (!isState(variable) && !isProp(variable)) ||
-                  isHOCProp(variable),
-              );
-            const isAllArgsInDeps = callExpr.arguments
-              .flatMap((arg) => getDownstreamRefs(context, arg))
+            const argsRefs = callExpr.arguments.flatMap((arg) =>
+              getDownstreamRefs(context, arg),
+            );
+            const argsUpstreamVariables = argsRefs.flatMap((ref) =>
+              getUpstreamReactVariables(context, ref.identifier),
+            );
+
+            const isAllArgsInternal = argsUpstreamVariables.notEmptyEvery(
+              (variable) =>
+                isState(variable) || (isProp(variable) && !isHOCProp(variable)),
+            );
+            const isSomeArgsExternal = argsUpstreamVariables.some(
+              (variable) =>
+                (!isState(variable) && !isProp(variable)) ||
+                isHOCProp(variable),
+            );
+            const isAllArgsInDeps = argsRefs
               // Need to do this prematurely here because we call notEmptyEvery on the refs,
               // not on the upstream variables (which also filters out parameters)
               // TODO: Think about how to centralize that.
