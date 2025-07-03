@@ -561,5 +561,25 @@ new MyRuleTester().run("/syntax", {
         },
       ],
     },
+    {
+      name: "With imports",
+      code: js`
+        import { useState, useEffect } from 'react';
+
+        function CountAccumulator({ count }) {
+          const [total, setTotal] = useState(count);
+
+          useEffect(() => {
+            setTotal((prev) => prev + count);
+          }, [count]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "total" },
+        },
+      ],
+    },
   ],
 });
