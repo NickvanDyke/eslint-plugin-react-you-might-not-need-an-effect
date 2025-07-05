@@ -1,7 +1,8 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 import { messageIds } from "../src/messages.js";
+import { rule } from "../src/rule.js";
 
-new MyRuleTester().run("/chaining-state", {
+new MyRuleTester().run("/chaining-state", rule, {
   invalid: [
     {
       // React docs recommend to first update state in render instead of an effect.

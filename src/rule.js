@@ -45,14 +45,6 @@ export const rule = {
 
       if (!effectFnRefs || !depsRefs) {
         return;
-      } else if (effectFnRefs.length === 0) {
-        // Hopefully it's obvious the effect can be removed.
-        // More a follow-up for once they fix/remove other issues.
-        context.report({
-          node,
-          messageId: messageIds.avoidEmptyEffect,
-        });
-        return;
       }
 
       const propUsedToResetAllState = findPropUsedToResetAllState(

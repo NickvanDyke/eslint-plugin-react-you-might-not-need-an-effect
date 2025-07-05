@@ -1,7 +1,8 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 import { messageIds } from "../src/messages.js";
+import { rule } from "../src/rule.js";
 
-new MyRuleTester().run("/initializing-state", {
+new MyRuleTester().run("/initializing-state", rule, {
   valid: [
     {
       name: "To external data",

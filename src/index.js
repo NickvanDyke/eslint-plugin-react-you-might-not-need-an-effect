@@ -1,15 +1,15 @@
 import { name as ruleName, rule } from "./rule.js";
+import * as noEmptyEffect from "./no-empty-effect.js";
 import globals from "globals";
-
-const pluginName = "react-you-might-not-need-an-effect";
 
 const plugin = {
   meta: {
-    name: pluginName,
+    name: "react-you-might-not-need-an-effect",
   },
   configs: {},
   rules: {
     [ruleName]: rule,
+    [noEmptyEffect.name]: noEmptyEffect.rule,
   },
 };
 
@@ -19,10 +19,11 @@ Object.assign(plugin.configs, {
     files: ["**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"],
     plugins: {
       // Object.assign above so we can reference `plugin` here
-      [pluginName]: plugin,
+      [plugin.meta.name]: plugin,
     },
     rules: {
-      [pluginName + "/" + ruleName]: "warn",
+      [plugin.meta.name + "/" + ruleName]: "warn",
+      [plugin.meta.name + "/" + noEmptyEffect.name]: "warn",
     },
     languageOptions: {
       globals: {
@@ -36,11 +37,11 @@ Object.assign(plugin.configs, {
       },
     },
   },
-  // eslintrc format
   "legacy-recommended": {
-    plugins: [pluginName],
+    plugins: [plugin.meta.name],
     rules: {
-      [pluginName + "/" + ruleName]: "warn",
+      [plugin.meta.name + "/" + ruleName]: "warn",
+      [plugin.meta.name + "/" + noEmptyEffect.name]: "warn",
     },
     globals: {
       // NOTE: Required so we can resolve global references to their upstream global variables

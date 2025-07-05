@@ -1,8 +1,9 @@
 import { messageIds } from "../src/messages.js";
+import { rule } from "../src/rule.js";
 import { MyRuleTester, js } from "./rule-tester.js";
 
 // Uses taken from the real world, as opposed to contrived examples
-new MyRuleTester().run("/real-world", {
+new MyRuleTester().run("/real-world", rule, {
   valid: [
     {
       name: "Managing a timer",

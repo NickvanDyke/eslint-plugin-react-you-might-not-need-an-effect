@@ -1,5 +1,4 @@
 export const messageIds = {
-  avoidEmptyEffect: "avoidEmptyEffect",
   avoidDerivedState: "avoidDerivedState",
   avoidInitializingState: "avoidInitializingState",
   avoidChainingState: "avoidChainingState",
@@ -11,7 +10,6 @@ export const messageIds = {
 
 // TODO: Could include more info in messages, like the relevant node
 export const messages = {
-  [messageIds.avoidEmptyEffect]: "This effect is empty and could be removed.",
   [messageIds.avoidDerivedState]:
     'Avoid storing derived state. Compute "{{state}}" directly during render, optionally with `useMemo` if it\'s expensive.',
   [messageIds.avoidInitializingState]:

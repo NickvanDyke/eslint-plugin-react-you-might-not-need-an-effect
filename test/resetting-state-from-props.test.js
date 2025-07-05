@@ -1,7 +1,8 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 import { messageIds } from "../src/messages.js";
+import { rule } from "../src/rule.js";
 
-new MyRuleTester().run("/resetting-state-from-props", {
+new MyRuleTester().run("/resetting-state-from-props", rule, {
   invalid: [
     {
       // Valid wrt this flag

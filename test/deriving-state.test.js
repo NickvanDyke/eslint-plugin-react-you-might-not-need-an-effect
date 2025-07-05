@@ -1,8 +1,9 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 import { messageIds } from "../src/messages.js";
+import { rule } from "../src/rule.js";
 
 // TODO: All these need the state setter in the deps
-new MyRuleTester().run("/deriving-state", {
+new MyRuleTester().run("/deriving-state", rule, {
   valid: [
     {
       name: "Compute in render from internal state",

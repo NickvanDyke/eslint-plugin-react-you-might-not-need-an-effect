@@ -1,7 +1,8 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 import { messageIds } from "../src/messages.js";
+import { rule } from "../src/rule.js";
 
-new MyRuleTester().run("/parent-child-coupling", {
+new MyRuleTester().run("/parent-child-coupling", rule, {
   valid: [
     {
       name: "Prop from library HOC used internally",

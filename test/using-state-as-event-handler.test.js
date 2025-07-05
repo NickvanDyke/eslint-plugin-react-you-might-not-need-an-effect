@@ -1,7 +1,8 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 import { messageIds } from "../src/messages.js";
+import { rule } from "../src/rule.js";
 
-new MyRuleTester().run("/using-state-as-event-handler", {
+new MyRuleTester().run("/using-state-as-event-handler", rule, {
   valid: [
     {
       name: "Sychronizing with external system",
