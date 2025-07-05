@@ -1,6 +1,7 @@
 import { name as ruleName, rule } from "./rule.js";
 import * as noEmptyEffect from "./no-empty-effect.js";
 import * as noResetAllStateWhenAPropChanges from "./no-reset-all-state-when-a-prop-changes.js";
+import * as noEventHandler from "./no-event-handler.js";
 import globals from "globals";
 
 const plugin = {
@@ -13,6 +14,7 @@ const plugin = {
     [noEmptyEffect.name]: noEmptyEffect.rule,
     [noResetAllStateWhenAPropChanges.name]:
       noResetAllStateWhenAPropChanges.rule,
+    [noEventHandler.name]: noEventHandler.rule,
   },
 };
 
@@ -28,6 +30,7 @@ Object.assign(plugin.configs, {
       [plugin.meta.name + "/" + ruleName]: "warn",
       [plugin.meta.name + "/" + noEmptyEffect.name]: "warn",
       [plugin.meta.name + "/" + noResetAllStateWhenAPropChanges.name]: "warn",
+      [plugin.meta.name + "/" + noEventHandler.name]: "warn",
     },
     languageOptions: {
       globals: {
@@ -47,6 +50,7 @@ Object.assign(plugin.configs, {
       [plugin.meta.name + "/" + ruleName]: "warn",
       [plugin.meta.name + "/" + noEmptyEffect.name]: "warn",
       [plugin.meta.name + "/" + noResetAllStateWhenAPropChanges.name]: "warn",
+      [plugin.meta.name + "/" + noEventHandler.name]: "warn",
     },
     globals: {
       // NOTE: Required so we can resolve global references to their upstream global variables

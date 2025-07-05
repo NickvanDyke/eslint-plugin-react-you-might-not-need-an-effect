@@ -3,8 +3,6 @@ export const messageIds = {
   avoidInitializingState: "avoidInitializingState",
   avoidChainingState: "avoidChainingState",
   avoidParentChildCoupling: "avoidParentChildCoupling",
-  avoidEventHandler: "avoidEventHandler",
-  // TODO: Possible to detect when `useSyncExternalStore` should be preferred?
 };
 
 // TODO: Could include more info in messages, like the relevant node
@@ -17,6 +15,4 @@ export const messages = {
     "Avoid chaining state changes. When possible, update all relevant state simultaneously.",
   [messageIds.avoidParentChildCoupling]:
     "Avoid coupling parent behavior or state to a child component. Instead, lift shared logic or state up to the parent.",
-  [messageIds.avoidEventHandler]:
-    "Avoid using state as an event handler. Instead, call the event handler directly.",
 };

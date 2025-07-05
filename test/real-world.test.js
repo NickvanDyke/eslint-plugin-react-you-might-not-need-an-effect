@@ -1,4 +1,3 @@
-import { messageIds } from "../src/messages.js";
 import { rule } from "../src/rule.js";
 import { MyRuleTester, js } from "./rule-tester.js";
 
@@ -232,47 +231,6 @@ new MyRuleTester().run("/real-world", rule, {
 
         useKeyboardStore.setKeyboardState = setKeyboardState;
       `,
-    },
-  ],
-  invalid: [
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/7
-      name: "Klarna",
-      code: js`
-        function Klarna({ klarnaAppId }) {
-          const [countryCode] = useState(qs.parse('countryCode=meow'));
-          const [result, setResult] = useState();
-          const klarnaEnabled = useSelector('idk') && shouldKlarnaBeEnabled(countryCode);
-          const currentLocale = getCurrentLocale(useGetCurrentLanguage());
-
-          const loadSignInWithKlarna = (klarnaAppId, klarnaEnvironment, countryCode, currentLocale) => {
-            const klarnaResult = doSomething();
-            setResult(klarnaResult);
-          };
-
-          useEffect(() => {
-            if (klarnaEnabled) {
-              return loadSignInWithKlarna(
-                  klarnaAppId,
-                  klarnaEnvironment,
-                  countryCode?.toUpperCase(),
-                  currentLocale,
-              );
-            }
-          }, [
-            countryCode,
-            klarnaAppId,
-            klarnaEnabled,
-            klarnaEnvironment,
-            currentLocale,
-          ]);
-        }
-      `,
-      errors: [
-        {
-          messageId: messageIds.avoidEventHandler,
-        },
-      ],
     },
   ],
 });

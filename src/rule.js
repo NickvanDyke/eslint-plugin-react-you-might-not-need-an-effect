@@ -1,9 +1,5 @@
 import { messageIds, messages } from "./messages.js";
-import {
-  findDownstreamNodes,
-  getCallExpr,
-  getDownstreamRefs,
-} from "./util/ast.js";
+import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
 import {
   isUseEffect,
   getUseStateNode,
@@ -52,28 +48,6 @@ export const rule = {
           (variable) =>
             isState(variable) || (isProp(variable) && !isHOCProp(variable)),
         );
-
-      findDownstreamNodes(context, node, "IfStatement")
-        // An event-handling effect (invalid) and a synchronizing effect (valid)
-        // look quite similar. But the latter should act on *all* possible states,        // whereas the former waits for a specific state (from the event).
-        // Technically synchronizing effects can be inlined too.
-        // But an effect is arguably more readable (for once), and recommended by the React docs.
-        .filter((ifNode) => !ifNode.alternate)
-        .filter((ifNode) =>
-          getDownstreamRefs(context, ifNode.test)
-            .flatMap((ref) =>
-              getUpstreamReactVariables(context, ref.identifier),
-            )
-            // TODO: Include non-HOC props, but probably with a different message -
-            // the state would need to be lifted to inline the effect logic
-            .notEmptyEvery((variable) => isState(variable)),
-        )
-        .forEach((ifNode) => {
-          context.report({
-            node: ifNode.test,
-            messageId: messageIds.avoidEventHandler,
-          });
-        });
 
       effectFnRefs
         .filter(isFnRef)

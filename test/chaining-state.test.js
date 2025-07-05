@@ -50,9 +50,6 @@ new MyRuleTester().run("/chaining-state", rule, {
       `,
       errors: [
         {
-          messageId: messageIds.avoidEventHandler,
-        },
-        {
           messageId: messageIds.avoidChainingState,
         },
       ],
