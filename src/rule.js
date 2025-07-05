@@ -5,7 +5,6 @@ import {
   getDownstreamRefs,
 } from "./util/ast.js";
 import {
-  findPropUsedToResetAllState,
   isUseEffect,
   getUseStateNode,
   getEffectFnRefs,
@@ -44,23 +43,6 @@ export const rule = {
       const depsRefs = getDependenciesRefs(context, node);
 
       if (!effectFnRefs || !depsRefs) {
-        return;
-      }
-
-      const propUsedToResetAllState = findPropUsedToResetAllState(
-        context,
-        effectFnRefs,
-        depsRefs,
-        node,
-      );
-      if (propUsedToResetAllState) {
-        const propName = propUsedToResetAllState.identifier.name;
-        context.report({
-          node: node,
-          messageId: messageIds.avoidResettingStateFromProps,
-          data: { prop: propName },
-        });
-        // Don't flag anything else -- confusing, and this should be fixed first.
         return;
       }
 

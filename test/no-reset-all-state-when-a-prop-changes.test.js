@@ -1,11 +1,13 @@
+import {
+  rule,
+  messages,
+  name,
+} from "../src/no-reset-all-state-when-a-prop-changes.js";
 import { MyRuleTester, js } from "./rule-tester.js";
-import { messageIds } from "../src/messages.js";
-import { rule } from "../src/rule.js";
 
-new MyRuleTester().run("/resetting-state-from-props", rule, {
-  invalid: [
+new MyRuleTester().run(name, rule, {
+  valid: [
     {
-      // Valid wrt this flag
       name: "Set state when a prop changes, but not to its default value",
       code: js`
         function List({ items }) {
@@ -16,14 +18,8 @@ new MyRuleTester().run("/resetting-state-from-props", rule, {
           }, [items]);
         }
       `,
-      errors: [
-        {
-          messageId: messageIds.avoidDerivedState,
-        },
-      ],
     },
     {
-      // Valid wrt this flag
       name: "Reset some state when a prop changes",
       code: js`
         function ProfilePage({ userId }) {
@@ -37,15 +33,22 @@ new MyRuleTester().run("/resetting-state-from-props", rule, {
           }, [userId]);
         }
       `,
-      errors: [
-        {
-          messageId: messageIds.avoidChainingState,
-        },
-        {
-          messageId: messageIds.avoidChainingState,
-        },
-      ],
     },
+    {
+      // undefined !== null
+      name: "Undefined state initializer compared to state setter with literal null",
+      code: js`
+        function List({ items }) {
+          const [selectedItem, setSelectedItem] = useState();
+
+          useEffect(() => {
+            setSelectedItem(null);
+          }, [items]);
+        }
+      `,
+    },
+  ],
+  invalid: [
     {
       name: "Reset all state when a prop changes",
       code: js`
@@ -61,7 +64,7 @@ new MyRuleTester().run("/resetting-state-from-props", rule, {
       `,
       errors: [
         {
-          messageId: messageIds.avoidResettingStateFromProps,
+          messageId: messages.avoidResettingAllStateWhenAPropChanges,
           data: { prop: "userId" },
         },
       ],
@@ -82,7 +85,7 @@ new MyRuleTester().run("/resetting-state-from-props", rule, {
       `,
       errors: [
         {
-          messageId: messageIds.avoidResettingStateFromProps,
+          messageId: messages.avoidResettingAllStateWhenAPropChanges,
           data: { prop: "userId" },
         },
       ],
@@ -100,7 +103,7 @@ new MyRuleTester().run("/resetting-state-from-props", rule, {
       `,
       errors: [
         {
-          messageId: messageIds.avoidResettingStateFromProps,
+          messageId: messages.avoidResettingAllStateWhenAPropChanges,
           // TODO: Ideally would be "user.id"
           data: { prop: "user" },
         },
@@ -119,7 +122,7 @@ new MyRuleTester().run("/resetting-state-from-props", rule, {
       `,
       errors: [
         {
-          messageId: messageIds.avoidResettingStateFromProps,
+          messageId: messages.avoidResettingAllStateWhenAPropChanges,
           data: { prop: "userId" },
         },
       ],
@@ -138,25 +141,74 @@ new MyRuleTester().run("/resetting-state-from-props", rule, {
       `,
       errors: [
         {
-          messageId: messageIds.avoidResettingStateFromProps,
+          messageId: messages.avoidResettingAllStateWhenAPropChanges,
         },
       ],
     },
     {
-      // Valid wrt this flag - undefined !== null
-      name: "Undefined state initializer compared to state setter with literal null",
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/8
+      name: "Meow",
       code: js`
-        function List({ items }) {
-          const [selectedItem, setSelectedItem] = useState();
+        const ExternalAssetItemRow = memo(
+          ({
+            id,
+            title,
+            exportIdentifier,
+            localId,
+            hasUpdate,
+            isViewOnly,
+            getMenuOptions,
+            onUpdate,
+            onDragStart,
+            Icon,
+            exitMode,
+          }) => {
+            const [shouldUpdate, setShouldUpdate] = useState(hasUpdate);
 
-          useEffect(() => {
-            setSelectedItem(null);
-          }, [items]);
-        }
+            useEffect(() => {
+              setShouldUpdate(hasUpdate);
+            }, [hasUpdate]);
+
+            const onClickUpdate = useCallback(
+              (event) => {
+                event.stopPropagation();
+
+                if (isViewOnly) return;
+
+                setShouldUpdate(false);
+              },
+              [onUpdate, exportIdentifier, title, isViewOnly],
+            );
+
+            const handleDragStart = useCallback(
+              (event) => {
+                exitMode();
+                onDragStart(event, exportIdentifier);
+              },
+              [onDragStart, exportIdentifier],
+            );
+
+            const getMenu = useCallback(
+              (id) => getMenuOptions(id, exportIdentifier, title, localId),
+              [getMenuOptions, exportIdentifier, title, localId],
+            );
+
+            return (
+              <Draggable
+                  hideDragSource={false}
+                  onDragStart={handleDragStart}
+                  onMouseDown={onMouseDown}
+                  autoScrollEnabled={false}
+              >
+              </Draggable>
+            )
+          },
+        );
       `,
       errors: [
         {
-          messageId: messageIds.avoidChainingState,
+          // TODO: Because the initial state is internal, derived state would be a better flag.
+          messageId: messages.avoidResettingAllStateWhenAPropChanges,
         },
       ],
     },

@@ -484,20 +484,21 @@ new MyRuleTester().run("/syntax", rule, {
       // Effects shouldn't be called conditionally, but good to be prepared
       name: "Conditional useEffect",
       code: js`
-        function ConditionalEffect({ key }) {
-          const [state, setState] = useState(0);
+        function DoubleCounter() {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
 
-          if (condition) {
+          if (count > 10) {
             useEffect(() => {
-              setState(0);
-            }, [key]);
+              setDoubleCount(count * 2);
+            }, [count]);
           }
         }
       `,
       errors: [
         {
-          messageId: messageIds.avoidResettingStateFromProps,
-          data: { prop: "key" },
+          messageId: messageIds.avoidDerivedState,
+          data: { state: "doubleCount" },
         },
       ],
     },

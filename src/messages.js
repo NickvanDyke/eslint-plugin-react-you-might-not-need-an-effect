@@ -3,7 +3,6 @@ export const messageIds = {
   avoidInitializingState: "avoidInitializingState",
   avoidChainingState: "avoidChainingState",
   avoidParentChildCoupling: "avoidParentChildCoupling",
-  avoidResettingStateFromProps: "avoidResettingStateFromProps",
   avoidEventHandler: "avoidEventHandler",
   // TODO: Possible to detect when `useSyncExternalStore` should be preferred?
 };
@@ -18,8 +17,6 @@ export const messages = {
     "Avoid chaining state changes. When possible, update all relevant state simultaneously.",
   [messageIds.avoidParentChildCoupling]:
     "Avoid coupling parent behavior or state to a child component. Instead, lift shared logic or state up to the parent.",
-  [messageIds.avoidResettingStateFromProps]:
-    'Avoid resetting state from props. If "{{prop}}" is a key, pass it as `key` instead so React will reset the component.',
   [messageIds.avoidEventHandler]:
     "Avoid using state as an event handler. Instead, call the event handler directly.",
 };
