@@ -13,7 +13,7 @@ export class MyRuleTester extends RuleTester {
     });
   }
 
-  run(variation, tests) {
+  run(name, rule, tests) {
     const originalStrictEqual = assert.strictEqual;
     try {
       assert.strictEqual = (actual, expected, ...rest) => {
@@ -40,11 +40,7 @@ export class MyRuleTester extends RuleTester {
         invalid: invalid.filter((test) => !test.todo),
       };
 
-      super.run(
-        plugin.meta.name + variation,
-        plugin.rules["you-might-not-need-an-effect"],
-        filteredTests,
-      );
+      super.run(name, rule, filteredTests);
     } finally {
       // Restore the original strictEqual function to avoid unintended effects
       assert.strictEqual = originalStrictEqual;

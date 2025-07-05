@@ -48,23 +48,23 @@ export default [
 
 The plugin will have more information to act upon when you pass the correct dependencies to your effect — [`react-hooks/exhaustive-deps`](https://www.npmjs.com/package/eslint-plugin-react-hooks).
 
-## 🔎 Rule: `you-might-not-need-an-effect`
+## 🔎 Rules
 
-Determines when an effect is likely unnecessary, such as when it:
+**Legend:**
+- 🟡 = Enabled as a warning in the recommended config
+- 🔴 = Enabled as an error in the recommended config
+- ⚪ = Not enabled by default
 
-- Stores derived state
-- Chains state updates
-- Initializes state
-- Resets all state when props change
-- Couples parent and child state or behavior
+| Rule | Description | Documentation | Default |
+|------|-------------|---------------|---------|
+| `no-derived-state` | Disallow storing derived state in an effect. | [docs](https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state) | 🟡 |
+| `no-chain-state-updates` | Disallow chaining state changes in an effect. | [docs](https://react.dev/learn/you-might-not-need-an-effect#chains-of-computations) | 🟡 |
+| `no-initialize-state` | Disallow initializing state in an effect. | — | 🟡 |
+| `no-reset-all-state-when-a-prop-changes` | Disallow resetting all state in an effect when a prop changes. | [docs](https://react.dev/learn/you-might-not-need-an-effect#resetting-all-state-when-a-prop-changes) | 🟡 |
+| `no-event-handler` | Disallow using state and an effect as an event handler. | [docs](https://react.dev/learn/you-might-not-need-an-effect#sharing-logic-between-event-handlers) | 🟡 |
+| `no-parent-child-coupling` | Disallow coupling parent behavior or state to a child component in an effect. | [docs](https://react.dev/learn/you-might-not-need-an-effect#notifying-parent-components-about-state-changes) | 🟡 |
+| `no-empty-effect` | Disallow empty effects. | — | 🟡 |
 
-When possible, also suggests the more idiomatic pattern.
-
-While the effect may be unnecessary, we cannot reliably determine that when it:
-
-- Uses external state
-- Calls external functions
-- Uses internal state to handle events
 
 ## ⚠️ Limitations
 
@@ -77,3 +77,4 @@ This plugin aims to minimize false positives and accepts that some false negativ
 - https://react.dev/learn/synchronizing-with-effects
 - https://react.dev/learn/separating-events-from-effects
 - https://react.dev/learn/lifecycle-of-reactive-effects
+

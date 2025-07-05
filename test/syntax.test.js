@@ -1,5 +1,5 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { messageIds } from "../src/messages.js";
+import { rule, name, messages } from "../src/no-derived-state.js";
 
 // TODO: Should maybe do away with this... it helps writing but not readable
 const code = ({
@@ -25,7 +25,7 @@ const code = ({
 // Syntax variations that are semantically equivalent
 // TODO: Could dynamically generate variations: https://mochajs.org/#dynamically-generating-tests
 // Could be overkill; they shouldn't affect each other (supposedly, but I guess that's the point of tests!)
-new MyRuleTester().run("/syntax", {
+new MyRuleTester().run(name, rule, {
   valid: [
     {
       name: "Two components with overlapping names",
@@ -190,7 +190,7 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidDerivedState,
+          messageId: messages.avoidDerivedState,
           data: { state: "doubleCount" },
         },
       ],
@@ -369,7 +369,7 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidDerivedState,
+          messageId: messages.avoidDerivedState,
           data: { state: "setAttempts" },
         },
       ],
@@ -388,7 +388,7 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidDerivedState,
+          messageId: messages.avoidDerivedState,
           data: { state: "attempts" },
         },
       ],
@@ -413,7 +413,7 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidDerivedState,
+          messageId: messages.avoidDerivedState,
           data: { state: "doubleCount" },
         },
       ],
@@ -433,7 +433,7 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidDerivedState,
+          messageId: messages.avoidDerivedState,
           data: { state: "state" },
         },
       ],
@@ -453,7 +453,7 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidDerivedState,
+          messageId: messages.avoidDerivedState,
           data: { state: "state" },
         },
       ],
@@ -474,7 +474,7 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidDerivedState,
+          messageId: messages.avoidDerivedState,
           data: { state: "derived" },
         },
       ],
@@ -483,48 +483,21 @@ new MyRuleTester().run("/syntax", {
       // Effects shouldn't be called conditionally, but good to be prepared
       name: "Conditional useEffect",
       code: js`
-        function ConditionalEffect({ key }) {
-          const [state, setState] = useState(0);
+        function DoubleCounter() {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
 
-          if (condition) {
+          if (count > 10) {
             useEffect(() => {
-              setState(0);
-            }, [key]);
+              setDoubleCount(count * 2);
+            }, [count]);
           }
         }
       `,
       errors: [
         {
-          messageId: messageIds.avoidResettingStateFromProps,
-          data: { prop: "key" },
-        },
-      ],
-    },
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
-      name: "Internal IIFE",
-      code: js`
-        import { useEffect, useState } from 'react';
-
-        export const App = () => {
-          const [data, setData] = useState(null);
-
-          const iife = () => {
-            return (async () => {
-              setData('Meow');
-            })();
-          };
-
-          useEffect(() => { 
-            (async () => {
-              await iife();
-            })();
-          }, []);
-        };
-      `,
-      errors: [
-        {
-          messageId: messageIds.avoidInitializingState,
+          messageId: messages.avoidDerivedState,
+          data: { state: "doubleCount" },
         },
       ],
     },
@@ -556,7 +529,7 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidDerivedState,
+          messageId: messages.avoidDerivedState,
           data: { state: "filteredPosts" },
         },
       ],
@@ -576,7 +549,7 @@ new MyRuleTester().run("/syntax", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidDerivedState,
+          messageId: messages.avoidDerivedState,
           data: { state: "total" },
         },
       ],

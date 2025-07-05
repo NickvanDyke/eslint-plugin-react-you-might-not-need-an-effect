@@ -1,15 +1,42 @@
-import { name as ruleName, rule } from "./rule.js";
+import * as noEmptyEffect from "./no-empty-effect.js";
+import * as noResetAllStateWhenAPropChanges from "./no-reset-all-state-when-a-prop-changes.js";
+import * as noEventHandler from "./no-event-handler.js";
+import * as noParentChildCoupling from "./no-parent-child-coupling.js";
+import * as noInitializeState from "./no-initialize-state.js";
+import * as noChainStateUpdates from "./no-chain-state-updates.js";
+import * as noDerivedState from "./no-derived-state.js";
 import globals from "globals";
-
-const pluginName = "react-you-might-not-need-an-effect";
 
 const plugin = {
   meta: {
-    name: pluginName,
+    name: "react-you-might-not-need-an-effect",
   },
   configs: {},
   rules: {
-    [ruleName]: rule,
+    [noEmptyEffect.name]: noEmptyEffect.rule,
+    [noResetAllStateWhenAPropChanges.name]:
+      noResetAllStateWhenAPropChanges.rule,
+    [noEventHandler.name]: noEventHandler.rule,
+    [noParentChildCoupling.name]: noParentChildCoupling.rule,
+    [noInitializeState.name]: noInitializeState.rule,
+    [noChainStateUpdates.name]: noChainStateUpdates.rule,
+    [noDerivedState.name]: noDerivedState.rule,
+  },
+};
+
+const recommendedRules = Object.keys(plugin.rules).reduce((acc, ruleName) => {
+  acc[plugin.meta.name + "/" + ruleName] = "warn";
+  return acc;
+}, {});
+const languageOptions = {
+  globals: {
+    // NOTE: Required so we can resolve global references to their upstream global variables
+    ...globals.browser,
+  },
+  parserOptions: {
+    ecmaFeatures: {
+      jsx: true,
+    },
   },
 };
 
@@ -19,38 +46,15 @@ Object.assign(plugin.configs, {
     files: ["**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"],
     plugins: {
       // Object.assign above so we can reference `plugin` here
-      [pluginName]: plugin,
+      [plugin.meta.name]: plugin,
     },
-    rules: {
-      [pluginName + "/" + ruleName]: "warn",
-    },
-    languageOptions: {
-      globals: {
-        // NOTE: Required so we can resolve global references to their upstream global variables
-        ...globals.browser,
-      },
-      parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-    },
+    rules: recommendedRules,
+    languageOptions,
   },
-  // eslintrc format
   "legacy-recommended": {
-    plugins: [pluginName],
-    rules: {
-      [pluginName + "/" + ruleName]: "warn",
-    },
-    globals: {
-      // NOTE: Required so we can resolve global references to their upstream global variables
-      ...globals.browser,
-    },
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
-      },
-    },
+    plugins: [plugin.meta.name],
+    rules: recommendedRules,
+    ...languageOptions,
   },
 });
 

@@ -1,7 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { messageIds } from "../src/messages.js";
+import { name, messages, rule } from "../src/no-parent-child-coupling.js";
 
-new MyRuleTester().run("/parent-child-coupling", {
+new MyRuleTester().run(name, rule, {
   valid: [
     {
       name: "Prop from library HOC used internally",
@@ -36,25 +36,6 @@ new MyRuleTester().run("/parent-child-coupling", {
   ],
   invalid: [
     {
-      // Valid wrt this flag.
-      // Verifies `setSelection` is not considered a prop because it's initialized with a prop.
-      name: "Using prop in state initializer",
-      code: js`
-        function List({ items }) {
-          const [selection, setSelection] = useState(items[0]);
-
-          useEffect(() => {
-            setSelection(null);
-          }, [items]);
-        }
-      `,
-      errors: [
-        {
-          messageId: messageIds.avoidChainingState,
-        },
-      ],
-    },
-    {
       name: "Pass internal live state",
       code: js`
         const Child = ({ onFetched }) => {
@@ -67,7 +48,7 @@ new MyRuleTester().run("/parent-child-coupling", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidParentChildCoupling,
+          messageId: messages.avoidParentChildCoupling,
         },
       ],
     },
@@ -85,7 +66,7 @@ new MyRuleTester().run("/parent-child-coupling", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidParentChildCoupling,
+          messageId: messages.avoidParentChildCoupling,
         },
       ],
     },
@@ -104,7 +85,7 @@ new MyRuleTester().run("/parent-child-coupling", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidParentChildCoupling,
+          messageId: messages.avoidParentChildCoupling,
         },
       ],
     },
@@ -126,7 +107,7 @@ new MyRuleTester().run("/parent-child-coupling", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidParentChildCoupling,
+          messageId: messages.avoidParentChildCoupling,
         },
       ],
     },
@@ -143,7 +124,7 @@ new MyRuleTester().run("/parent-child-coupling", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidParentChildCoupling,
+          messageId: messages.avoidParentChildCoupling,
         },
       ],
     },
@@ -161,7 +142,7 @@ new MyRuleTester().run("/parent-child-coupling", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidParentChildCoupling,
+          messageId: messages.avoidParentChildCoupling,
         },
       ],
     },
@@ -192,7 +173,7 @@ new MyRuleTester().run("/parent-child-coupling", {
         {
           // TODO: Ideally we catch using state as an event handler,
           // but not sure how to differentiate that
-          messageId: messageIds.avoidParentChildCoupling,
+          messageId: messages.avoidParentChildCoupling,
         },
       ],
     },
@@ -212,7 +193,7 @@ new MyRuleTester().run("/parent-child-coupling", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidParentChildCoupling,
+          messageId: messages.avoidParentChildCoupling,
         },
       ],
     },
@@ -242,10 +223,25 @@ new MyRuleTester().run("/parent-child-coupling", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidDerivedState,
+          messageId: messages.avoidParentChildCoupling,
         },
+      ],
+    },
+    {
+      name: "From props via member function",
+      code: js`
+        function DoubleList({ list }) {
+          const [doubleList, setDoubleList] = useState([]);
+
+          useEffect(() => {
+            setDoubleList(list.concat(list));
+          }, [list]);
+        }
+      `,
+      errors: [
         {
-          messageId: messageIds.avoidParentChildCoupling,
+          // We consider `list.concat` to essentially be a prop callback
+          messageId: messages.avoidParentChildCoupling,
         },
       ],
     },

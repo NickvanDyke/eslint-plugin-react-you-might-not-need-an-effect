@@ -1,7 +1,7 @@
+import { rule, messages, name } from "../src/no-event-handler.js";
 import { MyRuleTester, js } from "./rule-tester.js";
-import { messageIds } from "../src/messages.js";
 
-new MyRuleTester().run("/using-state-as-event-handler", {
+new MyRuleTester().run(name, rule, {
   valid: [
     {
       name: "Sychronizing with external system",
@@ -89,7 +89,7 @@ new MyRuleTester().run("/using-state-as-event-handler", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidEventHandler,
+          messageId: messages.avoidEventHandler,
         },
       ],
     },
@@ -120,7 +120,46 @@ new MyRuleTester().run("/using-state-as-event-handler", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidEventHandler,
+          messageId: messages.avoidEventHandler,
+        },
+      ],
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/7
+      name: "Klarna",
+      code: js`
+        function Klarna({ klarnaAppId }) {
+          const [countryCode] = useState(qs.parse('countryCode=meow'));
+          const [result, setResult] = useState();
+          const klarnaEnabled = useSelector('idk') && shouldKlarnaBeEnabled(countryCode);
+          const currentLocale = getCurrentLocale(useGetCurrentLanguage());
+
+          const loadSignInWithKlarna = (klarnaAppId, klarnaEnvironment, countryCode, currentLocale) => {
+            const klarnaResult = doSomething();
+            setResult(klarnaResult);
+          };
+
+          useEffect(() => {
+            if (klarnaEnabled) {
+              return loadSignInWithKlarna(
+                  klarnaAppId,
+                  klarnaEnvironment,
+                  countryCode?.toUpperCase(),
+                  currentLocale,
+              );
+            }
+          }, [
+            countryCode,
+            klarnaAppId,
+            klarnaEnabled,
+            klarnaEnvironment,
+            currentLocale,
+          ]);
+        }
+      `,
+      errors: [
+        {
+          messageId: messages.avoidEventHandler,
         },
       ],
     },

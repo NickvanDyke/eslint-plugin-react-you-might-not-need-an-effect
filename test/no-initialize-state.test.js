@@ -1,7 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { messageIds } from "../src/messages.js";
+import { name, rule, messages } from "../src/no-initialize-state.js";
 
-new MyRuleTester().run("/initializing-state", {
+new MyRuleTester().run(name, rule, {
   valid: [
     {
       name: "To external data",
@@ -34,7 +34,7 @@ new MyRuleTester().run("/initializing-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInitializingState,
+          messageId: messages.avoidInitializingState,
           data: { state: "state" },
         },
       ],
@@ -53,11 +53,8 @@ new MyRuleTester().run("/initializing-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInitializingState,
+          messageId: messages.avoidInitializingState,
           data: { state: "state" },
-        },
-        {
-          messageId: messageIds.avoidDerivedState,
         },
       ],
     },
@@ -75,8 +72,36 @@ new MyRuleTester().run("/initializing-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidInitializingState,
+          messageId: messages.avoidInitializingState,
           data: { state: "state" },
+        },
+      ],
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
+      name: "To literal via IIFE",
+      code: js`
+        import { useEffect, useState } from 'react';
+
+        export const App = () => {
+          const [data, setData] = useState(null);
+
+          const iife = () => {
+            return (async () => {
+              setData('Meow');
+            })();
+          };
+
+          useEffect(() => { 
+            (async () => {
+              await iife();
+            })();
+          }, []);
+        };
+      `,
+      errors: [
+        {
+          messageId: messages.avoidInitializingState,
         },
       ],
     },

@@ -1,8 +1,9 @@
-import { messageIds } from "../src/messages.js";
+import { rule } from "../src/no-derived-state.js";
 import { MyRuleTester, js } from "./rule-tester.js";
 
 // Uses taken from the real world, as opposed to contrived examples
-new MyRuleTester().run("/real-world", {
+// TODO: Refactor to use entire plugin?
+new MyRuleTester().run("real-world", rule, {
   valid: [
     {
       name: "Managing a timer",
@@ -231,114 +232,6 @@ new MyRuleTester().run("/real-world", {
 
         useKeyboardStore.setKeyboardState = setKeyboardState;
       `,
-    },
-  ],
-  invalid: [
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/8
-      name: "Meow",
-      code: js`
-        const ExternalAssetItemRow = memo(
-          ({
-            id,
-            title,
-            exportIdentifier,
-            localId,
-            hasUpdate,
-            isViewOnly,
-            getMenuOptions,
-            onUpdate,
-            onDragStart,
-            Icon,
-            exitMode,
-          }) => {
-            const [shouldUpdate, setShouldUpdate] = useState(hasUpdate);
-
-            useEffect(() => {
-              setShouldUpdate(hasUpdate);
-            }, [hasUpdate]);
-
-            const onClickUpdate = useCallback(
-              (event) => {
-                event.stopPropagation();
-
-                if (isViewOnly) return;
-
-                setShouldUpdate(false);
-              },
-              [onUpdate, exportIdentifier, title, isViewOnly],
-            );
-
-            const handleDragStart = useCallback(
-              (event) => {
-                exitMode();
-                onDragStart(event, exportIdentifier);
-              },
-              [onDragStart, exportIdentifier],
-            );
-
-            const getMenu = useCallback(
-              (id) => getMenuOptions(id, exportIdentifier, title, localId),
-              [getMenuOptions, exportIdentifier, title, localId],
-            );
-
-            return (
-              <Draggable
-                  hideDragSource={false}
-                  onDragStart={handleDragStart}
-                  onMouseDown={onMouseDown}
-                  autoScrollEnabled={false}
-              >
-              </Draggable>
-            )
-          },
-        );
-      `,
-      errors: [
-        {
-          // TODO: Because the initial state is internal, derived state would be a better flag.
-          messageId: messageIds.avoidResettingStateFromProps,
-        },
-      ],
-    },
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/7
-      name: "Klarna",
-      code: js`
-        function Klarna({ klarnaAppId }) {
-          const [countryCode] = useState(qs.parse('countryCode=meow'));
-          const [result, setResult] = useState();
-          const klarnaEnabled = useSelector('idk') && shouldKlarnaBeEnabled(countryCode);
-          const currentLocale = getCurrentLocale(useGetCurrentLanguage());
-
-          const loadSignInWithKlarna = (klarnaAppId, klarnaEnvironment, countryCode, currentLocale) => {
-            const klarnaResult = doSomething();
-            setResult(klarnaResult);
-          };
-
-          useEffect(() => {
-            if (klarnaEnabled) {
-              return loadSignInWithKlarna(
-                  klarnaAppId,
-                  klarnaEnvironment,
-                  countryCode?.toUpperCase(),
-                  currentLocale,
-              );
-            }
-          }, [
-            countryCode,
-            klarnaAppId,
-            klarnaEnabled,
-            klarnaEnvironment,
-            currentLocale,
-          ]);
-        }
-      `,
-      errors: [
-        {
-          messageId: messageIds.avoidEventHandler,
-        },
-      ],
     },
   ],
 });

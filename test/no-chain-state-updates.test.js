@@ -1,7 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { messageIds } from "../src/messages.js";
+import { rule, name, messages } from "../src/no-chain-state-updates.js";
 
-new MyRuleTester().run("/chaining-state", {
+new MyRuleTester().run(name, rule, {
   invalid: [
     {
       // React docs recommend to first update state in render instead of an effect.
@@ -29,7 +29,7 @@ new MyRuleTester().run("/chaining-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidChainingState,
+          messageId: messages.avoidChainingStateUpdates,
         },
       ],
     },
@@ -49,10 +49,7 @@ new MyRuleTester().run("/chaining-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidEventHandler,
-        },
-        {
-          messageId: messageIds.avoidChainingState,
+          messageId: messages.avoidChainingStateUpdates,
         },
       ],
     },
@@ -71,7 +68,7 @@ new MyRuleTester().run("/chaining-state", {
       `,
       errors: [
         {
-          messageId: messageIds.avoidChainingState,
+          messageId: messages.avoidChainingStateUpdates,
           data: { state: "state" },
         },
       ],
