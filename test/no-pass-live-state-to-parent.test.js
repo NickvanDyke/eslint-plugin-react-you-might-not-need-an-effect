@@ -1,8 +1,53 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { name, messages, rule } from "../src/no-parent-child-coupling.js";
+import { name, messages, rule } from "../src/no-pass-live-state-to-parent.js";
 
 new MyRuleTester().run(name, rule, {
   valid: [
+    {
+      name: "Pass literal value to prop callback",
+      code: js`
+        const Child = ({ onTextChanged }) => {
+          useEffect(() => {
+            onTextChanged("Hello World");
+          }, [onTextChanged]);
+        }
+      `,
+    },
+    {
+      name: "No-arg prop callback in response to internal state change",
+      code: js`
+        function Form({ onClose }) {
+          const [name, setName] = useState();
+          const [isOpen, setIsOpen] = useState(true);
+
+          useEffect(() => {
+            if (!isOpen) {
+              onClose();
+            }
+          }, [isOpen]);
+
+          return (
+            <button onClick={() => setIsOpen(false)}>Submit</button>
+          )
+        }
+      `,
+      errors: [
+        {
+          messageId: messages.avoidPassingLiveStateToParent,
+        },
+      ],
+    },
+    {
+      // This might be an anti-pattern in the first place...
+      name: "Prop getter",
+      code: js`
+        function Child({ getData }) {
+          useEffect(() => {
+            console.log(getData());
+          }, [getData]);
+        }
+      `,
+    },
     {
       name: "Prop from library HOC used internally",
       code: js`
@@ -12,7 +57,7 @@ new MyRuleTester().run(name, rule, {
           const [option, setOption] = useState();
 
           useEffect(() => {
-            history.push('/options/' + option);
+            history.push(option);
           }, [option]);
         });
       `,
@@ -36,7 +81,7 @@ new MyRuleTester().run(name, rule, {
   ],
   invalid: [
     {
-      name: "Pass internal live state",
+      name: "Pass live internal fetched state",
       code: js`
         const Child = ({ onFetched }) => {
           const [data, setData] = useState();
@@ -48,12 +93,36 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidParentChildCoupling,
+          messageId: messages.avoidPassingLiveStateToParent,
         },
       ],
     },
     {
-      name: "Pass derived internal live state",
+      name: "Pass live internal state",
+      code: js`
+        const Child = ({ onTextChanged }) => {
+          const [text, setText] = useState();
+
+          useEffect(() => {
+            onTextChanged(text);
+          }, [onTextChanged, text]);
+
+          return (
+            <input
+              type="text"
+              onChange={(e) => setText(e.target.value)}
+            />
+          );
+        }
+      `,
+      errors: [
+        {
+          messageId: messages.avoidPassingLiveStateToParent,
+        },
+      ],
+    },
+    {
+      name: "Pass live derived internal state",
       code: js`
         const Child = ({ onFetched }) => {
           const [data, setData] = useState();
@@ -66,12 +135,12 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidParentChildCoupling,
+          messageId: messages.avoidPassingLiveStateToParent,
         },
       ],
     },
     {
-      name: "Pass internal live state via derived prop",
+      name: "Pass live internal state via derived prop",
       code: js`
         const Child = ({ onFetched }) => {
           const [data, setData] = useState();
@@ -85,29 +154,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidParentChildCoupling,
-        },
-      ],
-    },
-    {
-      name: "No-arg prop callback in response to internal state change",
-      code: js`
-        function Form({ onClose }) {
-          const [name, setName] = useState();
-          const [isOpen, setIsOpen] = useState(true);
-
-          useEffect(() => {
-            onClose();
-          }, [isOpen]);
-
-          return (
-            <button onClick={() => setIsOpen(false)}>Submit</button>
-          )
-        }
-      `,
-      errors: [
-        {
-          messageId: messages.avoidParentChildCoupling,
+          messageId: messages.avoidPassingLiveStateToParent,
         },
       ],
     },
@@ -124,7 +171,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidParentChildCoupling,
+          messageId: messages.avoidPassingLiveStateToParent,
         },
       ],
     },
@@ -142,7 +189,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidParentChildCoupling,
+          messageId: messages.avoidPassingLiveStateToParent,
         },
       ],
     },
@@ -154,6 +201,8 @@ new MyRuleTester().run(name, rule, {
           const [dataToSubmit, setDataToSubmit] = useState();
 
           useEffect(() => {
+            if (!dataToSubmit) return;
+
             onSubmit(dataToSubmit);
           }, [dataToSubmit]);
 
@@ -173,60 +222,31 @@ new MyRuleTester().run(name, rule, {
         {
           // TODO: Ideally we catch using state as an event handler,
           // but not sure how to differentiate that
-          messageId: messages.avoidParentChildCoupling,
+          messageId: messages.avoidPassingLiveStateToParent,
         },
       ],
     },
-    {
-      name: "Call prop in response to prop change",
-      code: js`
-        function Form({ isOpen, events }) {
-
-          useEffect(() => {
-            if (!isOpen) {
-              // NOTE: Also verifies that we consider 'events' in 'events.onClose' to be a fn ref
-              // (It's a MemberExpression under a CallExpression)
-              events.onClose();
-            }
-          }, [isOpen]);
-        }
-      `,
-      errors: [
-        {
-          messageId: messages.avoidParentChildCoupling,
-        },
-      ],
-    },
-    {
-      name: "Derive state from prop function",
-      code: js`
-        function FilteredPosts({ posts }) {
-          const [filteredPosts, setFilteredPosts] = useState([]);
-
-          useEffect(() => {
-            // Resulting AST node looks like:
-            // {
-            //   "type": "ArrayPattern",
-            //   "elements": [
-            //     null, <-- Must handle this!
-            //     {
-            //       "type": "Identifier",
-            //       "name": "second"
-            //     }
-            //   ]
-            // }
-            setFilteredPosts(
-              posts.filter((post) => post.body !== "")
-            );
-          }, [posts]);
-        }
-      `,
-      errors: [
-        {
-          messageId: messages.avoidParentChildCoupling,
-        },
-      ],
-    },
+    // TODO: Catch in something like "no-managing-parent" - an effect that only references props
+    // {
+    //   name: "Call prop in response to prop change",
+    //   code: js`
+    //     function Form({ isOpen, events }) {
+    //
+    //       useEffect(() => {
+    //         if (!isOpen) {
+    //           // NOTE: Also verifies that we consider 'events' in 'events.onClose' to be a fn ref
+    //           // (It's a MemberExpression under a CallExpression)
+    //           events.onClose();
+    //         }
+    //       }, [isOpen]);
+    //     }
+    //   `,
+    //   errors: [
+    //     {
+    //       messageId: messages.avoidParentChildCoupling,
+    //     },
+    //   ],
+    // },
     {
       name: "From props via member function",
       code: js`
@@ -241,7 +261,7 @@ new MyRuleTester().run(name, rule, {
       errors: [
         {
           // We consider `list.concat` to essentially be a prop callback
-          messageId: messages.avoidParentChildCoupling,
+          messageId: messages.avoidPassingLiveStateToParent,
         },
       ],
     },

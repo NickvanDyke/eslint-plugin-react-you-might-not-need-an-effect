@@ -31,6 +31,8 @@ export const rule = {
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getDependenciesRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
+
+      // TODO: Should this length check account for the setter in the deps?
       if (depsRefs.length > 0) return;
 
       effectFnRefs

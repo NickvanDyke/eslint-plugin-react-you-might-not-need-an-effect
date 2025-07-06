@@ -1,7 +1,7 @@
 import * as noEmptyEffect from "./no-empty-effect.js";
 import * as noResetAllStateWhenAPropChanges from "./no-reset-all-state-when-a-prop-changes.js";
 import * as noEventHandler from "./no-event-handler.js";
-import * as noParentChildCoupling from "./no-parent-child-coupling.js";
+import * as noPassLiveStateToParent from "./no-pass-live-state-to-parent.js";
 import * as noInitializeState from "./no-initialize-state.js";
 import * as noChainStateUpdates from "./no-chain-state-updates.js";
 import * as noDerivedState from "./no-derived-state.js";
@@ -17,7 +17,7 @@ const plugin = {
     [noResetAllStateWhenAPropChanges.name]:
       noResetAllStateWhenAPropChanges.rule,
     [noEventHandler.name]: noEventHandler.rule,
-    [noParentChildCoupling.name]: noParentChildCoupling.rule,
+    [noPassLiveStateToParent.name]: noPassLiveStateToParent.rule,
     [noInitializeState.name]: noInitializeState.rule,
     [noChainStateUpdates.name]: noChainStateUpdates.rule,
     [noDerivedState.name]: noDerivedState.rule,
