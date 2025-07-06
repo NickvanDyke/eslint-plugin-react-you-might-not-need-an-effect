@@ -63,6 +63,7 @@ The plugin will have more information to act upon when you pass the correct depe
 | `no-reset-all-state-when-a-prop-changes` | Disallow resetting all state in an effect when a prop changes. | [docs](https://react.dev/learn/you-might-not-need-an-effect#resetting-all-state-when-a-prop-changes) | 🟡 |
 | `no-event-handler` | Disallow using state and an effect as an event handler. | [docs](https://react.dev/learn/you-might-not-need-an-effect#sharing-logic-between-event-handlers) | 🟡 |
 | `no-pass-live-state-to-parent` | Disallow passing live state to parent components in an effect. | [docs](https://react.dev/learn/you-might-not-need-an-effect#notifying-parent-components-about-state-changes) | 🟡 |
+| `no-manage-parent` | Disallow effects that only use props. | — | 🟡 |
 | `no-empty-effect` | Disallow empty effects. | — | 🟡 |
 
 

@@ -5,6 +5,7 @@ import * as noPassLiveStateToParent from "./no-pass-live-state-to-parent.js";
 import * as noInitializeState from "./no-initialize-state.js";
 import * as noChainStateUpdates from "./no-chain-state-updates.js";
 import * as noDerivedState from "./no-derived-state.js";
+import * as noManageParent from "./no-manage-parent.js";
 import globals from "globals";
 
 const plugin = {
@@ -21,6 +22,7 @@ const plugin = {
     [noInitializeState.name]: noInitializeState.rule,
     [noChainStateUpdates.name]: noChainStateUpdates.rule,
     [noDerivedState.name]: noDerivedState.rule,
+    [noManageParent.name]: noManageParent.rule,
   },
 };
 
