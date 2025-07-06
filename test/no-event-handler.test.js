@@ -60,12 +60,55 @@ new MyRuleTester().run(name, rule, {
         }
       `,
     },
+    {
+      name: "Using prop to handle an event and call a prop",
+      code: js`
+        function Form({ dataToSubmit, submitData }) {
+          useEffect(() => {
+            if (dataToSubmit) {
+              submitData(dataToSubmit);
+            }
+          }, [dataToSubmit]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
-      name: "Using state to handle an event",
+      name: "Using state to handle an event and call an external function",
       code: js`
         function Form() {
+          const [name, setName] = useState();
+          const [dataToSubmit, setDataToSubmit] = useState();
+
+          useEffect(() => {
+            if (dataToSubmit) {
+              submitData(dataToSubmit);
+            }
+          }, [dataToSubmit]);
+
+          return (
+            <div>
+              <input
+                name="name"
+                type="text"
+                onChange={(e) => setName(e.target.value)}
+              />
+              <button onClick={() => setDataToSubmit({ name })}>Submit</button>
+            </div>
+          )
+        }
+      `,
+      errors: [
+        {
+          messageId: messages.avoidEventHandler,
+        },
+      ],
+    },
+    {
+      name: "Using state to handle an event and call a prop",
+      code: js`
+        function Form({ submitData }) {
           const [name, setName] = useState();
           const [dataToSubmit, setDataToSubmit] = useState();
 
