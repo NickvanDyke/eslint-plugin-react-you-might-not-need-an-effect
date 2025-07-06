@@ -94,6 +94,37 @@ new MyRuleTester().run(name, rule, {
       ],
     },
     {
+      name: "Early return in if test",
+      code: js`
+        function Form() {
+          const [name, setName] = useState();
+          const [dataToSubmit, setDataToSubmit] = useState();
+
+          useEffect(() => {
+            if (!dataToSubmit) return;
+
+            submitData(dataToSubmit);
+          }, [dataToSubmit]);
+
+          return (
+            <div>
+              <input
+                name="name"
+                type="text"
+                onChange={(e) => setName(e.target.value)}
+              />
+              <button onClick={() => setDataToSubmit({ name })}>Submit</button>
+            </div>
+          )
+        }
+      `,
+      errors: [
+        {
+          messageId: messages.avoidEventHandler,
+        },
+      ],
+    },
+    {
       name: "More complex if test",
       code: js`
         function Form() {
