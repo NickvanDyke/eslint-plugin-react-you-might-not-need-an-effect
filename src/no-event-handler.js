@@ -30,6 +30,8 @@ export const rule = {
       const depsRefs = getDependenciesRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
+      // TODO: Can we also flag this when the deps are internal, and the body calls internal stuff?
+
       findDownstreamNodes(context, node, "IfStatement")
         .filter((ifNode) => !ifNode.alternate)
         .filter((ifNode) =>

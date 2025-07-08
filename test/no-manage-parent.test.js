@@ -50,6 +50,20 @@ new MyRuleTester().run(name, rule, {
         }
       `,
     },
+    {
+      // TODO: I'm pretty sure this is an anti-pattern, but I'm not totally sure how...
+      // Should be `no-event-handler`? Because we can call `foo` wherever we call `setBar`.
+      // `foo` is internal, so this isn't syncing to an external system.
+      name: "Effect uses prop but deps has state",
+      code: js`
+        function Component({ foo }) {
+          const [bar, setBar] = useState(0);
+          useEffect(() => {
+            foo;
+          }, [bar]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
