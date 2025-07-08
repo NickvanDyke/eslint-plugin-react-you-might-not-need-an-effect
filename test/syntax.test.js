@@ -218,6 +218,18 @@ new MyRuleTester().run(name, rule, {
       errors: 2,
     },
     {
+      name: "Effect anonymous function body",
+      code: js`
+         const DoubleCounter = () => {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(function() { setDoubleCount(count * 2); }, [count]);
+         }
+       `,
+      errors: 1,
+    },
+    {
       name: "React.useEffect",
       code: js`
           function DoubleCounter() {
