@@ -39,6 +39,7 @@ export const rule = {
             .flatMap((ref) =>
               getUpstreamReactVariables(context, ref.identifier),
             )
+            // TODO: Should flag props too, but maybe with a different message?
             .notEmptyEvery((variable) => isState(variable)),
         )
         .forEach((ifNode) => {

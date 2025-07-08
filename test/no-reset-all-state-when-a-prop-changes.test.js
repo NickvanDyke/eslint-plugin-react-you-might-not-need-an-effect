@@ -207,7 +207,6 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          // TODO: Because the initial state is internal, derived state would be a better flag.
           messageId: messages.avoidResettingAllStateWhenAPropChanges,
         },
       ],

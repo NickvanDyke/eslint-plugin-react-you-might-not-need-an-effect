@@ -220,33 +220,10 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          // TODO: Ideally we catch using state as an event handler,
-          // but not sure how to differentiate that
           messageId: messages.avoidPassingLiveStateToParent,
         },
       ],
     },
-    // TODO: Catch in something like "no-managing-parent" - an effect that only references props
-    // {
-    //   name: "Call prop in response to prop change",
-    //   code: js`
-    //     function Form({ isOpen, events }) {
-    //
-    //       useEffect(() => {
-    //         if (!isOpen) {
-    //           // NOTE: Also verifies that we consider 'events' in 'events.onClose' to be a fn ref
-    //           // (It's a MemberExpression under a CallExpression)
-    //           events.onClose();
-    //         }
-    //       }, [isOpen]);
-    //     }
-    //   `,
-    //   errors: [
-    //     {
-    //       messageId: messages.avoidParentChildCoupling,
-    //     },
-    //   ],
-    // },
     {
       name: "From props via member function",
       code: js`

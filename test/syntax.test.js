@@ -552,7 +552,6 @@ new MyRuleTester().run(name, rule, {
             //   ]
             // }
             setFilteredPosts(
-              // TODO: Need to filter out parameter refs before comparing args and deps
               posts.filter(([, value]) => value !== "")
             );
           }, [posts]);
