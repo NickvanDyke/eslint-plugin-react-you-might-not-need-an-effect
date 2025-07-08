@@ -1,13 +1,21 @@
-import { rule } from "../src/no-derived-state.js";
-import { MyRuleTester, js } from "./rule-tester.js";
+import { ESLint } from "eslint";
+import plugin from "../src/index.js";
+import { js } from "./rule-tester.js";
+import assert from "assert";
 
-// Uses taken from the real world, as opposed to contrived examples
-// TODO: Refactor to use entire plugin?
-new MyRuleTester().run("real-world", rule, {
-  valid: [
-    {
-      name: "Managing a timer",
-      code: js`
+// Sanity check that runs the recommended config
+// on common + valid real-world code, as opposed to contrived test cases.
+describe("recommended rules on real-world code", () => {
+  const eslint = new ESLint({
+    overrideConfigFile: true,
+    overrideConfig: [plugin.configs.recommended],
+  });
+
+  describe("should not flag", () => {
+    [
+      {
+        name: "Managing a timer",
+        code: js`
         function Timer() {
           const [seconds, setSeconds] = useState(0);
 
@@ -24,11 +32,10 @@ new MyRuleTester().run("real-world", rule, {
           return <div>{seconds}</div>;
         }
       `,
-    },
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/11
-      name: "Debouncing",
-      code: js`
+      },
+      {
+        name: "Debouncing",
+        code: js`
         function useDebouncedState(value, delay) {
           const [state, setState] = useState(value);
           const [debouncedState, setDebouncedState] = useState(value);
@@ -46,10 +53,10 @@ new MyRuleTester().run("real-world", rule, {
           return [state, debouncedState, setState];
         }
       `,
-    },
-    {
-      name: "Listening for window events",
-      code: js`
+      },
+      {
+        name: "Listening for window events",
+        code: js`
         function WindowSize() {
           const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
 
@@ -68,12 +75,10 @@ new MyRuleTester().run("real-world", rule, {
           return <div>{size.width} x {size.height}</div>;
         }
       `,
-    },
-    {
-      name: "Play/pausing DOM video",
-      // Could technically play/pause the video in the `onClick` handler,
-      // but the use of an effect to sync state is arguably more readable and a valid use.
-      code: js`
+      },
+      {
+        name: "Play/pausing DOM video",
+        code: js`
         function VideoPlayer() {
           const [isPlaying, setIsPlaying] = useState(false);
           const videoRef = useRef();
@@ -92,10 +97,10 @@ new MyRuleTester().run("real-world", rule, {
           </div>
         }
       `,
-    },
-    {
-      name: "Saving to LocalStorage",
-      code: js`
+      },
+      {
+        name: "Saving to LocalStorage",
+        code: js`
         function Notes() {
           const [notes, setNotes] = useState(() => {
             const savedNotes = localStorage.getItem('notes');
@@ -113,10 +118,10 @@ new MyRuleTester().run("real-world", rule, {
           />
         }
       `,
-    },
-    {
-      name: "Logging/Analytics",
-      code: js`
+      },
+      {
+        name: "Logging/Analytics",
+        code: js`
         function Nav() {
           const [page, setPage] = useState('home');
 
@@ -133,27 +138,23 @@ new MyRuleTester().run("real-world", rule, {
           )
         }
       `,
-    },
-    {
-      // This might be a code smell, but people do it
-      name: "JSON.stringifying in deps",
-      code: js`
+      },
+      {
+        name: "JSON.stringifying in deps",
+        code: js`
         function Feed() {
           const [posts, setPosts] = useState([]);
           const [scrollPosition, setScrollPosition] = useState(0);
 
           useEffect(() => {
             setScrollPosition(0);
-            // We can't be sure JSON.stringify is pure, so we can't warn about this.
-            // TODO: Technically we could check against known pure functions.
           }, [JSON.stringify(posts)]);
         }
       `,
-    },
-    {
-      // Taken from https://github.com/linhnguyen-gt/react-native-phone-number-input/blob/b5e6dc652fa8a03609efb72607dc6866f5556ca3/src/countryPickerModal/CountryPicker.tsx
-      name: "CountryPicker",
-      code: js`
+      },
+      {
+        name: "CountryPicker",
+        code: js`
         function CountryPicker({ withEmoji }) {
           const { translation, getCountries } = useContext();
 
@@ -172,17 +173,13 @@ new MyRuleTester().run("real-world", rule, {
             return () => {
               cancel = true;
             };
-          },
-            // Important to the test: Leads us to find useStates to check their initializers
-            [translation, withEmoji]
-          );
+          }, [translation, withEmoji]);
         }
       `,
-    },
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/10
-      name: "navigation.setOptions",
-      code: js`
+      },
+      {
+        name: "navigation.setOptions",
+        code: js`
         import { useNavigation } from '@react-navigation/native';
         import { useState, useLayoutEffect } from 'react';
 
@@ -197,11 +194,10 @@ new MyRuleTester().run("real-world", rule, {
           }, [navigation, route]);
         }
       `,
-    },
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/9#issuecomment-2913950378
-      name: "Keyboard state listener",
-      code: js`
+      },
+      {
+        name: "Keyboard state listener",
+        code: js`
         import { useEffect, useState } from 'react';
         import keyboardReducer from './reducers';
 
@@ -232,6 +228,17 @@ new MyRuleTester().run("real-world", rule, {
 
         useKeyboardStore.setKeyboardState = setKeyboardState;
       `,
-    },
-  ],
+      },
+    ].forEach(({ name, code }) => {
+      it(name, async () => {
+        const results = await eslint.lintText(code);
+        const messages = results[0].messages;
+        assert.strictEqual(
+          messages.length,
+          0,
+          `Expected no lint errors for: ${name}, but got: ${JSON.stringify(messages)}`,
+        );
+      });
+    });
+  });
 });
