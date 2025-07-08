@@ -70,6 +70,8 @@ export const rule = {
                 ),
               ),
             );
+          // In this case the derived state will always be in sync,
+          // thus it could be computed directly during render
           const isStateSetterCalledOnce =
             ref.resolved.references.length - 1 === 1;
 

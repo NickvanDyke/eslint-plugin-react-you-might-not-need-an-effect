@@ -49,6 +49,10 @@ export const rule = {
         .filter((ref) => isStateSetter(context, ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
+          // TODO: I think this simplifies to "args are all literals"...
+          // But the upstream bit also catches intermediate variables that are ultimately literals.
+          // We could either remove that and just check `arg.type === "Literal"`,
+          // or could make this more readable by returning 'literal' | 'internal' | 'external' from the util functions...
           const argsRefs = callExpr.arguments.flatMap((arg) =>
             getDownstreamRefs(context, arg),
           );
