@@ -1,30 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 import { rule, name, messages } from "../src/no-derived-state.js";
 
-// TODO: Should maybe do away with this... it helps writing but not readable
-const code = ({
-  componentDeclaration = js`const DoubleCounter = () =>`,
-  effectBody = js`setDoubleCount(count * 2)`,
-  effectDeps = js`[count]`,
-}) => js`
-  ${componentDeclaration} {
-    const [count, setCount] = useState(0);
-    const [doubleCount, setDoubleCount] = useState(0);
-
-    useEffect(() => ${effectBody}, ${effectDeps});
-
-    return (
-      <div>
-        <p>Count: {count}</p>
-        <p>Double Count: {doubleCount}</p>
-      </div>
-    );
-  }
-`;
-
 // Syntax variations that are semantically equivalent
-// TODO: Could dynamically generate variations: https://mochajs.org/#dynamically-generating-tests
-// Could be overkill; they shouldn't affect each other (supposedly, but I guess that's the point of tests!)
 new MyRuleTester().run(name, rule, {
   valid: [
     {
@@ -167,16 +144,26 @@ new MyRuleTester().run(name, rule, {
   invalid: [
     {
       name: "Function component",
-      code: code({
-        componentDeclaration: js`function DoubleCounter()`,
-      }),
+      code: js`
+         function DoubleCounter() {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => setDoubleCount(count * 2), [count]);
+         }
+       `,
       errors: 1,
     },
     {
       name: "Arrow function component",
-      code: code({
-        componentDeclaration: js`const DoubleCounter = () =>`,
-      }),
+      code: js`
+         const DoubleCounter = () => {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => setDoubleCount(count * 2), [count]);
+         }
+       `,
       errors: 1,
     },
     {
@@ -197,24 +184,38 @@ new MyRuleTester().run(name, rule, {
     },
     {
       name: "Effect one-liner body",
-      code: code({
-        componentDeclaration: js`const AvoidDuplicateTest = () =>`,
-        effectBody: js`setDoubleCount(count * 2)`,
-      }),
+      code: js`
+         const AvoidDuplicateTest = () => {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => setDoubleCount(count * 2), [count]);
+         }
+       `,
       errors: 1,
     },
     {
       name: "Effect single-statement body",
-      code: code({
-        effectBody: js`{ setDoubleCount(count * 2); }`,
-      }),
+      code: js`
+         const DoubleCounter = () => {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => { setDoubleCount(count * 2); }, [count]);
+         }
+       `,
       errors: 1,
     },
     {
       name: "Effect multi-statement body",
-      code: code({
-        effectBody: js`{ setDoubleCount(count * 2); setDoubleCount(count * 2); }`,
-      }),
+      code: js`
+         const DoubleCounter = () => {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => { setDoubleCount(count * 2); setDoubleCount(count * 2); }, [count]);
+         }
+       `,
       errors: 2,
     },
     {
@@ -259,38 +260,50 @@ new MyRuleTester().run(name, rule, {
     },
     {
       name: "Non-destructured props",
-      code: code({
-        componentDeclaration: js`function DoubleCounter(props)`,
-        effectBody: js`setDoubleCount(props.count * 2)`,
-        effectDeps: js`[props.count]`,
-      }),
+      code: js`
+         function DoubleCounter(props) {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => setDoubleCount(props.count * 2), [props.count]);
+         }
+       `,
       errors: 1,
     },
     {
       name: "Destructured props",
-      code: code({
-        componentDeclaration: js`function DoubleCounter({ propCount })`,
-        effectBody: js`setDoubleCount(propCount * 2)`,
-        effectDeps: js`[propCount]`,
-      }),
+      code: js`
+         function DoubleCounter({ propCount }) {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => setDoubleCount(propCount * 2), [propCount]);
+         }
+       `,
       errors: 1,
     },
     {
       name: "Renamed destructured props",
-      code: code({
-        componentDeclaration: js`function DoubleCounter({ count: countProp })`,
-        effectBody: js`setDoubleCount(countProp * 2)`,
-        effectDeps: js`[countProp]`,
-      }),
+      code: js`
+         function DoubleCounter({ count: countProp }) {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => setDoubleCount(countProp * 2), [countProp]);
+         }
+       `,
       errors: 1,
     },
     {
       name: "Doubly deep MemberExpression in effect",
-      code: code({
-        componentDeclaration: js`function DoubleCounter(props)`,
-        effectBody: js`setDoubleCount(props.nested.count * 2)`,
-        effectDeps: js`[props.nested.count]`,
-      }),
+      code: js`
+         function DoubleCounter(props) {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => setDoubleCount(props.nested.count * 2), [props.nested.count]);
+         }
+       `,
       errors: 1,
     },
     {
@@ -323,30 +336,36 @@ new MyRuleTester().run(name, rule, {
     {
       // `exhaustive-deps` doesn't enforce member access in the deps
       name: "Member access in effect body but not in deps",
-      code: code({
-        componentDeclaration: js`function DoubleCounter(props)`,
-        effectBody: js`setDoubleCount(props.count * 2)`,
-        effectDeps: js`[props]`,
-      }),
+      code: js`
+         function DoubleCounter(props) {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => setDoubleCount(props.count * 2), [props]);
+         }
+       `,
       errors: 1,
     },
     {
       name: "Doubly nested scopes in effect body",
-      code: code({
-        effectBody: js`
-            {
-              if (count > 10) {
-                if (count > 100) {
-                  setDoubleCount(count * 4);
-                } else {
-                  setDoubleCount(count * 2);
-                }
-              } else {
-                setDoubleCount(count);
-              }
-            }
-          `,
-      }),
+      code: js`
+         const DoubleCounter = () => {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => {
+             if (count > 10) {
+               if (count > 100) {
+                 setDoubleCount(count * 4);
+               } else {
+                 setDoubleCount(count * 2);
+               }
+             } else {
+               setDoubleCount(count);
+             }
+           }, [count]);
+         }
+       `,
       errors: 3,
     },
     {
