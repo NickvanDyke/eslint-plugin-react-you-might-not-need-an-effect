@@ -20,8 +20,8 @@ describe("recommended config", () => {
 
   it("flat", async () => {
     const results = await new ESLint({
-      // Use `overrideConfig` so it ignores the project's config
-      // FIX: Seems to merge, not replace
+      // Use `overrideConfig` and `overrideConfigFile: true` to ignore the project's config
+      overrideConfigFile: true,
       overrideConfig: [plugin.configs.recommended],
     }).lintText(code);
 
