@@ -6,8 +6,10 @@ import {
   isDirectCall,
   isPropCallback,
   isHOCProp,
+  getUpstreamReactVariables,
+  isState,
 } from "./util/react.js";
-import { getCallExpr } from "./util/ast.js";
+import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
 
 export const name = "no-pass-live-state-to-parent";
 export const messages = {
@@ -24,7 +26,7 @@ export const rule = {
     schema: [],
     messages: {
       [messages.avoidPassingLiveStateToParent]:
-        "Avoid passing live state to parent components in an effect. Instead, lift the state to the parent component and pass it down as a prop.",
+        "Avoid passing live state to parents in an effect. Instead, lift the state to the parent and pass it down to the child as a prop.",
     },
   },
   create: (context) => ({
@@ -40,11 +42,15 @@ export const rule = {
         .filter(
           (ref) => isPropCallback(context, ref) && !isHOCProp(ref.resolved),
         )
-        .filter((ref) => getCallExpr(ref).arguments.length > 0)
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
-          // TODO: Unsure whether we should care about other things, like whether they're in deps...
-          if (callExpr.arguments.some((arg) => arg.type !== "Literal")) {
+          const argsUpstreamVariables = callExpr.arguments
+            .flatMap((arg) => getDownstreamRefs(context, arg))
+            .flatMap((ref) =>
+              getUpstreamReactVariables(context, ref.identifier),
+            );
+
+          if (argsUpstreamVariables.some((variable) => isState(variable))) {
             context.report({
               node: callExpr,
               messageId: messages.avoidPassingLiveStateToParent,

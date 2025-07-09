@@ -53,12 +53,12 @@ export const rule = {
           // But the upstream bit also catches intermediate variables that are ultimately literals.
           // We could either remove that and just check `arg.type === "Literal"`,
           // or could make this more readable by returning 'literal' | 'internal' | 'external' from the util functions...
-          const argsRefs = callExpr.arguments.flatMap((arg) =>
-            getDownstreamRefs(context, arg),
-          );
-          const argsUpstreamVariables = argsRefs.flatMap((ref) =>
-            getUpstreamReactVariables(context, ref.identifier),
-          );
+
+          const argsUpstreamVariables = callExpr.arguments
+            .flatMap((arg) => getDownstreamRefs(context, arg))
+            .flatMap((ref) =>
+              getUpstreamReactVariables(context, ref.identifier),
+            );
           const isAllArgsInternal = argsUpstreamVariables.notEmptyEvery(
             (variable) =>
               isState(variable) || (isProp(variable) && !isHOCProp(variable)),

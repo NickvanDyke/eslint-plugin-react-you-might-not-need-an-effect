@@ -53,6 +53,13 @@ export const isUseState = (node) =>
     return !el || el.type === "Identifier";
   });
 
+export const isUseRef = (node) =>
+  node.type === "VariableDeclarator" &&
+  node.init &&
+  node.init.type === "CallExpression" &&
+  node.init.callee.name === "useRef" &&
+  node.id.type === "Identifier";
+
 export const isUseEffect = (node) =>
   node.type === "CallExpression" &&
   ((node.callee.type === "Identifier" &&
@@ -123,6 +130,8 @@ export const isPropCallback = (context, ref) =>
 // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
 export const isState = (variable) =>
   variable.defs.some((def) => isUseState(def.node));
+export const isRef = (variable) =>
+  variable.defs.some((def) => isUseRef(def.node));
 export const isProp = (variable) =>
   variable.defs.some(
     (def) =>

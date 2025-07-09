@@ -14,7 +14,31 @@ new MyRuleTester().run(name, rule, {
       `,
     },
     {
-      name: "No-arg prop callback in response to internal state change",
+      name: "Pass live external state",
+      code: js`
+        const Child = ({ onFetched }) => {
+          const data = useSomeAPI();
+
+          useEffect(() => {
+            onFetched(data);
+          }, [onFetched, data]);
+        }
+      `,
+    },
+    {
+      // No idea why someone would do this, so we only check for passing state, but maybe there's a less contrived pattern.
+      // `no-manage-parent` would catch this anyway.
+      name: "Pass prop to parent",
+      code: js`
+        const Child = ({ text, onTextChanged }) => {
+          useEffect(() => {
+            onTextChanged(text);
+          }, [text, onTextChanged]);
+        }
+      `,
+    },
+    {
+      name: "No-arg prop callback",
       code: js`
         function Form({ onClose }) {
           const [name, setName] = useState();
@@ -31,11 +55,6 @@ new MyRuleTester().run(name, rule, {
           )
         }
       `,
-      errors: [
-        {
-          messageId: messages.avoidPassingLiveStateToParent,
-        },
-      ],
     },
     {
       // This might be an anti-pattern in the first place...
@@ -49,7 +68,7 @@ new MyRuleTester().run(name, rule, {
       `,
     },
     {
-      name: "Prop from library HOC used internally",
+      name: "Pass internal state to HOC prop",
       code: js`
         import { withRouter } from 'react-router-dom';
 
@@ -63,7 +82,7 @@ new MyRuleTester().run(name, rule, {
       `,
     },
     {
-      name: "Prop from library HOC used externally",
+      name: "Pass external state to HOC prop",
       code: js`
         import { withRouter } from 'react-router-dom';
 
@@ -72,31 +91,31 @@ new MyRuleTester().run(name, rule, {
 
           useEffect(() => {
             if (data.error) {
-              history.push('/error-page');
+              history.push(data.error);
             }
           }, [data]);
         });
       `,
     },
-  ],
-  invalid: [
     {
-      name: "Pass live internal fetched state",
+      // TODO: Definitely an anti-pattern, but may fit better elsewhere
+      // because refs are not quite state, e.g. don't cause re-renders.
+      // However they *are* local to the component...
+      name: "Pass ref to parent",
       code: js`
-        const Child = ({ onFetched }) => {
-          const [data, setData] = useState();
+        const Child = ({ onRef }) => {
+          const ref = useRef();
 
           useEffect(() => {
-            onFetched(data);
-          }, [onFetched, data]);
+            onRef(ref);
+          }, [onRef, ref]);
+
+          return <div ref={ref}>Child</div>;
         }
       `,
-      errors: [
-        {
-          messageId: messages.avoidPassingLiveStateToParent,
-        },
-      ],
     },
+  ],
+  invalid: [
     {
       name: "Pass live internal state",
       code: js`
@@ -122,15 +141,47 @@ new MyRuleTester().run(name, rule, {
       ],
     },
     {
-      name: "Pass live derived internal state",
+      name: "Pass live internal state AND external state",
       code: js`
-        const Child = ({ onFetched }) => {
-          const [data, setData] = useState();
+        const Child = ({ onTextChanged }) => {
+          const [text, setText] = useState();
+          const data = useSomeAPI();
 
           useEffect(() => {
-            const firstElement = data[0];
-            onFetched(firstElement);
-          }, [onFetched, data]);
+            onTextChanged(text, data);
+          }, [onTextChanged, text, data]);
+
+          return (
+            <input
+              type="text"
+              onChange={(e) => setText(e.target.value)}
+            />
+          );
+        }
+      `,
+      errors: [
+        {
+          messageId: messages.avoidPassingLiveStateToParent,
+        },
+      ],
+    },
+    {
+      name: "Pass live derived internal state",
+      code: js`
+        const Child = ({ onTextChanged }) => {
+          const [text, setText] = useState();
+
+          useEffect(() => {
+            const firstChar = text[0];
+            onTextChanged(firstChar);
+          }, [onTextChanged, text]);
+
+          return (
+            <input
+              type="text"
+              onChange={(e) => setText(e.target.value)}
+            />
+          );
         }
       `,
       errors: [
@@ -159,42 +210,7 @@ new MyRuleTester().run(name, rule, {
       ],
     },
     {
-      name: "Pass live external state",
-      code: js`
-        const Child = ({ onFetched }) => {
-          const data = useSomeAPI();
-
-          useEffect(() => {
-            onFetched(data);
-          }, [onFetched, data]);
-        }
-      `,
-      errors: [
-        {
-          messageId: messages.avoidPassingLiveStateToParent,
-        },
-      ],
-    },
-    {
-      name: "Pass derived live external state",
-      code: js`
-        const Child = ({ onFetched }) => {
-          const data = useSomeAPI();
-          const firstElement = data[0];
-
-          useEffect(() => {
-            onFetched(firstElement);
-          }, [onFetched, firstElement]);
-        }
-      `,
-      errors: [
-        {
-          messageId: messages.avoidPassingLiveStateToParent,
-        },
-      ],
-    },
-    {
-      name: "Pass final external state",
+      name: "Pass final internal state",
       code: js`
         function Form({ onSubmit }) {
           const [name, setName] = useState();
@@ -220,24 +236,6 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidPassingLiveStateToParent,
-        },
-      ],
-    },
-    {
-      name: "From props via member function",
-      code: js`
-        function DoubleList({ list }) {
-          const [doubleList, setDoubleList] = useState([]);
-
-          useEffect(() => {
-            setDoubleList(list.concat(list));
-          }, [list]);
-        }
-      `,
-      errors: [
-        {
-          // We consider `list.concat` to essentially be a prop callback
           messageId: messages.avoidPassingLiveStateToParent,
         },
       ],
