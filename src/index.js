@@ -5,6 +5,7 @@ import * as noPassLiveStateToParent from "./no-pass-live-state-to-parent.js";
 import * as noInitializeState from "./no-initialize-state.js";
 import * as noChainStateUpdates from "./no-chain-state-updates.js";
 import * as noDerivedState from "./no-derived-state.js";
+import * as noPassDataToParent from "./no-pass-data-to-parent.js";
 import * as noManageParent from "./no-manage-parent.js";
 import globals from "globals";
 
@@ -19,10 +20,11 @@ const plugin = {
       noResetAllStateWhenAPropChanges.rule,
     [noEventHandler.name]: noEventHandler.rule,
     [noPassLiveStateToParent.name]: noPassLiveStateToParent.rule,
+    [noPassDataToParent.name]: noPassDataToParent.rule,
+    [noManageParent.name]: noManageParent.rule,
     [noInitializeState.name]: noInitializeState.rule,
     [noChainStateUpdates.name]: noChainStateUpdates.rule,
     [noDerivedState.name]: noDerivedState.rule,
-    [noManageParent.name]: noManageParent.rule,
   },
 };
 

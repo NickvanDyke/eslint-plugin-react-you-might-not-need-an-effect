@@ -51,7 +51,7 @@ new MyRuleTester().run(name, rule, {
           }, [isOpen]);
 
           return (
-            <button onClick={() => setIsOpen(false)}>Submit</button>
+            <button onClick={() => setIsOpen(false)}>Close</button>
           )
         }
       `,
