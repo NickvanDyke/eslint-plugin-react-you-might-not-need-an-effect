@@ -98,8 +98,8 @@ new MyRuleTester().run(name, rule, {
           const ref = useRef();
 
           useEffect(() => {
-            onRef(ref);
-          }, [onRef, ref]);
+            onRef(ref.current);
+          }, [onRef, ref.current]);
 
           return <div ref={ref}>Child</div>;
         }
