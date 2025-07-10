@@ -52,7 +52,7 @@ export const rule = {
             getDownstreamRefs(context, arg),
           );
           const argsUpstreamVariables = argsRefs.flatMap((ref) =>
-            getUpstreamReactVariables(context, ref.identifier),
+            getUpstreamReactVariables(context, ref.resolved),
           );
           const isAllArgsInternal = argsUpstreamVariables.notEmptyEvery(
             (variable) =>
@@ -65,8 +65,8 @@ export const rule = {
             .notEmptyEvery((argRef) =>
               depsRefs.some((depRef) =>
                 arraysEqual(
-                  getUpstreamReactVariables(context, argRef.identifier),
-                  getUpstreamReactVariables(context, depRef.identifier),
+                  getUpstreamReactVariables(context, argRef.resolved),
+                  getUpstreamReactVariables(context, depRef.resolved),
                 ),
               ),
             );

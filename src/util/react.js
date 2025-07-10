@@ -117,12 +117,12 @@ export const isFnRef = (ref) => getCallExpr(ref) !== undefined;
 // And in the case of a prop, we can't differentiate state mutations from callbacks anyway.
 export const isStateSetter = (context, ref) =>
   isFnRef(ref) &&
-  getUpstreamReactVariables(context, ref.identifier).notEmptyEvery((variable) =>
+  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
     isState(variable),
   );
 export const isPropCallback = (context, ref) =>
   isFnRef(ref) &&
-  getUpstreamReactVariables(context, ref.identifier).notEmptyEvery((variable) =>
+  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
     isProp(variable),
   );
 
@@ -153,7 +153,7 @@ const getDeclNode = (node) =>
     : node;
 
 export const getUseStateNode = (context, ref) => {
-  return getUpstreamReactVariables(context, ref.identifier)
+  return getUpstreamReactVariables(context, ref.resolved)
     .find((variable) => isState(variable))
     ?.defs.find((def) => isUseState(def.node))?.node;
 };
@@ -260,10 +260,10 @@ const findContainingNode = (node) => {
   }
 };
 
-export const getUpstreamReactVariables = (context, node) =>
+export const getUpstreamReactVariables = (context, variable) =>
   getUpstreamVariables(
     context,
-    node,
+    variable,
     // Stop at the *usage* of `useState` - don't go up to the `useState` variable.
     // Not needed for props - they don't go "too far".
     // We could remove this and check for the `useState` variable instead,

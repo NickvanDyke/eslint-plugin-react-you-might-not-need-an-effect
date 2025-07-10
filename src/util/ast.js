@@ -33,31 +33,28 @@ export const findDownstreamNodes = (context, topNode, type) => {
 
 export const getUpstreamVariables = (
   context,
-  node,
+  variable,
   filter,
   visited = new Set(),
 ) => {
-  if (visited.has(node)) {
+  if (visited.has(variable)) {
     return [];
   }
 
-  visited.add(node);
-
-  const variable = findVariable(context.sourceCode.getScope(node), node);
-  if (!variable) {
-    // I think this only happens when:
-    // 1. There's genuinely no variable, i.e. `node` is a literal
-    // 2. Import statement is missing
-    // 3. ESLint globals are misconfigured
-    return [];
-  }
+  visited.add(variable);
 
   const upstreamVariables = variable.defs
     .filter((def) => !!def.node.init)
     .filter((def) => filter(def.node))
-    .flatMap((def) => findDownstreamNodes(context, def.node.init, "Identifier"))
-    .flatMap((identifier) =>
-      getUpstreamVariables(context, identifier, filter, visited),
+    .flatMap((def) => getDownstreamRefs(context, def.node.init))
+    .map((ref) => ref.resolved)
+    // I think this only happens when:
+    // 1. There's genuinely no variable, i.e. `node` is a literal
+    // 2. Import statement is missing
+    // 3. ESLint globals are misconfigured
+    .filter(Boolean)
+    .flatMap((variable) =>
+      getUpstreamVariables(context, variable, filter, visited),
     );
 
   // Ultimately return only leaf variables

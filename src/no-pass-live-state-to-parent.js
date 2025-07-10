@@ -46,9 +46,7 @@ export const rule = {
           const callExpr = getCallExpr(ref);
           const argsUpstreamVariables = callExpr.arguments
             .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) =>
-              getUpstreamReactVariables(context, ref.identifier),
-            );
+            .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved));
 
           if (argsUpstreamVariables.some((variable) => isState(variable))) {
             context.report({

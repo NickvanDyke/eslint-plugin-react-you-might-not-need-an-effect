@@ -37,7 +37,7 @@ export const rule = {
       if (!effectFnRefs || !depsRefs) return;
 
       const isAllDepsInternal = depsRefs
-        .flatMap((ref) => getUpstreamReactVariables(context, ref.identifier))
+        .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved))
         .notEmptyEvery(
           (variable) =>
             isState(variable) || (isProp(variable) && !isHOCProp(variable)),
@@ -56,9 +56,7 @@ export const rule = {
 
           const argsUpstreamVariables = callExpr.arguments
             .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) =>
-              getUpstreamReactVariables(context, ref.identifier),
-            );
+            .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved));
           const isAllArgsInternal = argsUpstreamVariables.notEmptyEvery(
             (variable) =>
               isState(variable) || (isProp(variable) && !isHOCProp(variable)),

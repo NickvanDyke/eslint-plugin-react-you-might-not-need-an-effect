@@ -36,9 +36,7 @@ export const rule = {
         .filter((ifNode) => !ifNode.alternate)
         .filter((ifNode) =>
           getDownstreamRefs(context, ifNode.test)
-            .flatMap((ref) =>
-              getUpstreamReactVariables(context, ref.identifier),
-            )
+            .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved))
             // TODO: Should flag props too, but maybe with a different message?
             .notEmptyEvery((variable) => isState(variable)),
         )
