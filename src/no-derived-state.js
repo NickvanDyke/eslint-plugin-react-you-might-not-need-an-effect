@@ -10,9 +10,9 @@ import {
   isHOCProp,
   getUpstreamReactVariables,
   isState,
+  countCalls,
 } from "./util/react.js";
 import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
-import { arraysEqual } from "./util/javascript.js";
 
 export const name = "no-derived-state";
 export const messages = {
@@ -48,36 +48,26 @@ export const rule = {
           const stateName = (
             useStateNode.id.elements[0] ?? useStateNode.id.elements[1]
           )?.name;
-          const argsRefs = callExpr.arguments.flatMap((arg) =>
-            getDownstreamRefs(context, arg),
-          );
-          const argsUpstreamVariables = argsRefs.flatMap((ref) =>
+
+          const argsUpstreamVars = callExpr.arguments
+            .flatMap((arg) => getDownstreamRefs(context, arg))
+            .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved));
+          const depsUpstreamVars = depsRefs.flatMap((ref) =>
             getUpstreamReactVariables(context, ref.resolved),
           );
-          const isAllArgsInternal = argsUpstreamVariables.notEmptyEvery(
+          const isAllArgsInternal = argsUpstreamVars.notEmptyEvery(
             (variable) =>
               isState(variable) || (isProp(variable) && !isHOCProp(variable)),
           );
-          const isAllArgsInDeps = argsRefs
-            .filter((ref) =>
-              ref.resolved.defs.every((def) => def.type !== "Parameter"),
-            )
-            .notEmptyEvery((argRef) =>
-              depsRefs.some((depRef) =>
-                arraysEqual(
-                  getUpstreamReactVariables(context, argRef.resolved),
-                  getUpstreamReactVariables(context, depRef.resolved),
-                ),
-              ),
-            );
-          // In this case the derived state will always be in sync,
-          // thus it could be computed directly during render
-          const isStateSetterCalledOnce =
-            ref.resolved.references.length - 1 === 1;
+          const isAllArgsInDeps = argsUpstreamVars.notEmptyEvery((argVar) =>
+            depsUpstreamVars.some((depVar) => argVar.name === depVar.name),
+          );
 
           if (
             isAllArgsInternal ||
-            (isAllArgsInDeps && isStateSetterCalledOnce)
+            // In this case the derived state will always be in sync,
+            // thus it could be computed directly during render
+            (isAllArgsInDeps && countCalls(ref) === 1)
           ) {
             context.report({
               node: callExpr,

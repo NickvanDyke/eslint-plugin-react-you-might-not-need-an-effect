@@ -242,8 +242,10 @@ const countUseStates = (context, componentNode) => {
   return count;
 };
 
-export const countStateSetterCalls = (stateSetterRef) =>
-  stateSetterRef.resolved.references.length - 1; // -1 for the initial declaration
+export const countCalls = (ref) =>
+  ref.resolved.references.filter(
+    (ref) => ref.identifier.parent.type === "CallExpression",
+  ).length;
 
 // Returns the component or custom hook that contains the `useEffect` node
 const findContainingNode = (node) => {

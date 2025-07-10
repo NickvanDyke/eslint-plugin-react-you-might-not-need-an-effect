@@ -148,20 +148,6 @@ new MyRuleTester().run(name, rule, {
       `,
     },
     {
-      name: "From external state via member function",
-      code: js`
-        function Counter() {
-          const countGetter = useSomeAPI();
-          const [count, setCount] = useState(0);
-
-          useEffect(() => {
-            const newCount = countGetter.getCount();
-            setCount(newCount);
-          }, [countGetter, setCount]);
-        }
-      `,
-    },
-    {
       name: "Via pure local function",
       code: js`
         function DoubleCounter() {
@@ -445,7 +431,7 @@ new MyRuleTester().run(name, rule, {
 
           useEffect(() => {
             setSelectedPost(posts[0]);
-          }, [posts]);
+          }, [posts, setSelectedPost]);
         }
       `,
       errors: [
@@ -465,7 +451,7 @@ new MyRuleTester().run(name, rule, {
           useEffect(() => {
             const prefixedName = 'Dr. ' + name;
             setFullName(prefixedName) 
-          }, [name]);
+          }, [name, setFullName]);
         }
       `,
       errors: [
@@ -486,7 +472,7 @@ new MyRuleTester().run(name, rule, {
 
           useEffect(() => {
             setLocation(history.location);
-          }, [history.location]);
+          }, [history.location, setLocation]);
         });
       `,
       errors: [

@@ -8,6 +8,7 @@ import * as noDerivedState from "./no-derived-state.js";
 import * as noPassDataToParent from "./no-pass-data-to-parent.js";
 import * as noManageParent from "./no-manage-parent.js";
 import globals from "globals";
+import "./util/javascript.js";
 
 const plugin = {
   meta: {
