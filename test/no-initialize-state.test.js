@@ -17,6 +17,42 @@ new MyRuleTester().run(name, rule, {
         }
       `,
     },
+    {
+      name: "To literal in IIFE inside callback",
+      code: js`
+        import { useEffect, useState } from 'react';
+
+        export const MyComponent = () => {
+          const [state, setState] = useState();
+
+          useEffect(() => {
+            window.addEventListener('load', () => {
+              (async () => {
+                setState('Loaded');
+              })();
+            });
+          }, []);
+        };
+      `,
+    },
+    {
+      name: "To literal in callback inside IIFE",
+      code: js`
+        import { useEffect, useState } from 'react';
+
+        export const MyComponent = () => {
+          const [state, setState] = useState();
+
+          useEffect(() => {
+            (async () => {
+              window.addEventListener('load', () => {
+                setState('Loaded');
+              });
+            })();
+          }, []);
+        };
+      `,
+    },
   ],
   invalid: [
     {

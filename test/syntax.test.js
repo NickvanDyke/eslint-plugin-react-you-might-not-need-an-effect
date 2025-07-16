@@ -104,42 +104,6 @@ new MyRuleTester().run(name, rule, {
         };
       `,
     },
-    {
-      name: "Internal IIFE inside callback",
-      code: js`
-        import { useEffect, useState } from 'react';
-
-        export const MyComponent = () => {
-          const [state, setState] = useState();
-
-          useEffect(() => {
-            window.addEventListener('load', () => {
-              (async () => {
-                setState('Loaded');
-              })();
-            });
-          }, []);
-        };
-      `,
-    },
-    {
-      name: "Internal callback inside IIFE",
-      code: js`
-        import { useEffect, useState } from 'react';
-
-        export const MyComponent = () => {
-          const [state, setState] = useState();
-
-          useEffect(() => {
-            (async () => {
-              window.addEventListener('load', () => {
-                setState('Loaded');
-              });
-            })();
-          }, []);
-        };
-      `,
-    },
   ],
   invalid: [
     {
