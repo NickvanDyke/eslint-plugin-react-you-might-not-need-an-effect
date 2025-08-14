@@ -60,15 +60,15 @@ export const isUseRef = (node) =>
   node.init.callee.name === "useRef" &&
   node.id.type === "Identifier";
 
+// NOTE: Does not include `useLayoutEffect`.
+// When used correctly, it interacts with the DOM = external system = (probably) valid effect.
+// When used incorrectly, it's probably too difficult to accurately analyze anyway.
 export const isUseEffect = (node) =>
   node.type === "CallExpression" &&
-  ((node.callee.type === "Identifier" &&
-    (node.callee.name === "useEffect" ||
-      node.callee.name === "useLayoutEffect")) ||
+  ((node.callee.type === "Identifier" && node.callee.name === "useEffect") ||
     (node.callee.type === "MemberExpression" &&
       node.callee.object.name === "React" &&
-      (node.callee.property.name === "useEffect" ||
-        node.callee.property.name === "useLayoutEffect")));
+      node.callee.property.name === "useEffect"));
 
 export const getEffectFn = (node) => {
   if (!isUseEffect(node) || node.arguments.length < 1) {

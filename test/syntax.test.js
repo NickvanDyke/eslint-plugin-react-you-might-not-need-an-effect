@@ -5,6 +5,27 @@ import { rule, name, messages } from "../src/no-derived-state.js";
 new MyRuleTester().run(name, rule, {
   valid: [
     {
+      name: "useLayoutEffect",
+      code: js`
+          function DoubleCounter() {
+            const ref = useRef();
+            const [count, setCount] = useState(0);
+            const [doubleCount, setDoubleCount] = useState(0);
+
+            useLayoutEffect(() => {
+              if (count == 0) {
+                ref.current?.focus();
+              }
+            }, [count]);
+
+            return (
+              <input ref={ref} value={count} />
+            )
+          }
+        `,
+      errors: 1,
+    },
+    {
       name: "Two components with overlapping names",
       // Not a super realistic example
       code: js`
@@ -202,20 +223,6 @@ new MyRuleTester().run(name, rule, {
             const [doubleCount, setDoubleCount] = useState(0);
 
             React.useEffect(() => {
-              setDoubleCount(count * 2);
-            }, [count]);
-          }
-        `,
-      errors: 1,
-    },
-    {
-      name: "useLayoutEffect",
-      code: js`
-          function DoubleCounter() {
-            const [count, setCount] = useState(0);
-            const [doubleCount, setDoubleCount] = useState(0);
-
-            useLayoutEffect(() => {
               setDoubleCount(count * 2);
             }, [count]);
           }
