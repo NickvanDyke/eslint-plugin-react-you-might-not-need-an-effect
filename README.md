@@ -68,9 +68,9 @@ The plugin will have more information to act upon when you pass the correct depe
 | `no-empty-effect` | Disallow empty effects. | — | 🟡 |
 
 
-## ⚠️ Limitations
+## ⚠️ Caveats
 
-This plugin aims to minimize false positives and accepts that some false negatives are inevitable — see the [tests](./test) for (in)valid examples. But the ways to (mis)use an effect are practically endless; if you encounter unexpected behavior or edge cases in real-world usage, please [open an issue](https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/new) with details about your scenario. Your feedback helps improve the plugin for everyone!
+The ways to (mis)use an effect are practically endless — see the [tests](./test) for (in)valid examples. If you encounter unexpected behavior in real-world usage, please [open an issue](https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/new). Your feedback helps improve the plugin for everyone!
 
 ## 📖 Learn More
 
