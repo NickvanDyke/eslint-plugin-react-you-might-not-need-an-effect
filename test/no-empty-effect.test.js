@@ -13,18 +13,23 @@ new MyRuleTester().run(name, rule, {
         }
       `,
     },
+  ],
+  invalid: [
     {
-      name: "Effect without function",
+      name: "Effect with no args",
       code: js`
         function Component() {
           useEffect();
         }
       `,
+      errors: [
+        {
+          messageId: messages.avoidEmptyEffect,
+        },
+      ],
     },
-  ],
-  invalid: [
     {
-      name: "Empty effect",
+      name: "Empty effect body",
       code: js`
         function Component() {
           useEffect(() => {}, []);

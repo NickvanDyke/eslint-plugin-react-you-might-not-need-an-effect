@@ -18,9 +18,11 @@ export const rule = {
   create: (context) => ({
     CallExpression: (node) => {
       if (!isUseEffect(node)) return;
-      const effectFnRefs = getEffectFnRefs(context, node);
 
-      if (effectFnRefs?.length === 0) {
+      if (
+        node.arguments?.length === 0 ||
+        getEffectFnRefs(context, node)?.length === 0
+      ) {
         // Hopefully it's obvious the effect can be removed.
         // More a follow-up for once they fix/remove other issues.
         context.report({
