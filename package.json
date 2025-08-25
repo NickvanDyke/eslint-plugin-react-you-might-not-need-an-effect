@@ -52,7 +52,7 @@
     "simple-git-hooks": "^2.13.0"
   },
   "peerDependencies": {
-    "eslint": ">=7.0.0"
+    "eslint": ">=8.40.0"
   },
   "packageManager": "yarn@4.6.0",
   "simple-git-hooks": {
