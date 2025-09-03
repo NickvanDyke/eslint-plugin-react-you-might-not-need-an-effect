@@ -64,6 +64,16 @@ new MyRuleTester().run(name, rule, {
         }
       `,
     },
+    {
+      name: "Effect uses prop with external system",
+      code: js`
+        function Component({ title }) {
+          useEffect(() => {
+            document.title = title;
+          }, [title]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
