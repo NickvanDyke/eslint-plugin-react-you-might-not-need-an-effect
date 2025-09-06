@@ -2,12 +2,9 @@ import { MyRuleTester, js } from "./rule-tester.js";
 import { rule, name, messages } from "../src/no-chain-state-updates.js";
 
 new MyRuleTester().run(name, rule, {
-  invalid: [
+  valid: [
     {
-      // React docs recommend to first update state in render instead of an effect.
-      // But then continue on to say that usually you can avoid the sync entirely by
-      // more wisely choosing your state. So we'll just always warn about chained state.
-      name: "Syncing prop changes to internal state",
+      name: "Setting state to literal when props change",
       code: js`
         function List({ items }) {
           const [selection, setSelection] = useState();
@@ -15,16 +12,47 @@ new MyRuleTester().run(name, rule, {
           useEffect(() => {
             setSelection(null);
           }, [items]);
+        }
+      `,
+    },
+    {
+      name: "Setting state to a value derived from state",
+      code: js`
+        function Counter() {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
+          
+          useEffect(() => {
+            setDoubleCount(count * 2);
+          }, [count]);
+        }
+      `,
+    },
+    {
+      name: "Setting state to literal when external state changes",
+      code: js`
+        function Feed() {
+          const { data: posts } = useQuery('/posts');
+          const [scrollPosition, setScrollPosition] = useState(0);
 
-          return (
-            <div>
-              {items.map((item) => (
-                <div key={item.id} onClick={() => setSelection(item)}>
-                  {item.name}
-                </div>
-              ))}
-            </div>
-          )
+          useEffect(() => {
+            setScrollPosition(0);
+          }, [posts]);
+        }
+      `,
+    },
+  ],
+  invalid: [
+    {
+      name: "Setting state to literal when internal state changes",
+      code: js`
+        function Counter() {
+          const [count, setCount] = useState(0);
+          const [otherState, setOtherState] = useState();
+          
+          useEffect(() => {
+            setOtherState('Hello World');
+          }, [count]);
         }
       `,
       errors: [
@@ -34,7 +62,7 @@ new MyRuleTester().run(name, rule, {
       ],
     },
     {
-      name: "Conditionally setting state from internal state",
+      name: "Conditionally setting state to literal when internal state changes",
       code: js`
         function Form() {
           const [error, setError] = useState();

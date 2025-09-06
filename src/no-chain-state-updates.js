@@ -5,8 +5,6 @@ import {
   getUpstreamReactVariables,
   isDirectCall,
   isFnRef,
-  isHOCProp,
-  isProp,
   isState,
   isStateSetter,
   isUseEffect,
@@ -36,12 +34,9 @@ export const rule = {
       const depsRefs = getDependenciesRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
-      const isAllDepsInternal = depsRefs
+      const isAllDepsState = depsRefs
         .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved))
-        .notEmptyEvery(
-          (variable) =>
-            isState(variable) || (isProp(variable) && !isHOCProp(variable)),
-        );
+        .notEmptyEvery((variable) => isState(variable));
 
       effectFnRefs
         .filter(isFnRef)
@@ -49,24 +44,12 @@ export const rule = {
         .filter((ref) => isStateSetter(context, ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
-          // TODO: I think this simplifies to "args are all literals"...
-          // But the upstream bit also catches intermediate variables that are ultimately literals.
-          // We could either remove that and just check `arg.type === "Literal"`,
-          // or could make this more readable by returning 'literal' | 'internal' | 'external' from the util functions...
 
           const argsUpstreamVariables = callExpr.arguments
             .flatMap((arg) => getDownstreamRefs(context, arg))
             .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved));
-          const isAllArgsInternal = argsUpstreamVariables.notEmptyEvery(
-            (variable) =>
-              isState(variable) || (isProp(variable) && !isHOCProp(variable)),
-          );
-          const isSomeArgsExternal = argsUpstreamVariables.some(
-            (variable) =>
-              (!isState(variable) && !isProp(variable)) || isHOCProp(variable),
-          );
 
-          if (!isAllArgsInternal && !isSomeArgsExternal && isAllDepsInternal) {
+          if (isAllDepsState && argsUpstreamVariables.length === 0) {
             context.report({
               node: callExpr,
               messageId: messages.avoidChainingStateUpdates,
