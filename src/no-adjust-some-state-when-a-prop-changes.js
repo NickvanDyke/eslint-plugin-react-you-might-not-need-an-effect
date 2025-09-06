@@ -1,0 +1,64 @@
+import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
+import {
+  getDependenciesRefs,
+  getEffectFnRefs,
+  getUpstreamReactVariables,
+  isDirectCall,
+  isFnRef,
+  isHOCProp,
+  isProp,
+  isStateSetter,
+  isUseEffect,
+} from "./util/react.js";
+
+export const name = "no-adjust-some-state-when-a-prop-changes";
+export const messages = {
+  avoidAdjustingSomeStateWhenAPropChanges:
+    "avoidAdjustingSomeStateWhenAPropChanges",
+};
+export const rule = {
+  meta: {
+    type: "suggestion",
+    docs: {
+      description:
+        "Disallow adjusting some state when a prop changes in an effect.",
+      url: "https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes",
+    },
+    schema: [],
+    messages: {
+      [messages.avoidAdjustingSomeStateWhenAPropChanges]:
+        "Avoid adjusting some state when a prop changes. Instead, adjust the state directly during render, or refactor your state to avoid this need entirely.",
+    },
+  },
+  create: (context) => ({
+    CallExpression: (node) => {
+      if (!isUseEffect(node)) return;
+      const effectFnRefs = getEffectFnRefs(context, node);
+      const depsRefs = getDependenciesRefs(context, node);
+      if (!effectFnRefs || !depsRefs) return;
+
+      const isAllDepsProps = depsRefs
+        .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved))
+        .notEmptyEvery((variable) => isProp(variable) && !isHOCProp(variable));
+
+      effectFnRefs
+        .filter(isFnRef)
+        .filter((ref) => isDirectCall(ref.identifier))
+        .filter((ref) => isStateSetter(context, ref))
+        .forEach((ref) => {
+          const callExpr = getCallExpr(ref);
+
+          const argsUpstreamVariables = callExpr.arguments
+            .flatMap((arg) => getDownstreamRefs(context, arg))
+            .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved));
+
+          if (isAllDepsProps && argsUpstreamVariables.length === 0) {
+            context.report({
+              node: callExpr,
+              messageId: messages.avoidAdjustingSomeStateWhenAPropChanges,
+            });
+          }
+        });
+    },
+  }),
+};
