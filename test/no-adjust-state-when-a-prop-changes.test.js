@@ -3,7 +3,7 @@ import {
   rule,
   name,
   messages,
-} from "../src/no-adjust-some-state-when-a-prop-changes.js";
+} from "../src/no-adjust-state-when-a-prop-changes.js";
 
 new MyRuleTester().run(name, rule, {
   valid: [
@@ -62,7 +62,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidAdjustingSomeStateWhenAPropChanges,
+          messageId: messages.avoidAdjustingStateWhenAPropChanges,
         },
       ],
     },
@@ -81,7 +81,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidAdjustingSomeStateWhenAPropChanges,
+          messageId: messages.avoidAdjustingStateWhenAPropChanges,
         },
       ],
     },

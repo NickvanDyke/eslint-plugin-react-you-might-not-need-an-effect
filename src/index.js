@@ -1,5 +1,5 @@
 import * as noEmptyEffect from "./no-empty-effect.js";
-import * as noAdjustSomeStateWhenAPropChanges from "./no-adjust-some-state-when-a-prop-changes.js";
+import * as noAdjustStateWhenAPropChanges from "./no-adjust-state-when-a-prop-changes.js";
 import * as noResetAllStateWhenAPropChanges from "./no-reset-all-state-when-a-prop-changes.js";
 import * as noEventHandler from "./no-event-handler.js";
 import * as noPassLiveStateToParent from "./no-pass-live-state-to-parent.js";
@@ -20,8 +20,7 @@ const plugin = {
     [noEmptyEffect.name]: noEmptyEffect.rule,
     [noResetAllStateWhenAPropChanges.name]:
       noResetAllStateWhenAPropChanges.rule,
-    [noAdjustSomeStateWhenAPropChanges.name]:
-      noAdjustSomeStateWhenAPropChanges.rule,
+    [noAdjustStateWhenAPropChanges.name]: noAdjustStateWhenAPropChanges.rule,
     [noEventHandler.name]: noEventHandler.rule,
     [noPassLiveStateToParent.name]: noPassLiveStateToParent.rule,
     [noPassDataToParent.name]: noPassDataToParent.rule,
