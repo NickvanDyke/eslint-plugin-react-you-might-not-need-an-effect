@@ -8,8 +8,9 @@ export const js = String.raw;
 export class MyRuleTester extends RuleTester {
   constructor(options) {
     super({
+      ...plugin.configs.recommended,
       ...options,
-      languageOptions: plugin.configs.recommended.languageOptions,
+      rules: {}, // Avoid double-testing the rule passed to `run()`
     });
   }
 
