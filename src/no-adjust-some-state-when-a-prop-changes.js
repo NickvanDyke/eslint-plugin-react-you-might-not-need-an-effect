@@ -21,13 +21,13 @@ export const rule = {
     type: "suggestion",
     docs: {
       description:
-        "Disallow adjusting some state when a prop changes in an effect.",
+        "Disallow adjusting some state in an effect when a prop changes.",
       url: "https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes",
     },
     schema: [],
     messages: {
       [messages.avoidAdjustingSomeStateWhenAPropChanges]:
-        "Avoid adjusting some state when a prop changes. Instead, adjust the state directly during render, or refactor your state to avoid this need entirely.",
+        "Avoid adjusting state when a prop changes. Instead, adjust the state directly during render, or refactor your state to avoid this need entirely.",
     },
   },
   create: (context) => ({
