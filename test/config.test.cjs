@@ -3,6 +3,7 @@ const { LegacyESLint } = require("eslint/use-at-your-own-risk");
 const { js } = require("./rule-tester.js");
 const assert = require("assert");
 // WARNING: Must `yarn build` before this test!
+// eslint-disable-next-line n/no-missing-require
 const plugin = require("../dist/index.cjs");
 
 describe("recommended config", () => {

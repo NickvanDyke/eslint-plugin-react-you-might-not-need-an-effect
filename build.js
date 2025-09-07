@@ -5,7 +5,7 @@ build({
   bundle: true,
   sourcemap: true,
   format: "cjs",
-  outfile: "dist/index.cjs",
+  outfile: "./dist/index.cjs",
   platform: "node",
   external: ["eslint"],
 });
