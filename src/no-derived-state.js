@@ -2,7 +2,6 @@ import {
   isUseEffect,
   getEffectFnRefs,
   getDependenciesRefs,
-  isFnRef,
   isDirectCall,
   isStateSetter,
   getUseStateNode,
@@ -38,9 +37,8 @@ export const rule = {
       if (!effectFnRefs || !depsRefs) return;
 
       effectFnRefs
-        .filter(isFnRef)
-        .filter((ref) => isDirectCall(ref.identifier))
         .filter((ref) => isStateSetter(context, ref))
+        .filter((ref) => isDirectCall(ref.identifier))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
           const useStateNode = getUseStateNode(context, ref);

@@ -124,16 +124,14 @@ export function getDependenciesRefs(context, node) {
   return getDownstreamRefs(context, depsArr);
 }
 
-export const isFnRef = (ref) => getCallExpr(ref) !== undefined;
-
 // NOTE: These return true for state with CallExpressions, like `list.concat()`.
 // Arguably preferable, as mutating the state is functionally the same as calling the setter.
 // (Even though that is not recommended and should be prevented by a different rule).
 // And in the case of a prop, we can't differentiate state mutations from callbacks anyway.
 export const isStateSetter = (context, ref) =>
-  isFnRef(ref) && isState(context, ref);
+  getCallExpr(ref) !== undefined && isState(context, ref);
 export const isPropCallback = (context, ref) =>
-  isFnRef(ref) && isProp(context, ref);
+  getCallExpr(ref) !== undefined && isProp(context, ref);
 
 // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
 // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.

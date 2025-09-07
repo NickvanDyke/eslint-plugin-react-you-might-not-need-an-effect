@@ -4,7 +4,6 @@ import {
   getEffectFnRefs,
   isArgsAllLiterals,
   isDirectCall,
-  isFnRef,
   isProp,
   isStateSetter,
   isUseEffect,
@@ -39,9 +38,8 @@ export const rule = {
       );
 
       effectFnRefs
-        .filter(isFnRef)
-        .filter((ref) => isDirectCall(ref.identifier))
         .filter((ref) => isStateSetter(context, ref))
+        .filter((ref) => isDirectCall(ref.identifier))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 

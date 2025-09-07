@@ -4,7 +4,6 @@ import {
   getEffectFnRefs,
   getUseStateNode,
   isDirectCall,
-  isFnRef,
   isStateSetter,
   isUseEffect,
 } from "./util/react.js";
@@ -36,9 +35,8 @@ export const rule = {
       if (depsRefs.length > 0) return;
 
       effectFnRefs
-        .filter(isFnRef)
-        .filter((ref) => isDirectCall(ref.identifier))
         .filter((ref) => isStateSetter(context, ref))
+        .filter((ref) => isDirectCall(ref.identifier))
         .forEach((ref) => {
           const useStateNode = getUseStateNode(context, ref);
           const stateName = (
