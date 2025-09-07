@@ -135,7 +135,6 @@ export const isPropCallback = (context, ref) =>
 
 // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
 // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
-// TODO: Verify that's the case even with globals.browser
 export const isState = (context, ref) =>
   getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
     variable.defs.some((def) => isUseState(def.node)),
