@@ -14,6 +14,24 @@ describe("recommended rules on real-world code", () => {
   describe("should not flag", () => {
     [
       {
+        name: "useLayoutEffect",
+        code: js`
+          function Input({ count }) {
+            const ref = useRef();
+
+            useLayoutEffect(() => {
+              if (count == 0) {
+                ref.current?.focus();
+              }
+            }, [count]);
+
+            return (
+              <input ref={ref} value={count} />
+            )
+          }
+        `,
+      },
+      {
         name: "Managing a timer",
         code: js`
         function Timer() {
