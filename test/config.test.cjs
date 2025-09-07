@@ -1,8 +1,9 @@
-import { ESLint } from "eslint";
-import { LegacyESLint } from "eslint/use-at-your-own-risk";
-import { js } from "./rule-tester.js";
-import assert from "assert";
-import plugin from "../src/index.js";
+const { ESLint } = require("eslint");
+const { LegacyESLint } = require("eslint/use-at-your-own-risk");
+const { js } = require("./rule-tester.js");
+const assert = require("assert");
+// WARNING: Must `yarn build` before this test!
+const plugin = require("../dist/index.cjs");
 
 describe("recommended config", () => {
   const codeThatDerivesState = js`
