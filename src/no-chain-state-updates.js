@@ -1,8 +1,8 @@
-import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
+import { getCallExpr } from "./util/ast.js";
 import {
   getDependenciesRefs,
   getEffectFnRefs,
-  getUpstreamReactVariables,
+  isArgsAllLiterals,
   isDirectCall,
   isFnRef,
   isState,
@@ -34,9 +34,9 @@ export const rule = {
       const depsRefs = getDependenciesRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
-      const isAllDepsState = depsRefs
-        .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved))
-        .notEmptyEvery((variable) => isState(variable));
+      const isAllDepsState = depsRefs.notEmptyEvery((ref) =>
+        isState(context, ref),
+      );
 
       effectFnRefs
         .filter(isFnRef)
@@ -45,11 +45,7 @@ export const rule = {
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
-          const argsUpstreamVariables = callExpr.arguments
-            .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved));
-
-          if (isAllDepsState && argsUpstreamVariables.length === 0) {
+          if (isAllDepsState && isArgsAllLiterals(context, callExpr)) {
             context.report({
               node: callExpr,
               messageId: messages.avoidChainingStateUpdates,

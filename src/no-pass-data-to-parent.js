@@ -5,9 +5,9 @@ import {
   isFnRef,
   isDirectCall,
   isPropCallback,
-  getUpstreamReactVariables,
   isState,
   isRef,
+  isProp,
 } from "./util/react.js";
 import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
 
@@ -41,15 +41,16 @@ export const rule = {
         .filter((ref) => isPropCallback(context, ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
-          const argsUpstreamVariables = callExpr.arguments
-            .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved));
 
           if (
-            callExpr.arguments.some((arg) => arg.type === "Literal") ||
-            argsUpstreamVariables.some(
-              (variable) => !isState(variable) && !isRef(variable),
-            )
+            callExpr.arguments
+              .flatMap((arg) => getDownstreamRefs(context, arg))
+              .notEmptyEvery(
+                (ref) =>
+                  !isState(context, ref) &&
+                  !isProp(context, ref) &&
+                  !isRef(context, ref),
+              )
           ) {
             context.report({
               node: callExpr,

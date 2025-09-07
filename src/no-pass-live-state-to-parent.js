@@ -5,7 +5,6 @@ import {
   isFnRef,
   isDirectCall,
   isPropCallback,
-  getUpstreamReactVariables,
   isState,
 } from "./util/react.js";
 import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
@@ -41,11 +40,11 @@ export const rule = {
         .filter((ref) => isPropCallback(context, ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
-          const argsUpstreamVariables = callExpr.arguments
+          const isStateInArgs = callExpr.arguments
             .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved));
+            .some((ref) => isState(context, ref));
 
-          if (argsUpstreamVariables.some((variable) => isState(variable))) {
+          if (isStateInArgs) {
             context.report({
               node: callExpr,
               messageId: messages.avoidPassingLiveStateToParent,

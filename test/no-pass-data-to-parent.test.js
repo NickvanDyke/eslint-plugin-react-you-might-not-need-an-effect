@@ -4,7 +4,17 @@ import { name, messages, rule } from "../src/no-pass-data-to-parent.js";
 new MyRuleTester().run(name, rule, {
   valid: [
     {
-      name: "Pass live internal state",
+      name: "Pass literal value to prop",
+      code: js`
+        const Child = ({ onTextChanged }) => {
+          useEffect(() => {
+            onTextChanged("Hello World");
+          }, [onTextChanged]);
+        }
+      `,
+    },
+    {
+      name: "Pass internal state",
       code: js`
         const Child = ({ onTextChanged }) => {
           const [text, setText] = useState();
@@ -16,6 +26,25 @@ new MyRuleTester().run(name, rule, {
           return (
             <input
               type="text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
+          );
+        }
+      `,
+    },
+    {
+      name: "Pass prop",
+      code: js`
+        const Child = ({ text, onTextChanged }) => {
+          useEffect(() => {
+            onTextChanged(text);
+          }, [onTextChanged, text]);
+
+          return (
+            <input
+              type="text"
+              value={text}
               onChange={(e) => setText(e.target.value)}
             />
           );
@@ -108,21 +137,6 @@ new MyRuleTester().run(name, rule, {
   ],
   invalid: [
     {
-      name: "Pass literal value to prop",
-      code: js`
-        const Child = ({ onTextChanged }) => {
-          useEffect(() => {
-            onTextChanged("Hello World");
-          }, [onTextChanged]);
-        }
-      `,
-      errors: [
-        {
-          messageId: messages.avoidPassingDataToParent,
-        },
-      ],
-    },
-    {
       name: "Pass external state",
       code: js`
         const Child = ({ onFetched }) => {
@@ -158,7 +172,7 @@ new MyRuleTester().run(name, rule, {
       ],
     },
     {
-      name: "Pass external state that's retrieved in effect",
+      name: "Pass external state that's retrieved in effect via .then",
       todo: true, // TODO: We ignore the `data` variable because it's a Parameter :/
       code: js`
         const Child = ({ onFetched }) => {
@@ -175,19 +189,19 @@ new MyRuleTester().run(name, rule, {
       ],
     },
     {
-      name: "From props via member function",
+      name: "Pass external state that's retrieved in effect via async/await",
       code: js`
-        function DoubleList({ list }) {
-          const [doubleList, setDoubleList] = useState([]);
-
+        const Child = ({ onFetched }) => {
           useEffect(() => {
-            setDoubleList(list.concat(list));
-          }, [list]);
+            (async () => {
+              const data = await fetchData();
+              onFetched(data);
+            })();
+          }, []);
         }
       `,
       errors: [
         {
-          // We consider `list.concat` to essentially be a prop callback
           messageId: messages.avoidPassingDataToParent,
         },
       ],

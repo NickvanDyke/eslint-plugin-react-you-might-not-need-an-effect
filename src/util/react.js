@@ -116,33 +116,33 @@ export const isFnRef = (ref) => getCallExpr(ref) !== undefined;
 // (Even though that is not recommended and should be prevented by a different rule).
 // And in the case of a prop, we can't differentiate state mutations from callbacks anyway.
 export const isStateSetter = (context, ref) =>
-  isFnRef(ref) &&
-  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
-    isState(variable),
-  );
+  isFnRef(ref) && isState(context, ref);
 export const isPropCallback = (context, ref) =>
-  isFnRef(ref) &&
-  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
-    isProp(variable),
-  );
+  isFnRef(ref) && isProp(context, ref);
 
 // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
 // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
-export const isState = (variable) =>
-  variable.defs.some((def) => isUseState(def.node));
-export const isRef = (variable) =>
-  variable.defs.some((def) => isUseRef(def.node));
+export const isState = (context, ref) =>
+  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
+    variable.defs.some((def) => isUseState(def.node)),
+  );
+export const isRef = (context, ref) =>
+  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
+    variable.defs.some((def) => isUseRef(def.node)),
+  );
 // Returns false for props of HOCs like `withRouter` because they usually have side effects.
-export const isProp = (variable) =>
-  variable.defs.some((def) => {
-    const declNode = getDeclNode(def.node);
-    return (
-      def.type === "Parameter" &&
-      ((isReactFunctionalComponent(declNode) &&
-        !isReactFunctionalHOC(declNode)) ||
-        isCustomHook(declNode))
-    );
-  });
+export const isProp = (context, ref) =>
+  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
+    variable.defs.some((def) => {
+      const declNode = getDeclNode(def.node);
+      return (
+        def.type === "Parameter" &&
+        ((isReactFunctionalComponent(declNode) &&
+          !isReactFunctionalHOC(declNode)) ||
+          isCustomHook(declNode))
+      );
+    }),
+  );
 
 const getDeclNode = (node) =>
   node.type === "ArrowFunctionExpression"
@@ -151,9 +151,11 @@ const getDeclNode = (node) =>
       : node.parent
     : node;
 
+// TODO: Surely can be simplified/re-use other functions.
+// Needs a better API too so we can more easily get names etc. for messages.
 export const getUseStateNode = (context, ref) => {
   return getUpstreamReactVariables(context, ref.resolved)
-    .find((variable) => isState(variable))
+    .find((variable) => variable.defs.some((def) => isUseState(def.node)))
     ?.defs.find((def) => isUseState(def.node))?.node;
 };
 
@@ -194,7 +196,7 @@ export const findPropUsedToResetAllState = (
       countUseStates(context, findContainingNode(useEffectNode));
 
   return isAllStateReset
-    ? depsRefs.find((ref) => isProp(ref.resolved))
+    ? depsRefs.find((ref) => isProp(context, ref))
     : undefined;
 };
 
@@ -261,6 +263,25 @@ const findContainingNode = (node) => {
   }
 };
 
+export const isArgsAllLiterals = (context, callExpr) =>
+  callExpr.arguments
+    .flatMap((arg) => getDownstreamRefs(context, arg))
+    .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved))
+    .length === 0;
+
+// TODO: Duplicated from `isProp()` for use in getUpstreamReactVariables.
+// Combine somehow ideally.
+const isPropVariable = (variable) =>
+  variable.defs.some((def) => {
+    const declNode = getDeclNode(def.node);
+    return (
+      def.type === "Parameter" &&
+      ((isReactFunctionalComponent(declNode) &&
+        !isReactFunctionalHOC(declNode)) ||
+        isCustomHook(declNode))
+    );
+  });
+
 export const getUpstreamReactVariables = (context, variable) =>
   getUpstreamVariables(
     context,
@@ -274,6 +295,6 @@ export const getUpstreamReactVariables = (context, variable) =>
     (node) => !isUseState(node),
   ).filter(
     (variable) =>
-      isProp(variable) ||
+      isPropVariable(variable) ||
       variable.defs.every((def) => def.type !== "Parameter"),
   );

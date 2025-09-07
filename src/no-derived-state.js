@@ -48,25 +48,25 @@ export const rule = {
             useStateNode.id.elements[0] ?? useStateNode.id.elements[1]
           )?.name;
 
+          const argsRefs = callExpr.arguments.flatMap((arg) =>
+            getDownstreamRefs(context, arg),
+          );
+          const isAllArgsInternal = argsRefs.notEmptyEvery(
+            (ref) => isState(context, ref) || isProp(context, ref),
+          );
+
           const argsUpstreamVars = callExpr.arguments
             .flatMap((arg) => getDownstreamRefs(context, arg))
             .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved));
           const depsUpstreamVars = depsRefs.flatMap((ref) =>
             getUpstreamReactVariables(context, ref.resolved),
           );
-          const isAllArgsInternal = argsUpstreamVars.notEmptyEvery(
-            (variable) => isState(variable) || isProp(variable),
-          );
           const isAllArgsInDeps = argsUpstreamVars.notEmptyEvery((argVar) =>
             depsUpstreamVars.some((depVar) => argVar.name === depVar.name),
           );
+          const isValueAlwaysInSync = isAllArgsInDeps && countCalls(ref) === 1;
 
-          if (
-            isAllArgsInternal ||
-            // In this case the derived state will always be in sync,
-            // thus it could be computed directly during render
-            (isAllArgsInDeps && countCalls(ref) === 1)
-          ) {
+          if (isAllArgsInternal || isValueAlwaysInSync) {
             context.report({
               node: callExpr,
               messageId: messages.avoidDerivedState,

@@ -30,7 +30,7 @@ export const rule = {
 
       if (effectFnRefs.length === 0) return;
 
-      if (effectFnRefs.concat(depsRefs).every((ref) => isProp(ref.resolved))) {
+      if (effectFnRefs.concat(depsRefs).every((ref) => isProp(context, ref))) {
         context.report({
           node,
           messageId: messages.avoidManagingParent,

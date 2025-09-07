@@ -26,8 +26,8 @@ new MyRuleTester().run(name, rule, {
       `,
     },
     {
-      // No idea why someone would do this, so we only check for passing state, but maybe there's a less contrived pattern.
-      // `no-manage-parent` would catch this anyway.
+      // No idea why someone would do this, but maybe there's a less contrived pattern.
+      // Plus the rule's message and linked docs only mention state - obviously you can't "lift" a prop.
       name: "Pass prop to parent",
       code: js`
         const Child = ({ text, onTextChanged }) => {
