@@ -6,6 +6,7 @@ import {
   isIIFE,
 } from "./ast.js";
 
+// TODO: Most of these don't need to be exported.
 export const isReactFunctionalComponent = (node) =>
   (node.type === "FunctionDeclaration" ||
     (node.type === "VariableDeclarator" &&
@@ -52,6 +53,21 @@ export const isUseState = (node) =>
     // I suppose technically the state can still be read via setter callback.
     return !el || el.type === "Identifier";
   });
+
+const isPropDef = (def) => {
+  const declaringNode =
+    def.node.type === "ArrowFunctionExpression"
+      ? def.node.parent.type === "CallExpression"
+        ? def.node.parent.parent
+        : def.node.parent
+      : def.node;
+  return (
+    def.type === "Parameter" &&
+    ((isReactFunctionalComponent(declaringNode) &&
+      !isReactFunctionalHOC(declaringNode)) ||
+      isCustomHook(declaringNode))
+  );
+};
 
 export const isUseRef = (node) =>
   node.type === "VariableDeclarator" &&
@@ -122,34 +138,20 @@ export const isPropCallback = (context, ref) =>
 
 // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
 // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
+// TODO: Verify that's the case even with globals.browser
 export const isState = (context, ref) =>
   getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
     variable.defs.some((def) => isUseState(def.node)),
+  );
+// Returns false for props of HOCs like `withRouter` because they usually have side effects.
+export const isProp = (context, ref) =>
+  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
+    variable.defs.some((def) => isPropDef(def)),
   );
 export const isRef = (context, ref) =>
   getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
     variable.defs.some((def) => isUseRef(def.node)),
   );
-// Returns false for props of HOCs like `withRouter` because they usually have side effects.
-export const isProp = (context, ref) =>
-  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
-    variable.defs.some((def) => {
-      const declNode = getDeclNode(def.node);
-      return (
-        def.type === "Parameter" &&
-        ((isReactFunctionalComponent(declNode) &&
-          !isReactFunctionalHOC(declNode)) ||
-          isCustomHook(declNode))
-      );
-    }),
-  );
-
-const getDeclNode = (node) =>
-  node.type === "ArrowFunctionExpression"
-    ? node.parent.type === "CallExpression"
-      ? node.parent.parent
-      : node.parent
-    : node;
 
 // TODO: Surely can be simplified/re-use other functions.
 // Needs a better API too so we can more easily get names etc. for messages.
@@ -269,19 +271,6 @@ export const isArgsAllLiterals = (context, callExpr) =>
     .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved))
     .length === 0;
 
-// TODO: Duplicated from `isProp()` for use in getUpstreamReactVariables.
-// Combine somehow ideally.
-const isPropVariable = (variable) =>
-  variable.defs.some((def) => {
-    const declNode = getDeclNode(def.node);
-    return (
-      def.type === "Parameter" &&
-      ((isReactFunctionalComponent(declNode) &&
-        !isReactFunctionalHOC(declNode)) ||
-        isCustomHook(declNode))
-    );
-  });
-
 export const getUpstreamReactVariables = (context, variable) =>
   getUpstreamVariables(
     context,
@@ -293,8 +282,11 @@ export const getUpstreamReactVariables = (context, variable) =>
     // And would need to change `getUseStateNode()` too?
     // TODO: Could probably organize these filters better.
     (node) => !isUseState(node),
-  ).filter(
-    (variable) =>
-      isPropVariable(variable) ||
-      variable.defs.every((def) => def.type !== "Parameter"),
+  ).filter((variable) =>
+    variable.defs.every(
+      (def) =>
+        isPropDef(def) ||
+        // Ignore variables declared inside an anonymous function
+        def.type !== "Parameter",
+    ),
   );
