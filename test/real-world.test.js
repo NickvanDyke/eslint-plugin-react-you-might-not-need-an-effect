@@ -276,6 +276,34 @@ describe("recommended rules on real-world code", () => {
         useKeyboardStore.setKeyboardState = setKeyboardState;
       `,
       },
+      {
+        // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/28
+        name: "Indexing ref state with internal state",
+        code: js`
+          import { useEffect, useRef, useState } from "react";
+
+          const someArray = [{ id: 1 }, { id: 2 }, { id: 3 }];
+
+          const Component = ({ value }) => {
+            const inputRefs = useRef([]);
+
+            useEffect(() => {
+              inputRefs.current?.[index]?.focus();
+            }, [value, index]);
+
+            return (
+              <>
+                {someArray.map((item, index) => (
+                  <input
+                    key={item.id}
+                    ref={(el) => (inputRefs.current[index] = el)}
+                  />
+                ))}
+              </>
+            )
+          }
+        `,
+      },
     ].forEach(({ name, code }) => {
       it(name, async () => {
         const results = await eslint.lintText(code);
