@@ -1,7 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { name, messages, rule } from "../src/no-pass-data-to-parent.js";
+import rule from "../src/no-pass-data-to-parent.js";
 
-new MyRuleTester().run(name, rule, {
+new MyRuleTester().run("no-pass-data-to-parent", rule, {
   valid: [
     {
       name: "Pass literal value to prop",
@@ -71,7 +71,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidPassingDataToParent,
+          messageId: "avoidPassingDataToParent",
         },
       ],
     },
@@ -149,7 +149,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidPassingDataToParent,
+          messageId: "avoidPassingDataToParent",
         },
       ],
     },
@@ -167,7 +167,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidPassingDataToParent,
+          messageId: "avoidPassingDataToParent",
         },
       ],
     },
@@ -184,7 +184,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidPassingDataToParent,
+          messageId: "avoidPassingDataToParent",
         },
       ],
     },
@@ -202,7 +202,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidPassingDataToParent,
+          messageId: "avoidPassingDataToParent",
         },
       ],
     },

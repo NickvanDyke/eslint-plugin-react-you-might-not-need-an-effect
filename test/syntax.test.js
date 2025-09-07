@@ -1,8 +1,9 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { rule, name, messages } from "../src/no-derived-state.js";
+import noDerivedState from "../src/no-derived-state.js";
 
 // Syntax variations that are semantically equivalent
-new MyRuleTester().run(name, rule, {
+// TODO: This is more of a test dumping ground than it should be
+new MyRuleTester().run("syntax", noDerivedState, {
   valid: [
     {
       name: "Two components with overlapping names",
@@ -141,7 +142,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "doubleCount" },
         },
       ],
@@ -350,7 +351,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "setAttempts" },
         },
       ],
@@ -369,7 +370,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "attempts" },
         },
       ],
@@ -394,7 +395,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "doubleCount" },
         },
       ],
@@ -414,7 +415,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "state" },
         },
       ],
@@ -434,7 +435,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "state" },
         },
       ],
@@ -455,7 +456,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "derived" },
         },
       ],
@@ -477,7 +478,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "doubleCount" },
         },
       ],
@@ -509,12 +510,14 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "filteredPosts" },
         },
       ],
     },
     {
+      // TODO: All tests should have imports, to mimick real-world usage.
+      // And then one test without imports I guess, to verify behavior.
       name: "With imports",
       code: js`
         import { useState, useEffect } from 'react';
@@ -529,7 +532,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "total" },
         },
       ],

@@ -8,11 +8,10 @@ import {
   isStateSetter,
 } from "./util/react.js";
 
-export const name = "no-chain-state-updates";
-export const messages = {
-  avoidChainingStateUpdates: "avoidChainingStateUpdates",
-};
-export const rule = {
+/**
+ * @type {import("eslint").Rule.RuleModule}
+ */
+export default {
   meta: {
     type: "suggestion",
     docs: {
@@ -21,7 +20,7 @@ export const rule = {
     },
     schema: [],
     messages: {
-      [messages.avoidChainingStateUpdates]:
+      avoidChainingStateUpdates:
         "Avoid chaining state changes. When possible, update all relevant state simultaneously.",
     },
   },
@@ -44,7 +43,7 @@ export const rule = {
           if (isAllDepsState && isArgsAllLiterals(context, callExpr)) {
             context.report({
               node: callExpr,
-              messageId: messages.avoidChainingStateUpdates,
+              messageId: "avoidChainingStateUpdates",
             });
           }
         });

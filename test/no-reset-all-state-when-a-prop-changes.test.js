@@ -1,11 +1,7 @@
-import {
-  rule,
-  messages,
-  name,
-} from "../src/no-reset-all-state-when-a-prop-changes.js";
+import rule from "../src/no-reset-all-state-when-a-prop-changes.js";
 import { MyRuleTester, js } from "./rule-tester.js";
 
-new MyRuleTester().run(name, rule, {
+new MyRuleTester().run("no-reset-all-state-when-a-prop-changes", rule, {
   valid: [
     {
       name: "Set state when a prop changes, but not to its default value",
@@ -64,7 +60,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidResettingAllStateWhenAPropChanges,
+          messageId: "avoidResettingAllStateWhenAPropChanges",
           data: { prop: "userId" },
         },
       ],
@@ -85,7 +81,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidResettingAllStateWhenAPropChanges,
+          messageId: "avoidResettingAllStateWhenAPropChanges",
           data: { prop: "userId" },
         },
       ],
@@ -103,7 +99,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidResettingAllStateWhenAPropChanges,
+          messageId: "avoidResettingAllStateWhenAPropChanges",
           // TODO: Ideally would be "user.id"
           data: { prop: "user" },
         },
@@ -122,7 +118,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidResettingAllStateWhenAPropChanges,
+          messageId: "avoidResettingAllStateWhenAPropChanges",
           data: { prop: "userId" },
         },
       ],
@@ -141,7 +137,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidResettingAllStateWhenAPropChanges,
+          messageId: "avoidResettingAllStateWhenAPropChanges",
         },
       ],
     },
@@ -207,7 +203,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidResettingAllStateWhenAPropChanges,
+          messageId: "avoidResettingAllStateWhenAPropChanges",
         },
       ],
     },

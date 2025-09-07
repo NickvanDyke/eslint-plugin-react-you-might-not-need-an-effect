@@ -1,7 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { name, rule, messages } from "../src/no-manage-parent.js";
+import rule from "../src/no-manage-parent.js";
 
-new MyRuleTester().run(name, rule, {
+new MyRuleTester().run("no-manage-parent", rule, {
   valid: [
     {
       name: "Effect uses state",
@@ -87,7 +87,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidManagingParent,
+          messageId: "avoidManagingParent",
         },
       ],
     },
@@ -104,7 +104,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidManagingParent,
+          messageId: "avoidManagingParent",
         },
       ],
     },

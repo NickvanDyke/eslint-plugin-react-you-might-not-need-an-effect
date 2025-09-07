@@ -1,7 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { name, messages, rule } from "../src/no-pass-live-state-to-parent.js";
+import rule from "../src/no-pass-live-state-to-parent.js";
 
-new MyRuleTester().run(name, rule, {
+new MyRuleTester().run("no-pass-live-state-to-parent", rule, {
   valid: [
     {
       name: "Pass literal value to prop callback",
@@ -136,7 +136,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidPassingLiveStateToParent,
+          messageId: "avoidPassingLiveStateToParent",
         },
       ],
     },
@@ -161,7 +161,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidPassingLiveStateToParent,
+          messageId: "avoidPassingLiveStateToParent",
         },
       ],
     },
@@ -186,7 +186,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidPassingLiveStateToParent,
+          messageId: "avoidPassingLiveStateToParent",
         },
       ],
     },
@@ -205,7 +205,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidPassingLiveStateToParent,
+          messageId: "avoidPassingLiveStateToParent",
         },
       ],
     },
@@ -236,7 +236,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidPassingLiveStateToParent,
+          messageId: "avoidPassingLiveStateToParent",
         },
       ],
     },

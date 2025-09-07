@@ -1,7 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { name, rule, messages } from "../src/no-initialize-state.js";
+import rule from "../src/no-initialize-state.js";
 
-new MyRuleTester().run(name, rule, {
+new MyRuleTester().run("no-initialize-state", rule, {
   valid: [
     {
       name: "To external data",
@@ -70,7 +70,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidInitializingState,
+          messageId: "avoidInitializingState",
           data: { state: "state" },
         },
       ],
@@ -89,7 +89,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidInitializingState,
+          messageId: "avoidInitializingState",
           data: { state: "state" },
         },
       ],
@@ -108,7 +108,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidInitializingState,
+          messageId: "avoidInitializingState",
           data: { state: "state" },
         },
       ],
@@ -137,7 +137,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidInitializingState,
+          messageId: "avoidInitializingState",
         },
       ],
     },

@@ -7,11 +7,10 @@ import {
   isStateSetter,
 } from "./util/react.js";
 
-export const name = "no-initialize-state";
-export const messages = {
-  avoidInitializingState: "avoidInitializingState",
-};
-export const rule = {
+/**
+ * @type {import("eslint").Rule.RuleModule}
+ */
+export default {
   meta: {
     type: "suggestion",
     docs: {
@@ -19,7 +18,7 @@ export const rule = {
     },
     schema: [],
     messages: {
-      [messages.avoidInitializingState]:
+      avoidInitializingState:
         'Avoid initializing state in an effect. Instead, pass "{{state}}"\'s initial value to its `useState`.',
     },
   },
@@ -43,7 +42,7 @@ export const rule = {
 
           context.report({
             node: getCallExpr(ref),
-            messageId: messages.avoidInitializingState,
+            messageId: "avoidInitializingState",
             data: { state: stateName },
           });
         });

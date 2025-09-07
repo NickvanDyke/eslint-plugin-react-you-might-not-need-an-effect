@@ -1,8 +1,8 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { name, rule, messages } from "../src/no-derived-state.js";
+import rule from "../src/no-derived-state.js";
 
 // TODO: All these need the state setter in the deps
-new MyRuleTester().run(name, rule, {
+new MyRuleTester().run("no-derived-state", rule, {
   valid: [
     {
       name: "Compute in render from internal state",
@@ -276,7 +276,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "fullName" },
         },
       ],
@@ -297,7 +297,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "fullName" },
         },
       ],
@@ -318,7 +318,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "fullName" },
         },
       ],
@@ -336,7 +336,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "fullName" },
         },
       ],
@@ -355,7 +355,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "fullName" },
         },
       ],
@@ -373,7 +373,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "doubleList" },
         },
       ],
@@ -392,12 +392,12 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "doubleList" },
         },
         {
           // We consider `list.concat` to essentially be a state setter call
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "list" },
         },
       ],
@@ -417,7 +417,7 @@ new MyRuleTester().run(name, rule, {
       errors: [
         {
           // We consider `doubleList.push` to essentially be a state setter call
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "doubleList" },
         },
       ],
@@ -436,7 +436,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "selectedPost" },
         },
       ],
@@ -456,7 +456,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "fullName" },
         },
       ],
@@ -477,7 +477,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "fullName" },
         },
       ],
@@ -497,7 +497,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "total" },
         },
       ],
@@ -517,7 +517,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "doubleCount" },
         },
       ],
@@ -545,7 +545,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "prefixedName" },
         },
       ],
@@ -569,7 +569,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "formData" },
         },
       ],
@@ -593,7 +593,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "formData" },
         },
       ],
@@ -619,7 +619,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "formData" },
         },
       ],
@@ -641,7 +641,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidDerivedState,
+          messageId: "avoidDerivedState",
           data: { state: "fullName" },
         },
       ],

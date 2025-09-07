@@ -1,10 +1,9 @@
 import { isUseEffect, getEffectFnRefs } from "./util/react.js";
 
-export const name = "no-empty-effect";
-export const messages = {
-  avoidEmptyEffect: "avoidEmptyEffect",
-};
-export const rule = {
+/**
+ * @type {import("eslint").Rule.RuleModule}
+ */
+export default {
   meta: {
     type: "suggestion",
     docs: {
@@ -12,7 +11,7 @@ export const rule = {
     },
     schema: [],
     messages: {
-      [messages.avoidEmptyEffect]: "This effect is empty and could be removed.",
+      avoidEmptyEffect: "This effect is empty and could be removed.",
     },
   },
   create: (context) => ({
@@ -27,7 +26,7 @@ export const rule = {
         // More a follow-up for once they fix/remove other issues.
         context.report({
           node,
-          messageId: messages.avoidEmptyEffect,
+          messageId: "avoidEmptyEffect",
         });
       }
     },

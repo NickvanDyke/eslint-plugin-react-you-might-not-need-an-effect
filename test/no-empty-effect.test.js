@@ -1,7 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { name, rule, messages } from "../src/no-empty-effect.js";
+import rule from "../src/no-empty-effect.js";
 
-new MyRuleTester().run(name, rule, {
+new MyRuleTester().run("no-empty-effect", rule, {
   valid: [
     {
       name: "Non-empty effect",
@@ -24,7 +24,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidEmptyEffect,
+          messageId: "avoidEmptyEffect",
         },
       ],
     },
@@ -37,7 +37,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidEmptyEffect,
+          messageId: "avoidEmptyEffect",
         },
       ],
     },
@@ -50,7 +50,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidEmptyEffect,
+          messageId: "avoidEmptyEffect",
         },
       ],
     },

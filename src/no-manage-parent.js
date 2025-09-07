@@ -1,11 +1,10 @@
 import { getEffectFnRefs, getEffectDepsRefs } from "./util/react.js";
 import { isProp } from "./util/react.js";
 
-export const name = "no-manage-parent";
-export const messages = {
-  avoidManagingParent: "avoidManagingParent",
-};
-export const rule = {
+/**
+ * @type {import("eslint").Rule.RuleModule}
+ */
+export default {
   meta: {
     type: "problem",
     docs: {
@@ -13,7 +12,7 @@ export const rule = {
     },
     schema: [],
     messages: {
-      [messages.avoidManagingParent]:
+      avoidManagingParent:
         "This effect only uses props. Consider lifting the logic up to the parent.",
     },
   },
@@ -28,7 +27,7 @@ export const rule = {
       if (effectFnRefs.concat(depsRefs).every((ref) => isProp(context, ref))) {
         context.report({
           node,
-          messageId: messages.avoidManagingParent,
+          messageId: "avoidManagingParent",
         });
       }
     },

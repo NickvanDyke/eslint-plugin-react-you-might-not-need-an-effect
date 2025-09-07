@@ -11,12 +11,10 @@ import {
   isCustomHook,
 } from "./util/react.js";
 
-export const name = "no-reset-all-state-when-a-prop-changes";
-export const messages = {
-  avoidResettingAllStateWhenAPropChanges:
-    "avoidResettingAllStateWhenAPropChanges",
-};
-export const rule = {
+/**
+ * @type {import("eslint").Rule.RuleModule}
+ */
+export default {
   meta: {
     type: "suggestion",
     docs: {
@@ -26,7 +24,7 @@ export const rule = {
     },
     schema: [],
     messages: {
-      [messages.avoidResettingAllStateWhenAPropChanges]:
+      avoidResettingAllStateWhenAPropChanges:
         'Avoid resetting all state when a prop changes. If "{{prop}}" is a key, pass it as `key` instead so React will reset the component.',
     },
   },
@@ -46,7 +44,7 @@ export const rule = {
       if (propUsedToResetAllState) {
         context.report({
           node: node,
-          messageId: messages.avoidResettingAllStateWhenAPropChanges,
+          messageId: "avoidResettingAllStateWhenAPropChanges",
           data: { prop: propUsedToResetAllState.identifier.name },
         });
       }

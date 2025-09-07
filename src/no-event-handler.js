@@ -2,11 +2,10 @@ import { getEffectFnRefs, getEffectDepsRefs } from "./util/react.js";
 import { findDownstreamNodes, getDownstreamRefs } from "./util/ast.js";
 import { isState } from "./util/react.js";
 
-export const name = "no-event-handler";
-export const messages = {
-  avoidEventHandler: "avoidEventHandler",
-};
-export const rule = {
+/**
+ * @type {import("eslint").Rule.RuleModule}
+ */
+export default {
   meta: {
     type: "suggestion",
     docs: {
@@ -15,7 +14,7 @@ export const rule = {
     },
     schema: [],
     messages: {
-      [messages.avoidEventHandler]:
+      avoidEventHandler:
         "Avoid using state and effects as an event handler. Instead, call the event handling code directly when the event occurs.",
     },
   },
@@ -38,7 +37,7 @@ export const rule = {
         .forEach((ifNode) => {
           context.report({
             node: ifNode.test,
-            messageId: messages.avoidEventHandler,
+            messageId: "avoidEventHandler",
           });
         });
     },

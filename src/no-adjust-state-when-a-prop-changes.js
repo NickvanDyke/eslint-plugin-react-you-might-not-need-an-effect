@@ -8,11 +8,10 @@ import {
   isStateSetter,
 } from "./util/react.js";
 
-export const name = "no-adjust-state-when-a-prop-changes";
-export const messages = {
-  avoidAdjustingStateWhenAPropChanges: "avoidAdjustingStateWhenAPropChanges",
-};
-export const rule = {
+/**
+ * @type {import("eslint").Rule.RuleModule}
+ */
+export default {
   meta: {
     type: "suggestion",
     docs: {
@@ -21,7 +20,7 @@ export const rule = {
     },
     schema: [],
     messages: {
-      [messages.avoidAdjustingStateWhenAPropChanges]:
+      avoidAdjustingStateWhenAPropChanges:
         "Avoid adjusting state when a prop changes. Instead, adjust the state directly during render, or refactor your state to avoid this need entirely.",
     },
   },
@@ -44,7 +43,7 @@ export const rule = {
           if (isAllDepsProps && isArgsAllLiterals(context, callExpr)) {
             context.report({
               node: callExpr,
-              messageId: messages.avoidAdjustingStateWhenAPropChanges,
+              messageId: "avoidAdjustingStateWhenAPropChanges",
             });
           }
         });

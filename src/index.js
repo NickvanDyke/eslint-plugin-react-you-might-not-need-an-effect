@@ -1,33 +1,35 @@
-import * as noEmptyEffect from "./no-empty-effect.js";
-import * as noAdjustStateWhenAPropChanges from "./no-adjust-state-when-a-prop-changes.js";
-import * as noResetAllStateWhenAPropChanges from "./no-reset-all-state-when-a-prop-changes.js";
-import * as noEventHandler from "./no-event-handler.js";
-import * as noPassLiveStateToParent from "./no-pass-live-state-to-parent.js";
-import * as noInitializeState from "./no-initialize-state.js";
-import * as noChainStateUpdates from "./no-chain-state-updates.js";
-import * as noDerivedState from "./no-derived-state.js";
-import * as noPassDataToParent from "./no-pass-data-to-parent.js";
-import * as noManageParent from "./no-manage-parent.js";
+import noEmptyEffect from "./no-empty-effect.js";
+import noAdjustStateWhenAPropChanges from "./no-adjust-state-when-a-prop-changes.js";
+import noResetAllStateWhenAPropChanges from "./no-reset-all-state-when-a-prop-changes.js";
+import noEventHandler from "./no-event-handler.js";
+import noPassLiveStateToParent from "./no-pass-live-state-to-parent.js";
+import noInitializeState from "./no-initialize-state.js";
+import noChainStateUpdates from "./no-chain-state-updates.js";
+import noDerivedState from "./no-derived-state.js";
+import noPassDataToParent from "./no-pass-data-to-parent.js";
+import noManageParent from "./no-manage-parent.js";
 import globals from "globals";
 import "./util/javascript.js";
 
+/**
+ * @type {import("eslint").ESLint.Plugin}
+ */
 const plugin = {
   meta: {
     name: "react-you-might-not-need-an-effect",
   },
   configs: {},
   rules: {
-    [noEmptyEffect.name]: noEmptyEffect.rule,
-    [noResetAllStateWhenAPropChanges.name]:
-      noResetAllStateWhenAPropChanges.rule,
-    [noAdjustStateWhenAPropChanges.name]: noAdjustStateWhenAPropChanges.rule,
-    [noEventHandler.name]: noEventHandler.rule,
-    [noPassLiveStateToParent.name]: noPassLiveStateToParent.rule,
-    [noPassDataToParent.name]: noPassDataToParent.rule,
-    [noManageParent.name]: noManageParent.rule,
-    [noInitializeState.name]: noInitializeState.rule,
-    [noChainStateUpdates.name]: noChainStateUpdates.rule,
-    [noDerivedState.name]: noDerivedState.rule,
+    "no-empty-effect": noEmptyEffect,
+    "no-adjust-state-when-a-prop-changes": noAdjustStateWhenAPropChanges,
+    "no-reset-all-state-when-a-prop-changes": noResetAllStateWhenAPropChanges,
+    "no-event-handler": noEventHandler,
+    "no-pass-live-state-to-parent": noPassLiveStateToParent,
+    "no-pass-data-to-parent": noPassDataToParent,
+    "no-manage-parent": noManageParent,
+    "no-initialize-state": noInitializeState,
+    "no-chain-state-updates": noChainStateUpdates,
+    "no-derived-state": noDerivedState,
   },
 };
 

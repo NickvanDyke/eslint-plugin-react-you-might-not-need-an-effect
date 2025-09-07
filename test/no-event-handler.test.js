@@ -1,7 +1,7 @@
-import { rule, messages, name } from "../src/no-event-handler.js";
+import rule from "../src/no-event-handler.js";
 import { MyRuleTester, js } from "./rule-tester.js";
 
-new MyRuleTester().run(name, rule, {
+new MyRuleTester().run("no-event-handler", rule, {
   valid: [
     {
       name: "Sychronizing with external system",
@@ -101,7 +101,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidEventHandler,
+          messageId: "avoidEventHandler",
         },
       ],
     },
@@ -132,7 +132,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidEventHandler,
+          messageId: "avoidEventHandler",
         },
       ],
     },
@@ -163,7 +163,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidEventHandler,
+          messageId: "avoidEventHandler",
         },
       ],
     },
@@ -194,7 +194,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidEventHandler,
+          messageId: "avoidEventHandler",
         },
       ],
     },
@@ -233,7 +233,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidEventHandler,
+          messageId: "avoidEventHandler",
         },
       ],
     },

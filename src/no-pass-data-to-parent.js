@@ -9,11 +9,10 @@ import {
 } from "./util/react.js";
 import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
 
-export const name = "no-pass-data-to-parent";
-export const messages = {
-  avoidPassingDataToParent: "avoidPassingDataToParent",
-};
-export const rule = {
+/**
+ * @type {import("eslint").Rule.RuleModule}
+ */
+export default {
   meta: {
     type: "suggestion",
     docs: {
@@ -22,7 +21,7 @@ export const rule = {
     },
     schema: [],
     messages: {
-      [messages.avoidPassingDataToParent]:
+      avoidPassingDataToParent:
         "Avoid passing data to parents in an effect. Instead, let the parent fetch the data itself and pass it down to the child as a prop.",
     },
   },
@@ -50,7 +49,7 @@ export const rule = {
           ) {
             context.report({
               node: callExpr,
-              messageId: messages.avoidPassingDataToParent,
+              messageId: "avoidPassingDataToParent",
             });
           }
         });

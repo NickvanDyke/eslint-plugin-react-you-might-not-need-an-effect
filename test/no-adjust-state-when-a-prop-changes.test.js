@@ -1,11 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import {
-  rule,
-  name,
-  messages,
-} from "../src/no-adjust-state-when-a-prop-changes.js";
+import rule from "../src/no-adjust-state-when-a-prop-changes.js";
 
-new MyRuleTester().run(name, rule, {
+new MyRuleTester().run("no-adjust-state-when-a-prop-changes", rule, {
   valid: [
     {
       name: "Adjusting state directly during render",
@@ -62,7 +58,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidAdjustingStateWhenAPropChanges,
+          messageId: "avoidAdjustingStateWhenAPropChanges",
         },
       ],
     },
@@ -81,7 +77,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidAdjustingStateWhenAPropChanges,
+          messageId: "avoidAdjustingStateWhenAPropChanges",
         },
       ],
     },

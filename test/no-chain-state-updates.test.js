@@ -1,7 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import { rule, name, messages } from "../src/no-chain-state-updates.js";
+import rule from "../src/no-chain-state-updates.js";
 
-new MyRuleTester().run(name, rule, {
+new MyRuleTester().run("no-chain-state-updates", rule, {
   valid: [
     {
       name: "Setting state to literal when props change",
@@ -57,7 +57,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidChainingStateUpdates,
+          messageId: "avoidChainingStateUpdates",
         },
       ],
     },
@@ -77,7 +77,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidChainingStateUpdates,
+          messageId: "avoidChainingStateUpdates",
         },
       ],
     },
@@ -96,7 +96,7 @@ new MyRuleTester().run(name, rule, {
       `,
       errors: [
         {
-          messageId: messages.avoidChainingStateUpdates,
+          messageId: "avoidChainingStateUpdates",
           data: { state: "state" },
         },
       ],

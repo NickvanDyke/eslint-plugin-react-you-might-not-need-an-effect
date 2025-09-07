@@ -7,11 +7,10 @@ import {
 } from "./util/react.js";
 import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
 
-export const name = "no-pass-live-state-to-parent";
-export const messages = {
-  avoidPassingLiveStateToParent: "avoidPassingLiveStateToParent",
-};
-export const rule = {
+/**
+ * @type {import("eslint").Rule.RuleModule}
+ */
+export default {
   meta: {
     type: "suggestion",
     docs: {
@@ -21,7 +20,7 @@ export const rule = {
     },
     schema: [],
     messages: {
-      [messages.avoidPassingLiveStateToParent]:
+      avoidPassingLiveStateToParent:
         "Avoid passing live state to parents in an effect. Instead, lift the state to the parent and pass it down to the child as a prop.",
     },
   },
@@ -43,7 +42,7 @@ export const rule = {
           if (isStateInArgs) {
             context.report({
               node: callExpr,
-              messageId: messages.avoidPassingLiveStateToParent,
+              messageId: "avoidPassingLiveStateToParent",
             });
           }
         });

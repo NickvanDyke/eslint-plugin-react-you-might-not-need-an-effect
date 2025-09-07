@@ -10,11 +10,10 @@ import {
 } from "./util/react.js";
 import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
 
-export const name = "no-derived-state";
-export const messages = {
-  avoidDerivedState: "avoidDerivedState",
-};
-export const rule = {
+/**
+ * @type {import('eslint').Rule.RuleModule}
+ */
+export default {
   meta: {
     type: "suggestion",
     docs: {
@@ -23,7 +22,7 @@ export const rule = {
     },
     schema: [],
     messages: {
-      [messages.avoidDerivedState]:
+      avoidDerivedState:
         'Avoid storing derived state. Compute "{{state}}" directly during render, optionally with `useMemo` if it\'s expensive.',
     },
   },
@@ -64,7 +63,7 @@ export const rule = {
           if (isAllArgsInternal || isValueAlwaysInSync) {
             context.report({
               node: callExpr,
-              messageId: messages.avoidDerivedState,
+              messageId: "avoidDerivedState",
               data: { state: stateName },
             });
           }
