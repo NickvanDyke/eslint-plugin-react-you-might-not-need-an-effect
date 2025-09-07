@@ -6,7 +6,6 @@ import {
   isDirectCall,
   isProp,
   isStateSetter,
-  isUseEffect,
 } from "./util/react.js";
 
 export const name = "no-adjust-state-when-a-prop-changes";
@@ -28,7 +27,6 @@ export const rule = {
   },
   create: (context) => ({
     CallExpression: (node) => {
-      if (!isUseEffect(node)) return;
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;

@@ -5,7 +5,6 @@ import {
   getUseStateNode,
   isDirectCall,
   isStateSetter,
-  isUseEffect,
 } from "./util/react.js";
 
 export const name = "no-initialize-state";
@@ -26,7 +25,6 @@ export const rule = {
   },
   create: (context) => ({
     CallExpression: (node) => {
-      if (!isUseEffect(node)) return;
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;

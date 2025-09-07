@@ -8,7 +8,7 @@ export const rule = {
   meta: {
     type: "suggestion",
     docs: {
-      description: "Disallow empty React effects.",
+      description: "Disallow empty effects.",
     },
     schema: [],
     messages: {

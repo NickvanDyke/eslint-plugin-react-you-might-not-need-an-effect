@@ -1,8 +1,4 @@
-import {
-  isUseEffect,
-  getEffectFnRefs,
-  getEffectDepsRefs,
-} from "./util/react.js";
+import { getEffectFnRefs, getEffectDepsRefs } from "./util/react.js";
 import { findDownstreamNodes, getDownstreamRefs } from "./util/ast.js";
 import { isState } from "./util/react.js";
 
@@ -25,7 +21,6 @@ export const rule = {
   },
   create: (context) => ({
     CallExpression: (node) => {
-      if (!isUseEffect(node)) return;
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;

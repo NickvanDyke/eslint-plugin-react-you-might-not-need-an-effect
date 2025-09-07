@@ -1,6 +1,5 @@
 import { getCallExpr, traverse } from "./util/ast.js";
 import {
-  isUseEffect,
   getEffectFnRefs,
   getEffectDepsRefs,
   isStateSetter,
@@ -33,7 +32,6 @@ export const rule = {
   },
   create: (context) => ({
     CallExpression: (node) => {
-      if (!isUseEffect(node)) return;
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
