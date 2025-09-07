@@ -5,7 +5,6 @@ import {
   getUpstreamReactVariables,
   isDirectCall,
   isFnRef,
-  isHOCProp,
   isProp,
   isStateSetter,
   isUseEffect,
@@ -37,7 +36,7 @@ export const rule = {
 
       const isAllDepsProps = depsRefs
         .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved))
-        .notEmptyEvery((variable) => isProp(variable) && !isHOCProp(variable));
+        .notEmptyEvery((variable) => isProp(variable));
 
       effectFnRefs
         .filter(isFnRef)

@@ -7,7 +7,6 @@ import {
   isStateSetter,
   getUseStateNode,
   isProp,
-  isHOCProp,
   getUpstreamReactVariables,
   isState,
   countCalls,
@@ -56,8 +55,7 @@ export const rule = {
             getUpstreamReactVariables(context, ref.resolved),
           );
           const isAllArgsInternal = argsUpstreamVars.notEmptyEvery(
-            (variable) =>
-              isState(variable) || (isProp(variable) && !isHOCProp(variable)),
+            (variable) => isState(variable) || isProp(variable),
           );
           const isAllArgsInDeps = argsUpstreamVars.notEmptyEvery((argVar) =>
             depsUpstreamVars.some((depVar) => argVar.name === depVar.name),

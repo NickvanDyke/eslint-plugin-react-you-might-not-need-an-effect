@@ -5,7 +5,6 @@ import {
   isFnRef,
   isDirectCall,
   isPropCallback,
-  isHOCProp,
   getUpstreamReactVariables,
   isState,
   isRef,
@@ -39,9 +38,7 @@ export const rule = {
       effectFnRefs
         .filter(isFnRef)
         .filter((ref) => isDirectCall(ref.identifier))
-        .filter(
-          (ref) => isPropCallback(context, ref) && !isHOCProp(ref.resolved),
-        )
+        .filter((ref) => isPropCallback(context, ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
           const argsUpstreamVariables = callExpr.arguments

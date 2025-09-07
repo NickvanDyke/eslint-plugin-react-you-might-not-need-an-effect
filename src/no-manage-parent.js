@@ -3,7 +3,7 @@ import {
   getEffectFnRefs,
   getDependenciesRefs,
 } from "./util/react.js";
-import { isProp, isHOCProp } from "./util/react.js";
+import { isProp } from "./util/react.js";
 
 export const name = "no-manage-parent";
 export const messages = {
@@ -30,11 +30,7 @@ export const rule = {
 
       if (effectFnRefs.length === 0) return;
 
-      if (
-        effectFnRefs
-          .concat(depsRefs)
-          .every((ref) => isProp(ref.resolved) && !isHOCProp(ref.resolved))
-      ) {
+      if (effectFnRefs.concat(depsRefs).every((ref) => isProp(ref.resolved))) {
         context.report({
           node,
           messageId: messages.avoidManagingParent,

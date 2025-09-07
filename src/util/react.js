@@ -132,18 +132,17 @@ export const isState = (variable) =>
   variable.defs.some((def) => isUseState(def.node));
 export const isRef = (variable) =>
   variable.defs.some((def) => isUseRef(def.node));
+// Returns false for props of HOCs like `withRouter` because they usually have side effects.
 export const isProp = (variable) =>
-  variable.defs.some(
-    (def) =>
+  variable.defs.some((def) => {
+    const declNode = getDeclNode(def.node);
+    return (
       def.type === "Parameter" &&
-      (isReactFunctionalComponent(getDeclNode(def.node)) ||
-        isCustomHook(getDeclNode(def.node))),
-  );
-export const isHOCProp = (variable) =>
-  variable.defs.some(
-    (def) =>
-      def.type === "Parameter" && isReactFunctionalHOC(getDeclNode(def.node)),
-  );
+      ((isReactFunctionalComponent(declNode) &&
+        !isReactFunctionalHOC(declNode)) ||
+        isCustomHook(declNode))
+    );
+  });
 
 const getDeclNode = (node) =>
   node.type === "ArrowFunctionExpression"
