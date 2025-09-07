@@ -2,7 +2,7 @@ import { getCallExpr, traverse } from "./util/ast.js";
 import {
   isUseEffect,
   getEffectFnRefs,
-  getDependenciesRefs,
+  getEffectDepsRefs,
   isStateSetter,
   isProp,
   getUseStateNode,
@@ -35,7 +35,7 @@ export const rule = {
     CallExpression: (node) => {
       if (!isUseEffect(node)) return;
       const effectFnRefs = getEffectFnRefs(context, node);
-      const depsRefs = getDependenciesRefs(context, node);
+      const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
       const propUsedToResetAllState = findPropUsedToResetAllState(

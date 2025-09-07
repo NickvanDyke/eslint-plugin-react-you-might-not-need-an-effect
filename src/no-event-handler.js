@@ -1,7 +1,7 @@
 import {
   isUseEffect,
   getEffectFnRefs,
-  getDependenciesRefs,
+  getEffectDepsRefs,
 } from "./util/react.js";
 import { findDownstreamNodes, getDownstreamRefs } from "./util/ast.js";
 import { isState } from "./util/react.js";
@@ -27,7 +27,7 @@ export const rule = {
     CallExpression: (node) => {
       if (!isUseEffect(node)) return;
       const effectFnRefs = getEffectFnRefs(context, node);
-      const depsRefs = getDependenciesRefs(context, node);
+      const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
       // TODO: Can we also flag this when the deps are internal, and the body calls internal stuff?

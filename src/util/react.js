@@ -84,7 +84,8 @@ export const isUseEffect = (node) =>
       node.callee.object.name === "React" &&
       node.callee.property.name === "useEffect"));
 
-export const getEffectFn = (node) => {
+// NOTE: When `MemberExpression` (even nested ones), a `Reference` is only the root object, not the function.
+export const getEffectFnRefs = (context, node) => {
   if (!isUseEffect(node) || node.arguments.length < 1) {
     return undefined;
   }
@@ -97,20 +98,10 @@ export const getEffectFn = (node) => {
     return undefined;
   }
 
-  return effectFn;
-};
-
-// NOTE: When `MemberExpression` (even nested ones), a `Reference` is only the root object, not the function.
-export const getEffectFnRefs = (context, node) => {
-  const effectFn = getEffectFn(node);
-  if (!effectFn) {
-    return null;
-  }
-
   return getDownstreamRefs(context, effectFn);
 };
 
-export function getDependenciesRefs(context, node) {
+export function getEffectDepsRefs(context, node) {
   if (!isUseEffect(node) || node.arguments.length < 2) {
     return undefined;
   }

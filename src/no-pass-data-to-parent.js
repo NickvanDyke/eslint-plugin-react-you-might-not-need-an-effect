@@ -1,7 +1,7 @@
 import {
   isUseEffect,
   getEffectFnRefs,
-  getDependenciesRefs,
+  getEffectDepsRefs,
   isDirectCall,
   isPropCallback,
   isState,
@@ -31,7 +31,7 @@ export const rule = {
     CallExpression: (node) => {
       if (!isUseEffect(node)) return;
       const effectFnRefs = getEffectFnRefs(context, node);
-      const depsRefs = getDependenciesRefs(context, node);
+      const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
       effectFnRefs

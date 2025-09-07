@@ -1,7 +1,7 @@
 import {
   isUseEffect,
   getEffectFnRefs,
-  getDependenciesRefs,
+  getEffectDepsRefs,
 } from "./util/react.js";
 import { isProp } from "./util/react.js";
 
@@ -25,7 +25,7 @@ export const rule = {
     CallExpression: (node) => {
       if (!isUseEffect(node)) return;
       const effectFnRefs = getEffectFnRefs(context, node);
-      const depsRefs = getDependenciesRefs(context, node);
+      const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
       if (effectFnRefs.length === 0) return;

@@ -1,6 +1,6 @@
 import { getCallExpr } from "./util/ast.js";
 import {
-  getDependenciesRefs,
+  getEffectDepsRefs,
   getEffectFnRefs,
   isArgsAllLiterals,
   isDirectCall,
@@ -30,7 +30,7 @@ export const rule = {
     CallExpression: (node) => {
       if (!isUseEffect(node)) return;
       const effectFnRefs = getEffectFnRefs(context, node);
-      const depsRefs = getDependenciesRefs(context, node);
+      const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
       const isAllDepsProps = depsRefs.notEmptyEvery((ref) =>
