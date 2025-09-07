@@ -6,8 +6,7 @@ import {
   isIIFE,
 } from "./ast.js";
 
-// TODO: Most of these don't need to be exported.
-export const isReactFunctionalComponent = (node) =>
+const isReactFunctionalComponent = (node) =>
   (node.type === "FunctionDeclaration" ||
     (node.type === "VariableDeclarator" &&
       (node.init.type === "ArrowFunctionExpression" ||
@@ -18,7 +17,7 @@ export const isReactFunctionalComponent = (node) =>
 // NOTE: Returns false for known pure HOCs -- `memo` and `forwardRef`.
 // TODO: Will not detect when they define the component normally and then export it wrapped in the HOC.
 // e.g. `const MyComponent = (props) => {...}; export default memo(MyComponent);`
-export const isReactFunctionalHOC = (node) =>
+const isReactFunctionalHOC = (node) =>
   node.type === "VariableDeclarator" &&
   node.init &&
   node.init.type === "CallExpression" &&
@@ -30,7 +29,7 @@ export const isReactFunctionalHOC = (node) =>
   node.id.type === "Identifier" &&
   node.id.name[0].toUpperCase() === node.id.name[0];
 
-export const isCustomHook = (node) =>
+const isCustomHook = (node) =>
   (node.type === "FunctionDeclaration" ||
     (node.type === "VariableDeclarator" &&
       node.init &&
@@ -40,7 +39,7 @@ export const isCustomHook = (node) =>
   node.id.name.startsWith("use") &&
   node.id.name[3] === node.id.name[3].toUpperCase();
 
-export const isUseState = (node) =>
+const isUseState = (node) =>
   node.type === "VariableDeclarator" &&
   node.init &&
   node.init.type === "CallExpression" &&
@@ -69,7 +68,7 @@ const isPropDef = (def) => {
   );
 };
 
-export const isUseRef = (node) =>
+const isUseRef = (node) =>
   node.type === "VariableDeclarator" &&
   node.init &&
   node.init.type === "CallExpression" &&
