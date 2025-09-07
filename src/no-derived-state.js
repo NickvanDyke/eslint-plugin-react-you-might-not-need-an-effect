@@ -8,7 +8,6 @@ import {
   isProp,
   getUpstreamReactVariables,
   isState,
-  countCalls,
 } from "./util/react.js";
 import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
 
@@ -75,3 +74,8 @@ export const rule = {
     },
   }),
 };
+
+const countCalls = (ref) =>
+  ref.resolved.references.filter(
+    (ref) => ref.identifier.parent.type === "CallExpression",
+  ).length;

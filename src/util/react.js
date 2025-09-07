@@ -1,12 +1,11 @@
 import {
-  traverse,
   getUpstreamVariables,
   getDownstreamRefs,
   getCallExpr,
   isIIFE,
 } from "./ast.js";
 
-const isReactFunctionalComponent = (node) =>
+export const isReactFunctionalComponent = (node) =>
   (node.type === "FunctionDeclaration" ||
     (node.type === "VariableDeclarator" &&
       (node.init.type === "ArrowFunctionExpression" ||
@@ -17,7 +16,7 @@ const isReactFunctionalComponent = (node) =>
 // NOTE: Returns false for known pure HOCs -- `memo` and `forwardRef`.
 // TODO: Will not detect when they define the component normally and then export it wrapped in the HOC.
 // e.g. `const MyComponent = (props) => {...}; export default memo(MyComponent);`
-const isReactFunctionalHOC = (node) =>
+export const isReactFunctionalHOC = (node) =>
   node.type === "VariableDeclarator" &&
   node.init &&
   node.init.type === "CallExpression" &&
@@ -29,7 +28,7 @@ const isReactFunctionalHOC = (node) =>
   node.id.type === "Identifier" &&
   node.id.name[0].toUpperCase() === node.id.name[0];
 
-const isCustomHook = (node) =>
+export const isCustomHook = (node) =>
   (node.type === "FunctionDeclaration" ||
     (node.type === "VariableDeclarator" &&
       node.init &&
@@ -39,7 +38,7 @@ const isCustomHook = (node) =>
   node.id.name.startsWith("use") &&
   node.id.name[3] === node.id.name[3].toUpperCase();
 
-const isUseState = (node) =>
+export const isUseState = (node) =>
   node.type === "VariableDeclarator" &&
   node.init &&
   node.init.type === "CallExpression" &&
@@ -53,7 +52,7 @@ const isUseState = (node) =>
     return !el || el.type === "Identifier";
   });
 
-const isPropDef = (def) => {
+export const isPropDef = (def) => {
   const declaringNode =
     def.node.type === "ArrowFunctionExpression"
       ? def.node.parent.type === "CallExpression"
@@ -68,7 +67,7 @@ const isPropDef = (def) => {
   );
 };
 
-const isUseRef = (node) =>
+export const isUseRef = (node) =>
   node.type === "VariableDeclarator" &&
   node.init &&
   node.init.type === "CallExpression" &&
@@ -174,90 +173,6 @@ export const isDirectCall = (node) => {
     return isUseEffect(node.parent);
   } else {
     return isDirectCall(node.parent);
-  }
-};
-
-export const findPropUsedToResetAllState = (
-  context,
-  effectFnRefs,
-  depsRefs,
-  useEffectNode,
-) => {
-  const stateSetterRefs = effectFnRefs.filter((ref) =>
-    isStateSetter(context, ref),
-  );
-
-  const isAllStateReset =
-    stateSetterRefs.length > 0 &&
-    stateSetterRefs.every((ref) => isSetStateToInitialValue(context, ref)) &&
-    stateSetterRefs.length ===
-      countUseStates(context, findContainingNode(useEffectNode));
-
-  return isAllStateReset
-    ? depsRefs.find((ref) => isProp(context, ref))
-    : undefined;
-};
-
-const isSetStateToInitialValue = (context, setterRef) => {
-  const setStateToValue = getCallExpr(setterRef).arguments[0];
-  const stateInitialValue = getUseStateNode(context, setterRef).init
-    .arguments[0];
-
-  // `useState()` (with no args) defaults to `undefined`,
-  // so ommitting the arg is equivalent to passing `undefined`.
-  // Technically this would false positive if they shadowed
-  // `undefined` in only one of the scopes (only possible via `var`),
-  // but I hope no one would do that.
-  const isUndefined = (node) => node === undefined || node.name === "undefined";
-  if (isUndefined(setStateToValue) && isUndefined(stateInitialValue)) {
-    return true;
-  }
-
-  // `sourceCode.getText()` returns the entire file when passed null/undefined - let's short circuit that
-  if (setStateToValue === null && stateInitialValue === null) {
-    return true;
-  } else if (
-    (setStateToValue && !stateInitialValue) ||
-    (!setStateToValue && stateInitialValue)
-  ) {
-    return false;
-  }
-
-  return (
-    context.sourceCode.getText(setStateToValue) ===
-    context.sourceCode.getText(stateInitialValue)
-  );
-};
-
-const countUseStates = (context, componentNode) => {
-  let count = 0;
-
-  traverse(context, componentNode, (node) => {
-    if (isUseState(node)) {
-      count++;
-    }
-  });
-
-  return count;
-};
-
-export const countCalls = (ref) =>
-  ref.resolved.references.filter(
-    (ref) => ref.identifier.parent.type === "CallExpression",
-  ).length;
-
-// Returns the component or custom hook that contains the `useEffect` node
-const findContainingNode = (node) => {
-  if (!node) {
-    return undefined;
-  } else if (
-    isReactFunctionalComponent(node) ||
-    isReactFunctionalHOC(node) ||
-    isCustomHook(node)
-  ) {
-    return node;
-  } else {
-    return findContainingNode(node.parent);
   }
 };
 
