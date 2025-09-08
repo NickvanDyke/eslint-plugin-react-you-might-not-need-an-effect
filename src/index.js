@@ -1,6 +1,6 @@
 import noEmptyEffect from "./no-empty-effect.js";
-import noAdjustStateWhenAPropChanges from "./no-adjust-state-when-a-prop-changes.js";
-import noResetAllStateWhenAPropChanges from "./no-reset-all-state-when-a-prop-changes.js";
+import noAdjustStateOnPropChange from "./no-adjust-state-on-prop-change.js";
+import noResetAllStateOnPropChange from "./no-reset-all-state-on-prop-change.js";
 import noEventHandler from "./no-event-handler.js";
 import noPassLiveStateToParent from "./no-pass-live-state-to-parent.js";
 import noInitializeState from "./no-initialize-state.js";
@@ -21,8 +21,8 @@ const plugin = {
   configs: {},
   rules: {
     "no-empty-effect": noEmptyEffect,
-    "no-adjust-state-when-a-prop-changes": noAdjustStateWhenAPropChanges,
-    "no-reset-all-state-when-a-prop-changes": noResetAllStateWhenAPropChanges,
+    "no-adjust-state-on-prop-change": noAdjustStateOnPropChange,
+    "no-reset-all-state-on-prop-change": noResetAllStateOnPropChange,
     "no-event-handler": noEventHandler,
     "no-pass-live-state-to-parent": noPassLiveStateToParent,
     "no-pass-data-to-parent": noPassDataToParent,

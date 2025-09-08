@@ -1,7 +1,7 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import rule from "../src/no-adjust-state-when-a-prop-changes.js";
+import rule from "../src/no-adjust-state-on-prop-change.js";
 
-new MyRuleTester().run("no-adjust-state-when-a-prop-changes", rule, {
+new MyRuleTester().run("no-adjust-state-on-prop-change", rule, {
   valid: [
     {
       name: "Adjusting state directly during render",

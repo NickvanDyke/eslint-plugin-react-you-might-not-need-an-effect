@@ -1,7 +1,7 @@
-import rule from "../src/no-reset-all-state-when-a-prop-changes.js";
+import rule from "../src/no-reset-all-state-on-prop-change.js";
 import { MyRuleTester, js } from "./rule-tester.js";
 
-new MyRuleTester().run("no-reset-all-state-when-a-prop-changes", rule, {
+new MyRuleTester().run("no-reset-all-state-on-prop-change", rule, {
   valid: [
     {
       name: "Set state when a prop changes, but not to its default value",
