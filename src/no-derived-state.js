@@ -49,9 +49,9 @@ export default {
             (ref) => isState(context, ref) || isProp(context, ref),
           );
 
-          const argsUpstreamVars = callExpr.arguments
-            .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved));
+          const argsUpstreamVars = argsRefs.flatMap((ref) =>
+            getUpstreamReactVariables(context, ref.resolved),
+          );
           const depsUpstreamVars = depsRefs.flatMap((ref) =>
             getUpstreamReactVariables(context, ref.resolved),
           );
