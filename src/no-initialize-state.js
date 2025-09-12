@@ -28,7 +28,7 @@ export default {
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
-      // TODO: Should this length check account for the setter in the deps?
+      // TODO: Should this length check account for the setter in the deps? exhaustive-deps doesn't warn one way or the other
       if (depsRefs.length > 0) return;
 
       effectFnRefs

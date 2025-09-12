@@ -2,7 +2,7 @@ import {
   getUpstreamVariables,
   getDownstreamRefs,
   getCallExpr,
-  isIIFE,
+  isSynchronousIIFE,
 } from "./ast.js";
 
 export const isReactFunctionalComponent = (node) =>
@@ -148,7 +148,7 @@ export const getUseStateNode = (context, ref) => {
 };
 
 // Returns true if the node is called directly inside a `useEffect`.
-// Note IIFEs do not break the "direct" chain because they're invoked immediately, as opposed to being a callback.
+// Note synchronous IIFEs do not break the "direct" chain because they're invoked immediately, as opposed to being a callback.
 // Non-direct calls are likely inside a callback passed to an external system like `window.addEventListener`,
 // or a Promise chain that (probably) retrieves external data.
 // Note we'll still analyze derived setters because isStateSetter considers that.
@@ -159,7 +159,7 @@ export const isDirectCall = (node) => {
   } else if (
     (node.type === "ArrowFunctionExpression" ||
       node.type === "FunctionExpression") &&
-    !isIIFE(node.parent)
+    !isSynchronousIIFE(node.parent)
   ) {
     return isUseEffect(node.parent);
   } else {

@@ -4,7 +4,7 @@ import rule from "../src/no-initialize-state.js";
 new MyRuleTester().run("no-initialize-state", rule, {
   valid: [
     {
-      name: "To external data",
+      name: "To external data via callback",
       code: js`
         function MyComponent() {
           const [state, setState] = useState();
@@ -18,6 +18,46 @@ new MyRuleTester().run("no-initialize-state", rule, {
       `,
     },
     {
+      name: "To external data via async IIFE",
+      code: js`
+        function MyComponent() {
+          const [state, setState] = useState();
+
+          useEffect(() => {
+            (async () => {
+              const response = await fetch("https://api.example.com/data");
+              const data = await response.json();
+              setState(data);
+            })();
+          }, []);
+        }
+      `,
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
+      // In practice, the IIFE should not be marked as `async`. Just documenting this behavior.
+      name: "To literal via async IIFE",
+      code: js`
+        import { useEffect, useState } from 'react';
+
+        export const App = () => {
+          const [data, setData] = useState(null);
+
+          const iife = () => {
+            return (() => {
+              setData('Meow');
+            })();
+          };
+
+          useEffect(() => { 
+            (async () => {
+              await iife();
+            })();
+          }, []);
+        };
+      `,
+    },
+    {
       name: "To literal in IIFE inside callback",
       code: js`
         import { useEffect, useState } from 'react';
@@ -27,7 +67,7 @@ new MyRuleTester().run("no-initialize-state", rule, {
 
           useEffect(() => {
             window.addEventListener('load', () => {
-              (async () => {
+              (() => {
                 setState('Loaded');
               })();
             });
@@ -44,7 +84,7 @@ new MyRuleTester().run("no-initialize-state", rule, {
           const [state, setState] = useState();
 
           useEffect(() => {
-            (async () => {
+            (() => {
               window.addEventListener('load', () => {
                 setState('Loaded');
               });
@@ -110,34 +150,6 @@ new MyRuleTester().run("no-initialize-state", rule, {
         {
           messageId: "avoidInitializingState",
           data: { state: "state" },
-        },
-      ],
-    },
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
-      name: "To literal via IIFE",
-      code: js`
-        import { useEffect, useState } from 'react';
-
-        export const App = () => {
-          const [data, setData] = useState(null);
-
-          const iife = () => {
-            return (async () => {
-              setData('Meow');
-            })();
-          };
-
-          useEffect(() => { 
-            (async () => {
-              await iife();
-            })();
-          }, []);
-        };
-      `,
-      errors: [
-        {
-          messageId: "avoidInitializingState",
         },
       ],
     },
