@@ -96,9 +96,6 @@ describe("recommended rules on real-world code", () => {
       },
       {
         // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/24
-        // TODO: Should we follow `contentRef.current` being passed as `element`, which is used for then derived state?
-        // If we do, this particular case shouldn't be flagged anyway, because the function passed to `ResizeObserver` is really a callback.
-        // Which I think isDirectCall should filter out?
         name: "ResizeObserver",
         code: js`
           function useHasOverflow({ contentRef, maxHeight }) {
