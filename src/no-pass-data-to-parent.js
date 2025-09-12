@@ -1,7 +1,6 @@
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
-  isDirectCall,
   isPropCallback,
   isState,
   isRef,
@@ -33,7 +32,7 @@ export default {
 
       effectFnRefs
         .filter((ref) => isPropCallback(context, ref))
-        .filter((ref) => isDirectCall(ref.identifier))
+        // We don't check `isDirectCall` because it shouldn't matter - passing data to the parent is passing data to the parent.
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 

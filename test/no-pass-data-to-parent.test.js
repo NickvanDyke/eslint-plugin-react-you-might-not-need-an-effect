@@ -121,6 +121,7 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
       // because refs are not quite state, e.g. don't cause re-renders.
       // However they *are* local to the component...
       // At the least, could use a different message when flagged.
+      // Or maybe user should be advised to use `forwardRef` instead? I think that's idiomatic.
       name: "Pass ref to parent",
       code: js`
         const Child = ({ onRef }) => {
@@ -198,6 +199,50 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
               onFetched(data);
             })();
           }, []);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidPassingDataToParent",
+        },
+      ],
+    },
+    {
+      // If parent needs to listen to child's DOM events, it should set up the listener itself.
+      // TODO: Better message? Advise to use `forwardRef`.
+      name: "Register callback on ref to pass data to parent",
+      code: js`
+        const Child = ({ onClicked }) => {
+          const ref = useRef();
+
+          useEffect(() => {
+            ref.current.addEventListener('click', (event) => {
+              onClicked(event);
+            });
+          }, [onFetched]);
+
+          return <SomeComponent ref={ref} />;
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidPassingDataToParent",
+        },
+      ],
+    },
+    {
+      name: "Pass window event data to parent",
+      code: js`
+        const Child = ({ onResized }) => {
+          useEffect(() => {
+            window.addEventListener('resize', (event) => {
+              onResized({
+                width: window.innerWidth,
+                height: window.innerHeight,
+              });
+            });
+            return () => window.removeEventListener('resize', handleResize);
+          }, [onResized]);
         }
       `,
       errors: [
