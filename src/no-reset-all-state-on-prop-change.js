@@ -100,6 +100,7 @@ const isSetStateToInitialValue = (context, setterRef) => {
 
   // TODO: This is one of the few times we compare just the immediate nodes,
   // not upstream variables - that seems pretty complicated here?
+  // At the least, upstream functions would have to return literals for us to consider too, not just variables...
   return (
     context.sourceCode.getText(setStateToValue) ===
     context.sourceCode.getText(stateInitialValue)

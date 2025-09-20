@@ -31,7 +31,7 @@ new MyRuleTester().run("no-reset-all-state-on-prop-change", rule, {
       `,
     },
     {
-      // undefined !== null
+      // Because undefined !== null
       name: "Undefined state initializer compared to state setter with literal null",
       code: js`
         function List({ items }) {
@@ -221,6 +221,28 @@ new MyRuleTester().run("no-reset-all-state-on-prop-change", rule, {
       errors: [
         {
           messageId: "avoidResettingAllStateWhenAPropChanges",
+        },
+      ],
+    },
+    {
+      name: "Reset all state to function call result when a prop changes",
+      code: js`
+        function ProfilePage({ userId }) {
+          const [comment, setComment] = useState(getInitialComment());
+
+          useEffect(() => {
+            setComment(getInitialComment());
+          }, [userId]);
+        }
+
+        function getInitialComment() {
+          return 'type something';
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidResettingAllStateWhenAPropChanges",
+          data: { prop: "userId" },
         },
       ],
     },
