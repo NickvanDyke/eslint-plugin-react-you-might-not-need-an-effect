@@ -14,6 +14,7 @@ export const isReactFunctionalComponent = (node) =>
   node.id.name[0].toUpperCase() === node.id.name[0];
 
 // NOTE: Returns false for known pure HOCs -- `memo` and `forwardRef`.
+// Basically this is meant to detect custom HOCs that may have side effects, particularly when using their props.
 // TODO: Will not detect when they define the component normally and then export it wrapped in the HOC.
 // e.g. `const MyComponent = (props) => {...}; export default memo(MyComponent);`
 export const isReactFunctionalHOC = (node) =>

@@ -98,6 +98,8 @@ const isSetStateToInitialValue = (context, setterRef) => {
     return false;
   }
 
+  // TODO: This is one of the few times we compare just the immediate nodes,
+  // not upstream variables - that seems pretty complicated here?
   return (
     context.sourceCode.getText(setStateToValue) ===
     context.sourceCode.getText(stateInitialValue)
@@ -105,9 +107,14 @@ const isSetStateToInitialValue = (context, setterRef) => {
 };
 
 const countUseStates = (context, componentNode) => {
+  if (!componentNode) {
+    return 0;
+  }
+
   let count = 0;
 
   traverse(context, componentNode, (node) => {
+    // TODO: Could optimize by not descending into nested functions/components, since hooks must be at the top level.
     if (isUseState(node)) {
       count++;
     }
@@ -116,7 +123,10 @@ const countUseStates = (context, componentNode) => {
   return count;
 };
 
-// Returns the component or custom hook that contains the `useEffect` node
+// Returns the component or custom hook that contains the `useEffect` node.
+// WARNING: Per the `isReactFunctionalComponent` etc. internals, this will return undefined for some non-idiomatic component definitions.
+// e.g. `function buildComponent(arg1, arg2) { return <div />; }`
+// Not sure we can account for that without introducing false positives, and those are rare and arguably bad practice.
 const findContainingNode = (node) => {
   if (!node) {
     return undefined;

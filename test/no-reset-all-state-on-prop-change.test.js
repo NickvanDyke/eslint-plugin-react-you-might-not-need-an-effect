@@ -43,6 +43,23 @@ new MyRuleTester().run("no-reset-all-state-on-prop-change", rule, {
         }
       `,
     },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/31
+      // Verifies that the rule doesn't crash when it can't find the containing component to count `useState`s.
+      // This *is* a rule-break, but detecting the lowercased function name would probably introduce more false positives than it'd save in false negatives.
+      name: "Reset all state when a prop changes inside lowercased function definition",
+      code: js`
+        function buildComponent() {
+          const [comment, setComment] = useState('type something');
+
+          useEffect(() => {
+            setComment('type something');
+          }, [userId]);
+
+          return <div>hi</div>;
+        }
+      `,
+    },
   ],
   invalid: [
     {
