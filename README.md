@@ -6,13 +6,13 @@ ESLint plugin to catch [unnecessary React `useEffect`s](https://react.dev/learn/
 
 ### Installation
 
-**NPM**:
+#### NPM
 
 ```bash
 npm install --save-dev eslint-plugin-react-you-might-not-need-an-effect
 ```
 
-**Yarn**:
+#### Yarn
 
 ```bash
 yarn add -D eslint-plugin-react-you-might-not-need-an-effect
@@ -42,9 +42,9 @@ export default [
 ];
 ```
 
-### Recommended
+### Suggested
 
-The plugin can provide more accurate analysis when you pass the correct dependencies to your effects — [`react-hooks/exhaustive-deps`](https://www.npmjs.com/package/eslint-plugin-react-hooks).
+The plugin can provide more accurate analysis when you pass the correct dependencies to your effects — consider using [`react-hooks/exhaustive-deps`](https://www.npmjs.com/package/eslint-plugin-react-hooks).
 
 ## 🔎 Rules
 
