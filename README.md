@@ -67,7 +67,7 @@ See the [tests](./test) for (in)valid examples for each rule.
 
 ## 💬 Feedback
 
-The ways to (mis)use an effect in real-world code are practically endless! If you encounter unexpected behavior or see opportunities for improvement, please [open an issue](https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/new). Your feedback helps improve the plugin for everyone!
+The ways to (mis)use an effect in real-world code are practically endless! This plugin is not exhaustive, and minimizes false positives at the expense of occasional false negatives. If you encounter unexpected behavior or see opportunities for improvement, please open an issue. Your feedback helps improve the plugin for everyone!
 
 ## 📖 Learn More
 
