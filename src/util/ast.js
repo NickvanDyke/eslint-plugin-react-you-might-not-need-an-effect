@@ -44,6 +44,12 @@ export const getUpstreamVariables = (
   visited.add(variable);
 
   const upstreamVariables = variable.defs
+    // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
+    // `init` covers for arrow functions; also needs `body` to descend into function declarations
+    // But then for function parameters (including props), `def.node.body` is the body of the function that they belong to,
+    // so we get *all* the downstream refs in it...
+    // We only want to descend when we're traversing up the function itself; no its parameters.
+    // Probably similar logic to in `getUpstreamReactVariables`.
     .filter((def) => !!def.node.init)
     .filter((def) => filter(def.node))
     .flatMap((def) => getDownstreamRefs(context, def.node.init))
@@ -91,9 +97,3 @@ export const getCallExpr = (ref, current = ref.identifier.parent) => {
 
   return undefined;
 };
-
-export const isSynchronousIIFE = (node) =>
-  node.type === "CallExpression" &&
-  (node.callee.type === "ArrowFunctionExpression" ||
-    node.callee.type === "FunctionExpression") &&
-  !node.callee.async;

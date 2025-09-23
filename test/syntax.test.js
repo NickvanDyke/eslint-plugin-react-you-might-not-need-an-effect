@@ -495,8 +495,8 @@ new MyRuleTester().run("syntax", noDerivedState, {
       ],
     },
     {
-      todo: true,
-      // TODO: Ah, I think we do descend, but the issue is `getUpstreamReactVariables` ignores
+      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
+      // Ah, I think we do descend, but the issue is `getUpstreamReactVariables` ignores
       // variables declared in FunctionDeclaration.params that aren't props...
       // So then the upstream variables are empty, resulting in `false` for `isState` and such.
       // But that's to prevent other false positives. How to narrow the logic?
@@ -510,7 +510,8 @@ new MyRuleTester().run("syntax", noDerivedState, {
       // I guess we have to assume those are impure. But for local, we can check the function body for any external refs.
       // Question is how to work that into the existing logic cleanly...
       // Ideally it just integrates with upstream logic, so we don't have to make special function checks like "is pure".
-      name: "Considers FunctionDeclaration function body and params",
+      name: "Considers VariableDeclaration function body and params",
+      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Dwayne');
@@ -547,6 +548,59 @@ new MyRuleTester().run("syntax", noDerivedState, {
 
           useEffect(() => {
             setFullName(computeName(firstName, lastName));
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      // TODO: I think this a similar root cause to the other function TODO in here - we don't descend into FunctionDeclaration bodies
+      name: "Immediately calling FunctionDeclaration derived setter",
+      todo: true,
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            function doSet() {
+              setFullName(firstName + ' ' + lastName);
+            }
+
+            doSet();
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      // TODO: Fails because `getCallExpr` returns the `doSet` call, *which has no arguments*,
+      // but internally calls the setter with internal arguments.
+      name: "Immediately calling VariableDeclaration no-arg derived setter",
+      todo: true,
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            const doSet = () => {
+              setFullName(firstName + ' ' + lastName);
+            }
+
+            doSet();
           }, [firstName, lastName]);
         }
       `,

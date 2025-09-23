@@ -1,7 +1,7 @@
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
-  isDirectCall,
+  isImmediateCall,
   isPropCallback,
   isState,
 } from "./util/react.js";
@@ -32,7 +32,7 @@ export default {
 
       effectFnRefs
         .filter((ref) => isPropCallback(context, ref))
-        .filter((ref) => isDirectCall(ref.identifier))
+        .filter((ref) => isImmediateCall(ref.identifier))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
           const isStateInArgs = callExpr.arguments

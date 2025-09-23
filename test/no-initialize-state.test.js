@@ -4,7 +4,7 @@ import rule from "../src/no-initialize-state.js";
 new MyRuleTester().run("no-initialize-state", rule, {
   valid: [
     {
-      name: "To external data via callback",
+      name: "To external data via Promise",
       code: js`
         function MyComponent() {
           const [state, setState] = useState();
@@ -34,31 +34,23 @@ new MyRuleTester().run("no-initialize-state", rule, {
       `,
     },
     {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
-      // In practice, the IIFE should not be marked as `async`. Just documenting this behavior.
-      name: "To literal via async IIFE",
+      // Don't know why someone would use a synchronous IIFE here,
+      // hence we don't make the effort to flag it, but just documenting this behavior.
+      name: "To literal inside synchronous IIFE",
       code: js`
-        import { useEffect, useState } from 'react';
+        function MyComponent() {
+          const [state, setState] = useState();
 
-        export const App = () => {
-          const [data, setData] = useState(null);
-
-          const iife = () => {
-            return (() => {
-              setData('Meow');
-            })();
-          };
-
-          useEffect(() => { 
-            (async () => {
-              await iife();
+          useEffect(() => {
+            (() => {
+              setState("Hello");
             })();
           }, []);
-        };
+        }
       `,
     },
     {
-      name: "To literal in IIFE inside callback",
+      name: "To literal inside IIFE inside callback",
       code: js`
         import { useEffect, useState } from 'react';
 
@@ -76,7 +68,7 @@ new MyRuleTester().run("no-initialize-state", rule, {
       `,
     },
     {
-      name: "To literal in callback inside IIFE",
+      name: "To literal inside callback inside IIFE",
       code: js`
         import { useEffect, useState } from 'react';
 

@@ -282,8 +282,64 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
     },
     {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
+      // TODO: Maybe move some of these to/from `syntax.test.js`
+      name: "Defined-then-called async function",
+      code: js`
+        function Component() {
+          const api = useFetchWrapper();
+          const [state, setState] = useState();
+
+          useEffect(() => {
+            async function fetchIt() {
+              const response = await fetch('/endpoint');
+              setState(response);
+            }
+
+            void fetchIt();
+          }, []);
+        }
+      `,
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
+      // For "always in sync" detection
+      name: "Defined-then-called async function with API in deps",
+      code: js`
+        function Component() {
+          const api = useFetchWrapper();
+          const [state, setState] = useState();
+
+          useEffect(() => {
+            async function fetchIt() {
+              const response = await api.doFetch('/endpoint');
+              setState(response);
+            }
+
+            void fetchIt();
+          }, [api]);
+        }
+      `,
+    },
+    {
+      name: "From external data retrieved in async IIFE with API in deps",
+      code: js`
+        function Component() {
+          const api = useFetchWrapper();
+          const [state, setState] = useState();
+
+          useEffect(() => {
+            (async function fetchIt() {
+              const response = await api.doFetch('/endpoint');
+              setState(response);
+            })();
+          }, [api]);
+        }
+      `,
+    },
+    {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
-      name: "From external data retrieved in async IIFE",
+      name: "From external data retrieved in overly-complicated async IIFE",
       code: js`
         import { useEffect, useState } from 'react';
 
@@ -315,6 +371,24 @@ new MyRuleTester().run("no-derived-state", rule, {
             <div>{response}</div>
           );
         };
+      `,
+    },
+    {
+      name: "Named function passed to event callback",
+      code: js`
+        function Component() {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          useEffect(() => {
+            function handleClick() {
+              setDoubleCount(count * 2);
+            }
+
+            document.addEventListener('click', handleClick);
+            return () => document.removeEventListener('click', handleClick);
+          }, [count]);
+        }
       `,
     },
   ],
@@ -627,11 +701,11 @@ new MyRuleTester().run("no-derived-state", rule, {
 
         function Component() {
           const [name, setName] = useState();
-          const [prefixedName, setPrefixedName] = useState();
-          const prefix = 'Dr. ';
+          const [fullName, setFullName] = useState();
+          const prefix = 'Dr.'
 
           const derivedSetter = useCallback((name) => {
-            setPrefixedName(prefix + name);
+            setFullName(prefix + ' ' + name);
           }, [prefix]);
 
           useEffect(() => {

@@ -3,7 +3,7 @@ import {
   getEffectDepsRefs,
   getEffectFnRefs,
   getUseStateNode,
-  isDirectCall,
+  isImmediateCall,
   isStateSetter,
 } from "./util/react.js";
 
@@ -33,7 +33,7 @@ export default {
 
       effectFnRefs
         .filter((ref) => isStateSetter(context, ref))
-        .filter((ref) => isDirectCall(ref.identifier))
+        .filter((ref) => isImmediateCall(ref.identifier))
         .forEach((ref) => {
           const useStateNode = getUseStateNode(context, ref);
           const stateName = (

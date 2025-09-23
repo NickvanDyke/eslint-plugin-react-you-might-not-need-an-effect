@@ -1,7 +1,7 @@
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
-  isDirectCall,
+  isImmediateCall,
   isStateSetter,
   getUseStateNode,
   isProp,
@@ -34,7 +34,7 @@ export default {
 
       effectFnRefs
         .filter((ref) => isStateSetter(context, ref))
-        .filter((ref) => isDirectCall(ref.identifier))
+        .filter((ref) => isImmediateCall(ref.identifier))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
           const useStateNode = getUseStateNode(context, ref);
