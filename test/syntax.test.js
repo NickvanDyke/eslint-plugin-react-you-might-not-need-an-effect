@@ -3,6 +3,8 @@ import noDerivedState from "../src/no-derived-state.js";
 
 // Analysis is quite syntax-dependent,
 // so here we have a bunch of semantically equivalent simple tests to verify various syntax.
+// While this tests `no-derived-state`, it's mostly about the utility functions under the hood.
+// TODO: may make more sense to unit test those directly
 new MyRuleTester().run("syntax", noDerivedState, {
   valid: [
     {
@@ -55,42 +57,6 @@ new MyRuleTester().run("syntax", noDerivedState, {
             setScrollPosition(0);
           }, [data.posts]);
         }
-      `,
-    },
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
-      name: "External IIFE",
-      code: js`
-        import { useEffect, useState } from 'react';
-
-        export const App = () => {
-          const [response, setResponse] = useState(null);
-
-          const fetchYesNoApi = () => {
-            return (async () => {
-              try {
-                const response = await fetch('https://yesno.wtf/api');
-                if (!response.ok) {
-                  throw new Error('Network error');
-                }
-                const data = await response.json();
-                setResponse(data);
-              } catch (err) {
-                console.error(err);
-              }
-            })();
-          };
-
-          useEffect(() => { 
-            (async () => {
-              await fetchYesNoApi();
-            })();
-          }, []);
-
-          return (
-            <div>{response}</div>
-          );
-        };
       `,
     },
   ],
@@ -525,6 +491,69 @@ new MyRuleTester().run("syntax", noDerivedState, {
         {
           messageId: "avoidDerivedState",
           data: { state: "total" },
+        },
+      ],
+    },
+    {
+      todo: true,
+      // TODO: Ah, I think we do descend, but the issue is `getUpstreamReactVariables` ignores
+      // variables declared in FunctionDeclaration.params that aren't props...
+      // So then the upstream variables are empty, resulting in `false` for `isState` and such.
+      // But that's to prevent other false positives. How to narrow the logic?
+      // Apparently not an issue for ArrowFunctionExpression.params...?
+      // But shouldn't this be already covered because getDownstreamRefs at the callsite returns the function AND the params we pass to it, which we then analyze?
+      // Maybe the function reference is not state, thus fails the check as a whole?
+      // Yeah I think so, because again we ignore its params when resolving its upstream variables.
+      // So it only contains internal references, and no external, but being empty fails the check,
+      // even though only referencing its params makes it a pure function.
+      // Careful how that interacts with imported function references too...
+      // I guess we have to assume those are impure. But for local, we can check the function body for any external refs.
+      // Question is how to work that into the existing logic cleanly...
+      // Ideally it just integrates with upstream logic, so we don't have to make special function checks like "is pure".
+      name: "Considers FunctionDeclaration function body and params",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          function computeName(firstName, lastName) {
+            return firstName + ' ' + lastName;
+          }
+
+          useEffect(() => {
+            setFullName(computeName(firstName, lastName));
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "Considers ArrowFunctionExpression function body and params",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          const computeName = (firstName, lastName) => {
+            return firstName + ' ' + lastName;
+          }
+
+          useEffect(() => {
+            setFullName(computeName(firstName, lastName));
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
         },
       ],
     },

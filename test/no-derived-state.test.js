@@ -148,23 +148,6 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
     },
     {
-      name: "Via pure local function",
-      code: js`
-        function DoubleCounter() {
-          const [count, setCount] = useState(0);
-          const [doubleCount, setDoubleCount] = useState(0);
-
-          function calculateDoubleCount(count) {
-            return count * 2;
-          }
-
-          useEffect(() => {
-            setDoubleCount(calculateDoubleCount(count));
-          }, [count]);
-        }
-      `,
-    },
-    {
       name: "Via unpure local function",
       code: js`
         function Counter() {
@@ -223,7 +206,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
     },
     {
-      name: "From derived internal and external state",
+      name: "From internal state and external state via intermediate variable",
       code: js`
         import { getPrefixFor } from 'library';
         import { useState } from 'react';
@@ -259,6 +242,79 @@ new MyRuleTester().run("no-derived-state", rule, {
             derivedSetter(name);
           }, [name, derivedSetter])
         }
+      `,
+    },
+    {
+      // We don't have the imported function's implementation available to analyze
+      name: "From internal state via imported function",
+      code: js`
+        import { computeName } from 'library';
+        import { useState } from 'react';
+
+        function Component() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            setFullName(computeName(firstName, lastName));
+          }, [name])
+        }
+      `,
+    },
+    {
+      name: "From internal state via local unpure function",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          function computeName(firstName, lastName) {
+            console.log('meow');
+            return firstName + ' ' + lastName;
+          }
+
+          useEffect(() => {
+            setFullName(computeName(firstName, lastName));
+          }, [firstName, lastName]);
+        }
+      `,
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
+      name: "From external data retrieved in async IIFE",
+      code: js`
+        import { useEffect, useState } from 'react';
+
+        export const App = () => {
+          const [response, setResponse] = useState(null);
+
+          const fetchYesNoApi = () => {
+            return (async () => {
+              try {
+                const response = await fetch('https://yesno.wtf/api');
+                if (!response.ok) {
+                  throw new Error('Network error');
+                }
+                const data = await response.json();
+                setResponse(data);
+              } catch (err) {
+                console.error(err);
+              }
+            })();
+          };
+
+          useEffect(() => { 
+            (async () => {
+              await fetchYesNoApi();
+            })();
+          }, []);
+
+          return (
+            <div>{response}</div>
+          );
+        };
       `,
     },
   ],
@@ -661,6 +717,30 @@ new MyRuleTester().run("no-derived-state", rule, {
         {
           messageId: "avoidDerivedState",
           data: { state: "formData" },
+        },
+      ],
+    },
+    {
+      todo: true,
+      name: "Via pure local function",
+      code: js`
+        function DoubleCounter() {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          function compute(count) {
+            return count * 2;
+          }
+
+          useEffect(() => {
+            setDoubleCount(compute(count));
+          }, [count]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "doubleCount" },
         },
       ],
     },
