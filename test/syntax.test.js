@@ -509,7 +509,7 @@ new MyRuleTester().run("syntax", noDerivedState, {
       // I guess we have to assume those are impure. But for local, we can check the function body for any external refs.
       // Question is how to work that into the existing logic cleanly...
       // Ideally it just integrates with upstream logic, so we don't have to make special function checks like "is pure".
-      name: "Considers FunctionDeclaration function body and params",
+      name: "Considers VariableDeclaration function body and params",
       todo: true,
       code: js`
         function Form() {
@@ -558,8 +558,8 @@ new MyRuleTester().run("syntax", noDerivedState, {
       ],
     },
     {
-      // TODO: I think this a similar root cause to the other function TODO in here...
-      name: "Immediately calling declared function that sets state",
+      // TODO: I think this a similar root cause to the other function TODO in here - we don't descend into FunctionDeclaration bodies
+      name: "Immediately calling FunctionDeclaration derived setter",
       todo: true,
       code: js`
         function Form() {
@@ -569,6 +569,33 @@ new MyRuleTester().run("syntax", noDerivedState, {
 
           useEffect(() => {
             function doSet() {
+              setFullName(firstName + ' ' + lastName);
+            }
+
+            doSet();
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      // TODO: Fails because `getCallExpr` returns the `doSet` call, *which has no arguments*,
+      // but internally calls the setter with internal arguments.
+      name: "Immediately calling VariableDeclaration no-arg derived setter",
+      todo: true,
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            const doSet = () => {
               setFullName(firstName + ' ' + lastName);
             }
 

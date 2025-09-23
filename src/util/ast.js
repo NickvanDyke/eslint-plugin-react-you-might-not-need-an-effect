@@ -44,7 +44,11 @@ export const getUpstreamVariables = (
   visited.add(variable);
 
   const upstreamVariables = variable.defs
-    // TODO: Should also be `def.node.body` for FunctionDeclaration
+    // TODO: `init` covers for arrow functions; also needs `body` to descend into function declarations
+    // But then for function parameters (including props), `def.node.body` is the body of the function that they belong to,
+    // so we get *all* the downstream refs in it...
+    // We only want to descend when we're traversing up the function itself; no its parameters.
+    // Probably similar logic to in `getUpstreamReactVariables`.
     .filter((def) => !!def.node.init)
     .filter((def) => filter(def.node))
     .flatMap((def) => getDownstreamRefs(context, def.node.init))

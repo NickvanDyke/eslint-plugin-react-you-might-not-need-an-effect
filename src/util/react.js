@@ -151,8 +151,6 @@ export const getUseStateNode = (context, ref) => {
  *
  * Otherwise returns `true`.
  *
- * Note we'll still analyze derived setters because `isStateSetter` considers that.
- *
  * Inspired by https://eslint-react.xyz/docs/rules/hooks-extra-no-direct-set-state-in-use-effect
  */
 export const isImmediateCall = (node) => {
@@ -165,7 +163,7 @@ export const isImmediateCall = (node) => {
     // Obviously not immediate if async
     node.async ||
     // Inside a function that may be called later.
-    // Ideally we'd then check if the call site is immediate, but that seems complicated...
+    // Note while we return false for *this* call, we may still return true for a call to the function containing this call.
     node.type === "FunctionDeclaration" ||
     (node.type === "ArrowFunctionExpression" &&
       node.parent.type === "VariableDeclarator") ||

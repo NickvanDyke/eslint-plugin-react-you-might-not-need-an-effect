@@ -283,7 +283,7 @@ new MyRuleTester().run("no-derived-state", rule, {
     },
     {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
-      // TODO: Maybe move some of these to `syntax.test.js`
+      // TODO: Maybe move some of these to/from `syntax.test.js`
       name: "Defined-then-called async function",
       code: js`
         function Component() {
