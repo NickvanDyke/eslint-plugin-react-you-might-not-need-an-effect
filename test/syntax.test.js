@@ -25,18 +25,6 @@ new MyRuleTester().run("syntax", noDerivedState, {
       `,
     },
     {
-      // TODO: We don't follow functions passed directly to the effect right now
-      name: "Passing non-anonymous function to effect",
-      code: js`
-        function Form({ onClose }) {
-          const [name, setName] = useState();
-          const [isOpen, setIsOpen] = useState(true);
-
-          useEffect(onClose, [isOpen]);
-        }
-      `,
-    },
-    {
       name: "Variable name shadows state name",
       code: js`
         import { getCountries } from 'library';
@@ -459,6 +447,30 @@ new MyRuleTester().run("syntax", noDerivedState, {
         {
           messageId: "avoidDerivedState",
           data: { state: "doubleCount" },
+        },
+      ],
+    },
+    {
+      // We don't follow functions passed directly to the effect right now
+      todo: true,
+      name: "Passing non-anonymous function to effect",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('');
+          const [lastName, setLastName] = useState('');
+          const [name, setName] = useState('');
+
+          function deriveName() {
+            setName(firstName + ' ' + lastName);
+          }
+
+          useEffect(deriveName, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "isOpen" },
         },
       ],
     },
