@@ -303,7 +303,8 @@ new MyRuleTester().run("no-derived-state", rule, {
     },
     {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
-      name: "Defined-then-called async function with API in deps", // For "always in sync" detection
+      // For "always in sync" detection
+      name: "Defined-then-called async function with API in deps",
       code: js`
         function Component() {
           const api = useFetchWrapper();

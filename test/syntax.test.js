@@ -558,8 +558,7 @@ new MyRuleTester().run("syntax", noDerivedState, {
       ],
     },
     {
-      // TODO: Need to analyze *where* the declared function containing the setter is called...
-      // Maybe we could call `isImmediateCall` on the function's references?
+      // TODO: I think this a similar root cause to the other function TODO in here...
       name: "Immediately calling declared function that sets state",
       todo: true,
       code: js`
@@ -574,35 +573,6 @@ new MyRuleTester().run("syntax", noDerivedState, {
             }
 
             doSet();
-          }, [firstName, lastName]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "fullName" },
-        },
-      ],
-    },
-    {
-      todo: true,
-      name: "Immediately calling doubly-declared function that sets state",
-      code: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Dwayne');
-          const [lastName, setLastName] = useState('The Rock');
-          const [fullName, setFullName] = useState('');
-
-          useEffect(() => {
-            function doSet1() {
-              function doSet2() {
-                setFullName(firstName + ' ' + lastName);
-              }
-
-              doSet2();
-            }
-
-            doSet1();
           }, [firstName, lastName]);
         }
       `,

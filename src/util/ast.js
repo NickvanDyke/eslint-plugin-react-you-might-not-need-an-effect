@@ -44,6 +44,7 @@ export const getUpstreamVariables = (
   visited.add(variable);
 
   const upstreamVariables = variable.defs
+    // TODO: Should also be `def.node.body` for FunctionDeclaration
     .filter((def) => !!def.node.init)
     .filter((def) => filter(def.node))
     .flatMap((def) => getDownstreamRefs(context, def.node.init))
