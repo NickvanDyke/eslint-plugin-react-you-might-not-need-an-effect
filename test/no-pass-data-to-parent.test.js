@@ -174,7 +174,6 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
     },
     {
       name: "Pass external state that's retrieved in effect via .then",
-      todo: true, // TODO: We ignore the `data` variable because it's a Parameter :/
       code: js`
         const Child = ({ onFetched }) => {
           useEffect(() => {
