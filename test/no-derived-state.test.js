@@ -282,8 +282,68 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
     },
     {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
+      name: "Defined-then-called async function",
+      code: js`
+        function Component() {
+          const api = useFetchWrapper();
+          const [state, setState] = useState();
+
+          useEffect(() => {
+            async function fetchIt() {
+              const response = await fetch('/endpoint');
+              setState(response);
+            }
+
+            void fetchIt();
+          }, []);
+        }
+      `,
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
+      // TODO: Verifies we don't false-positive via "single setter call = always in sync" heuristic
+      // Is it possible to retain that without flagging this...?
+      // Is the root issue that it should skip analyzing this `setState` anyway because it's in an async function?
+      // Or would that introduce false negatives?
+      // TODO: Maybe move some to `syntax.test.js` after.
+      name: "Defined-then-called async function with API in deps",
+      todo: true,
+      code: js`
+        function Component() {
+          const api = useFetchWrapper();
+          const [state, setState] = useState();
+
+          useEffect(() => {
+            async function fetchIt() {
+              const response = await api.doFetch('/endpoint');
+              setState(response);
+            }
+
+            void fetchIt();
+          }, [api]);
+        }
+      `,
+    },
+    {
+      name: "From external data retrieved in async IIFE with API in deps",
+      code: js`
+        function Component() {
+          const api = useFetchWrapper();
+          const [state, setState] = useState();
+
+          useEffect(() => {
+            (async function fetchIt() {
+              const response = await api.doFetch('/endpoint');
+              setState(response);
+            })();
+          }, [api]);
+        }
+      `,
+    },
+    {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/16
-      name: "From external data retrieved in async IIFE",
+      name: "From external data retrieved in overly-complicated async IIFE",
       code: js`
         import { useEffect, useState } from 'react';
 
