@@ -1,7 +1,6 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 import rule from "../src/no-derived-state.js";
 
-// TODO: All these need the state setter in the deps
 new MyRuleTester().run("no-derived-state", rule, {
   valid: [
     {
@@ -281,10 +280,10 @@ new MyRuleTester().run("no-derived-state", rule, {
         }
       `,
     },
+    // TODO: Maybe move some of these to/from `syntax.test.js`
     {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
-      // TODO: Maybe move some of these to/from `syntax.test.js`
-      name: "Defined-then-called async function",
+      name: "Defined-then-called async external global function",
       code: js`
         function Component() {
           const api = useFetchWrapper();
@@ -304,7 +303,7 @@ new MyRuleTester().run("no-derived-state", rule, {
     {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
       // For "always in sync" detection
-      name: "Defined-then-called async function with API in deps",
+      name: "Defined-then-called async function from API in deps",
       code: js`
         function Component() {
           const api = useFetchWrapper();
@@ -693,34 +692,6 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      name: "From internal state via useCallback derived setter",
-      todo: true,
-      code: js`
-        import { getPrefixFor } from 'library';
-        import { useState } from 'react';
-
-        function Component() {
-          const [name, setName] = useState();
-          const [fullName, setFullName] = useState();
-          const prefix = 'Dr.'
-
-          const derivedSetter = useCallback((name) => {
-            setFullName(prefix + ' ' + name);
-          }, [prefix]);
-
-          useEffect(() => {
-            derivedSetter(name);
-          }, [name, derivedSetter]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "prefixedName" },
-        },
-      ],
-    },
-    {
       name: "Partially update complex state from props",
       code: js`
         function Form({ firstName, lastName }) {
@@ -795,30 +766,6 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      todo: true,
-      name: "Via pure local function",
-      code: js`
-        function DoubleCounter() {
-          const [count, setCount] = useState(0);
-          const [doubleCount, setDoubleCount] = useState(0);
-
-          function compute(count) {
-            return count * 2;
-          }
-
-          useEffect(() => {
-            setDoubleCount(compute(count));
-          }, [count]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "doubleCount" },
-        },
-      ],
-    },
-    {
       name: "Derived state in larger, otherwise legit effect",
       code: js`
         function Form() {
@@ -831,6 +778,236 @@ new MyRuleTester().run("no-derived-state", rule, {
 
             setFullName(firstName + ' ' + lastName);
           }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    // TODO: Maybe move some of these to/from `syntax.test.js`
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
+      // I think this passes right now because `getUpstreamReactVariables` filters out non-prop parameters,
+      // so it correctly sees that `computeName` is pure, i.e. has no non-parameter references.
+      // (Although that may be a confusing way to coincidntally encode it).
+      name: "Set to result of pure local ArrowFunctionExpression",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          const computeName = (firstName, lastName) => {
+            return firstName + ' ' + lastName;
+          }
+
+          useEffect(() => {
+            setFullName(computeName(firstName, lastName));
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
+      // TODO: Descend into FunctionDeclaration to see that it's all parameter references
+      // (latter part should be for free, per the previous test).
+      todo: true,
+      name: "Set to result of pure local FunctionDeclaration",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          function computeName(firstName, lastName) {
+            return firstName + ' ' + lastName;
+          }
+
+          useEffect(() => {
+            setFullName(computeName(firstName, lastName));
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "doubleCount" },
+        },
+      ],
+    },
+    {
+      // It's not technically a pure function since it closes over state,
+      // but it's pure relative to the React component.
+      // TODO: Fails for FunctionDeclaration - same as previous test.
+      name: "Set to result of semi-pure local function",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            const computeName = () => firstName + ' ' + lastName;
+
+            setFullName(computeName());
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "Set to result of semi-pure function defined outside effect",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          const computeName = () => firstName + ' ' + lastName;
+
+          useEffect(() => {
+            setFullName(computeName());
+          }, [computeName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "Set to result of semi-pure useCallback",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          const computeName = useCallback(() => firstName + ' ' + lastName, [firstName, lastName]);
+
+          useEffect(() => {
+            setFullName(computeName());
+          }, [computeName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      // TODO: `getCallExpr` leads us to analyze the args passed to `doSet`, not the eventual `setFullName`.
+      // Do we need to flatMap downstream refs into CallExpressions?
+      // That makes sense, so it follows the same path as `isState`.
+      name: "Via no-arg intermediate setter",
+      todo: true,
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            const doSet = () => {
+              setFullName(firstName + ' ' + lastName);
+            }
+
+            doSet();
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      // TODO: It thinks `prefix` is an external reference?
+      name: "From internal state via useCallback one-arg one-dep intermediate setter",
+      todo: true,
+      code: js`
+        function Component() {
+          const [name, setName] = useState();
+          const [fullName, setFullName] = useState();
+          const prefix = 'Dr.'
+
+          const intermediateSetter = useCallback((name) => {
+            setFullName(prefix + ' ' + name);
+          }, [prefix]);
+
+          useEffect(() => {
+            intermediateSetter(name);
+          }, [name, intermediateSetter]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      // TODO: It thinks `prefix`, and maybe `name`, is an external reference?
+      todo: true,
+      name: "From internal state via useCallback no-arg two-dep intermediate setter",
+      code: js`
+        function Component() {
+          const [name, setName] = useState();
+          const [fullName, setFullName] = useState();
+          const prefix = 'Dr.'
+
+          const intermediateSetter = useCallback(() => {
+            setFullName(prefix + ' ' + name);
+          }, [prefix, name]);
+
+          useEffect(() => {
+            intermediateSetter(name);
+          }, [name, intermediateSetter]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "From internal state via useCallback two-arg no-dep intermediate setter",
+      code: js`
+        function Component() {
+          const [name, setName] = useState();
+          const [fullName, setFullName] = useState();
+          const prefix = 'Dr.'
+
+          const intermediateSetter = useCallback((prefix, name) => {
+            setFullName(prefix + ' ' + name);
+          }, []);
+
+          useEffect(() => {
+            intermediateSetter(prefix, name);
+          }, [prefix, name, intermediateSetter]);
         }
       `,
       errors: [
