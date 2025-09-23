@@ -283,6 +283,7 @@ new MyRuleTester().run("no-derived-state", rule, {
     },
     {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
+      // TODO: Maybe move some of these to `syntax.test.js`
       name: "Defined-then-called async function",
       code: js`
         function Component() {
@@ -302,13 +303,7 @@ new MyRuleTester().run("no-derived-state", rule, {
     },
     {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
-      // TODO: Verifies we don't false-positive via "single setter call = always in sync" heuristic
-      // Is it possible to retain that without flagging this...?
-      // Is the root issue that it should skip analyzing this `setState` anyway because it's in an async function?
-      // Or would that introduce false negatives?
-      // TODO: Maybe move some to `syntax.test.js` after.
-      name: "Defined-then-called async function with API in deps",
-      todo: true,
+      name: "Defined-then-called async function with API in deps", // For "always in sync" detection
       code: js`
         function Component() {
           const api = useFetchWrapper();
@@ -375,6 +370,24 @@ new MyRuleTester().run("no-derived-state", rule, {
             <div>{response}</div>
           );
         };
+      `,
+    },
+    {
+      name: "Named function passed to event callback",
+      code: js`
+        function Component() {
+          const [count, setCount] = useState(0);
+          const [doubleCount, setDoubleCount] = useState(0);
+
+          useEffect(() => {
+            function handleClick() {
+              setDoubleCount(count * 2);
+            }
+
+            document.addEventListener('click', handleClick);
+            return () => document.removeEventListener('click', handleClick);
+          }, [count]);
+        }
       `,
     },
   ],

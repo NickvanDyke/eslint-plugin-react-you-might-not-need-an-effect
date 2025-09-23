@@ -148,23 +148,32 @@ export const getUseStateNode = (context, ref) => {
     ?.defs.find((def) => isUseState(def.node))?.node;
 };
 
-// Returns true if the node is called directly inside a `useEffect`.
-// Note synchronous IIFEs do not break the "direct" chain because they're invoked immediately, as opposed to being a callback.
-// Non-direct calls are likely inside a callback passed to an external system like `window.addEventListener`,
-// or a Promise chain that (probably) retrieves external data.
-// Note we'll still analyze derived setters because isStateSetter considers that.
-// Heuristic inspired by https://eslint-react.xyz/docs/rules/hooks-extra-no-direct-set-state-in-use-effect
-export const isDirectCall = (node) => {
+/**
+ * Walks up the AST until a `useEffect` call, returning `false` if never found, or finds any of the following on the way:
+ * - A non-IIFE CallExpression, indicating the call is inside a callback passed to an event handler, `setTimeout`, `Promise.then()`, etc.
+ * - An async function
+ *
+ * Otherwise returns `true`.
+ *
+ * Note we'll still analyze derived setters because `isStateSetter` considers that.
+ *
+ * Inspired by https://eslint-react.xyz/docs/rules/hooks-extra-no-direct-set-state-in-use-effect
+ */
+export const isImmediateCall = (node) => {
   if (!node) {
+    // Reached the top of the program without finding a `useEffect`
     return false;
   } else if (
-    (node.type === "ArrowFunctionExpression" ||
+    node.type === "FunctionDeclaration" ||
+    ((node.type === "ArrowFunctionExpression" ||
       node.type === "FunctionExpression") &&
-    !isSynchronousIIFE(node.parent)
+      !isSynchronousIIFE(node.parent))
   ) {
+    // This is what we're called inside - time to stop and check.
     return isUseEffect(node.parent);
   } else {
-    return isDirectCall(node.parent);
+    // Keep going up
+    return isImmediateCall(node.parent);
   }
 };
 
