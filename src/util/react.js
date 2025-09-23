@@ -189,7 +189,7 @@ export const getUpstreamReactVariables = (context, variable) =>
     variable.defs.every(
       (def) =>
         isPropDef(def) ||
-        // Ignore variables declared inside an anonymous function
+        // Ignore variables declared inside an anonymous function, like in `array.map()`.
         def.type !== "Parameter",
     ),
   );

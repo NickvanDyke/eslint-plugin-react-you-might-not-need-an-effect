@@ -1,8 +1,8 @@
 import { MyRuleTester, js } from "./rule-tester.js";
 import noDerivedState from "../src/no-derived-state.js";
 
-// Syntax variations that are semantically equivalent
-// TODO: This is more of a test dumping ground than it should be
+// Analysis is quite syntax-dependent,
+// so here we have a bunch of semantically equivalent simple tests to verify various syntax.
 new MyRuleTester().run("syntax", noDerivedState, {
   valid: [
     {
@@ -437,27 +437,6 @@ new MyRuleTester().run("syntax", noDerivedState, {
         {
           messageId: "avoidDerivedState",
           data: { state: "state" },
-        },
-      ],
-    },
-    {
-      // Verifies that we don't check for upstream state and props in isolation
-      name: "Derive from both state and props",
-      code: js`
-        function Component({ prop }) {
-          const [state, setState] = useState(0);
-          const [derived, setDerived] = useState(0);
-          const combined = state + prop;
-
-          useEffect(() => {
-            setDerived(combined);
-          }, [combined]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "derived" },
         },
       ],
     },

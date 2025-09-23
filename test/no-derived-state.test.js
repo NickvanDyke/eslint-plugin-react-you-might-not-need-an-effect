@@ -423,6 +423,46 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
+      // Verifies that we don't check for upstream state and props in isolation
+      name: "From props and internal state",
+      code: js`
+        function Form({ title }) {
+          const [name, setName] = useState('Dwayne');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            setFullName(title + ' ' + name);
+          }, [title, name]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "From props and internal state in intermediate variable",
+      code: js`
+        function Form({ title }) {
+          const [name, setName] = useState('Dwayne');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            const newFullName = title + ' ' + name;
+            setFullName(newFullName);
+          }, [title, name]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
       name: "From external state with single setter call",
       code: js`
         function Feed() {
