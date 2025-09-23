@@ -91,9 +91,3 @@ export const getCallExpr = (ref, current = ref.identifier.parent) => {
 
   return undefined;
 };
-
-export const isSynchronousIIFE = (node) =>
-  node.type === "CallExpression" &&
-  (node.callee.type === "ArrowFunctionExpression" ||
-    node.callee.type === "FunctionExpression") &&
-  !node.callee.async;

@@ -1,9 +1,4 @@
-import {
-  getUpstreamVariables,
-  getDownstreamRefs,
-  getCallExpr,
-  isSynchronousIIFE,
-} from "./ast.js";
+import { getUpstreamVariables, getDownstreamRefs, getCallExpr } from "./ast.js";
 
 export const isReactFunctionalComponent = (node) =>
   (node.type === "FunctionDeclaration" ||
@@ -150,8 +145,9 @@ export const getUseStateNode = (context, ref) => {
 
 /**
  * Walks up the AST until a `useEffect` call, returning `false` if never found, or finds any of the following on the way:
- * - A non-IIFE CallExpression, indicating the call is inside a callback passed to an event handler, `setTimeout`, `Promise.then()`, etc.
  * - An async function
+ * - A function declaration, which may be called at an arbitrary later time
+ * - A function passed as a callback to another function or `new` - event handler, `setTimeout`, `Promise.then()` `new ResizeObserver()`, etc.
  *
  * Otherwise returns `true`.
  *
@@ -160,17 +156,26 @@ export const getUseStateNode = (context, ref) => {
  * Inspired by https://eslint-react.xyz/docs/rules/hooks-extra-no-direct-set-state-in-use-effect
  */
 export const isImmediateCall = (node) => {
-  if (!node) {
+  if (!node.parent) {
     // Reached the top of the program without finding a `useEffect`
     return false;
+  } else if (isUseEffect(node.parent)) {
+    return true;
   } else if (
+    // Obviously not immediate if async
+    node.async ||
+    // Inside a function that may be called later.
+    // Ideally we'd then check if the call site is immediate, but that seems complicated...
     node.type === "FunctionDeclaration" ||
+    (node.type === "ArrowFunctionExpression" &&
+      node.parent.type === "VariableDeclarator") ||
+    // Passed as an anonymous callback
     ((node.type === "ArrowFunctionExpression" ||
       node.type === "FunctionExpression") &&
-      !isSynchronousIIFE(node.parent))
+      (node.parent.type === "CallExpression" ||
+        node.parent.type === "NewExpression"))
   ) {
-    // This is what we're called inside - time to stop and check.
-    return isUseEffect(node.parent);
+    return false;
   } else {
     // Keep going up
     return isImmediateCall(node.parent);
