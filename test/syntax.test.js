@@ -495,7 +495,6 @@ new MyRuleTester().run("syntax", noDerivedState, {
       ],
     },
     {
-      todo: true,
       // TODO: Ah, I think we do descend, but the issue is `getUpstreamReactVariables` ignores
       // variables declared in FunctionDeclaration.params that aren't props...
       // So then the upstream variables are empty, resulting in `false` for `isState` and such.
@@ -511,6 +510,7 @@ new MyRuleTester().run("syntax", noDerivedState, {
       // Question is how to work that into the existing logic cleanly...
       // Ideally it just integrates with upstream logic, so we don't have to make special function checks like "is pure".
       name: "Considers FunctionDeclaration function body and params",
+      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Dwayne');
@@ -547,6 +547,62 @@ new MyRuleTester().run("syntax", noDerivedState, {
 
           useEffect(() => {
             setFullName(computeName(firstName, lastName));
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      // TODO: Need to analyze *where* the declared function containing the setter is called...
+      // Maybe we could call `isImmediateCall` on the function's references?
+      name: "Immediately calling declared function that sets state",
+      todo: true,
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            function doSet() {
+              setFullName(firstName + ' ' + lastName);
+            }
+
+            doSet();
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      todo: true,
+      name: "Immediately calling doubly-declared function that sets state",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            function doSet1() {
+              function doSet2() {
+                setFullName(firstName + ' ' + lastName);
+              }
+
+              doSet2();
+            }
+
+            doSet1();
           }, [firstName, lastName]);
         }
       `,
