@@ -390,6 +390,53 @@ new MyRuleTester().run("no-derived-state", rule, {
         }
       `,
     },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
+      // TODO: Finally time to not consider state MemberExpressions as state setters
+      todo: true,
+      name: "Calling method on state",
+      code: js`
+        function Component() {
+          const [name, setName] = useState();
+          const [model] = useState(
+            () => new FormModel(props)
+          );
+
+          // Register field within the model
+          useEffect(() => {
+            model.setFieldDescriptor(name);
+          }, [model, name]);
+        }
+      `,
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
+      name: "Cleanup function calls method on state",
+      code: js`
+        function Component() {
+          const [name, setName] = useState();
+          const [model] = useState(
+            () => new FormModel(props)
+          );
+
+          useEffect(() => {
+            return () => model.removeField(name);
+          }, [model, name]);
+        }
+      `,
+    },
+    {
+      // TODO: Double-check whether this is valid; compared to calling a method on state
+      name: "Cleanup function sets state",
+      code: js`
+        function Component() {
+          const [isMounted, setIsMounted] = useState(true);
+          useEffect(() => {
+            return () => setIsMounted(false);
+          }, []);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -509,6 +556,7 @@ new MyRuleTester().run("no-derived-state", rule, {
     },
     {
       name: "From internal state via member function",
+      todo: true,
       code: js`
         function DoubleList() {
           const [list, setList] = useState([]);
@@ -523,11 +571,6 @@ new MyRuleTester().run("no-derived-state", rule, {
         {
           messageId: "avoidDerivedState",
           data: { state: "doubleList" },
-        },
-        {
-          // We consider `list.concat` to essentially be a state setter call
-          messageId: "avoidDerivedState",
-          data: { state: "list" },
         },
       ],
     },

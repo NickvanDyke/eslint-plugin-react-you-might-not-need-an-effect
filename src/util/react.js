@@ -110,7 +110,7 @@ export function getEffectDepsRefs(context, node) {
   return getDownstreamRefs(context, depsArr);
 }
 
-// NOTE: These return true for state with CallExpressions, like `list.concat()`.
+// NOTE: These return true for MemberExpressions *on* state, like `list.concat()`.
 // Arguably preferable, as mutating the state is functionally the same as calling the setter.
 // (Even though that is not recommended and should be prevented by a different rule).
 // And in the case of a prop, we can't differentiate state mutations from callbacks anyway.
@@ -160,18 +160,13 @@ export const isImmediateCall = (node) => {
   } else if (isUseEffect(node.parent)) {
     return true;
   } else if (
-    // Obviously not immediate if async
+    // Obviously not immediate if async. I think this never occurs in isolation from the below conditions? But just in case for now.
     node.async ||
-    // Inside a function that may be called later.
+    // Inside a named or anonymous function that may be called later, either as a callback or by the developer.
     // Note while we return false for *this* call, we may still return true for a call to the function containing this call.
     node.type === "FunctionDeclaration" ||
-    (node.type === "ArrowFunctionExpression" &&
-      node.parent.type === "VariableDeclarator") ||
-    // Passed as an anonymous callback
-    ((node.type === "ArrowFunctionExpression" ||
-      node.type === "FunctionExpression") &&
-      (node.parent.type === "CallExpression" ||
-        node.parent.type === "NewExpression"))
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression"
   ) {
     return false;
   } else {
