@@ -40,6 +40,7 @@ export default {
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
+          // TODO: Flag non-literals too? e.g. I think this is the correct warning for https://github.com/getsentry/sentry/pull/100177/files#diff-cf3aceaba5cdab4553d92644581e23d54914923199d31807fe090e0d49b786caR97
           if (isAllDepsProps && isArgsAllLiterals(context, callExpr)) {
             context.report({
               node: callExpr,
