@@ -6,6 +6,7 @@ import {
   isImmediateCall,
   isProp,
   isStateSetter,
+  isUseEffect,
 } from "./util/react.js";
 
 /**
@@ -26,6 +27,7 @@ export default {
   },
   create: (context) => ({
     CallExpression: (node) => {
+      if (!isUseEffect(node)) return;
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;

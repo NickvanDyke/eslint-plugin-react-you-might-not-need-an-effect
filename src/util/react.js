@@ -98,14 +98,10 @@ export const isUseEffect = (node) =>
 
 // NOTE: When `MemberExpression` (even nested ones), a `Reference` is only the root object, not the function.
 export const getEffectFnRefs = (context, node) => {
-  if (!isUseEffect(node) || node.arguments.length < 1) {
-    return undefined;
-  }
-
   const effectFn = node.arguments[0];
   if (
-    effectFn.type !== "ArrowFunctionExpression" &&
-    effectFn.type !== "FunctionExpression"
+    effectFn?.type !== "ArrowFunctionExpression" &&
+    effectFn?.type !== "FunctionExpression"
   ) {
     return undefined;
   }
@@ -114,12 +110,8 @@ export const getEffectFnRefs = (context, node) => {
 };
 
 export function getEffectDepsRefs(context, node) {
-  if (!isUseEffect(node) || node.arguments.length < 2) {
-    return undefined;
-  }
-
   const depsArr = node.arguments[1];
-  if (depsArr.type !== "ArrayExpression") {
+  if (depsArr?.type !== "ArrayExpression") {
     return undefined;
   }
 
