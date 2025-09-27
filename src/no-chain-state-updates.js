@@ -2,6 +2,7 @@ import { getCallExpr } from "./util/ast.js";
 import {
   getEffectDepsRefs,
   getEffectFnRefs,
+  hasCleanup,
   isArgsAllLiterals,
   isImmediateCall,
   isState,
@@ -29,7 +30,10 @@ export default {
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
+      if (hasCleanup(node)) return;
 
+      // TODO: Should filter out setters before checking?
+      // exhaustive-deps doesn't enforce one way or the other.
       const isAllDepsState = depsRefs.notEmptyEvery((ref) =>
         isState(context, ref),
       );

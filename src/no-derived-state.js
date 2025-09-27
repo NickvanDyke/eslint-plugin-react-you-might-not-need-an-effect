@@ -7,6 +7,7 @@ import {
   isProp,
   getUpstreamReactVariables,
   isState,
+  hasCleanup,
 } from "./util/react.js";
 import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
 
@@ -31,6 +32,7 @@ export default {
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
+      if (hasCleanup(node)) return;
 
       effectFnRefs
         .filter((ref) => isStateSetter(context, ref))

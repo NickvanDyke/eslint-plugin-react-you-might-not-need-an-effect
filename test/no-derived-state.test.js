@@ -104,6 +104,25 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
     },
     {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
+      // While it *could* be an anti-pattern or unnecessary, effects *are* meant to synchronize systems.
+      // So we guess that a "subscription effect" is usually valid, or may be more readable.
+      name: "Synchronize internal state",
+      code: js`
+        function Component() {
+          const [name, setName] = useState();
+          const [model] = useState(
+            () => new FormModel(props)
+          );
+
+          useEffect(() => {
+            model.setFieldDescriptor(name);
+            return () => model.removeField(name);
+          }, [model, name]);
+        }
+      `,
+    },
+    {
       name: "Subscribe to external state",
       code: js`
         import { subscribeToStatus } from 'library';
@@ -390,53 +409,6 @@ new MyRuleTester().run("no-derived-state", rule, {
         }
       `,
     },
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
-      // TODO: Finally time to not consider state MemberExpressions as state setters
-      todo: true,
-      name: "Calling method on state",
-      code: js`
-        function Component() {
-          const [name, setName] = useState();
-          const [model] = useState(
-            () => new FormModel(props)
-          );
-
-          // Register field within the model
-          useEffect(() => {
-            model.setFieldDescriptor(name);
-          }, [model, name]);
-        }
-      `,
-    },
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/35
-      name: "Cleanup function calls method on state",
-      code: js`
-        function Component() {
-          const [name, setName] = useState();
-          const [model] = useState(
-            () => new FormModel(props)
-          );
-
-          useEffect(() => {
-            return () => model.removeField(name);
-          }, [model, name]);
-        }
-      `,
-    },
-    {
-      // TODO: Double-check whether this is valid; compared to calling a method on state
-      name: "Cleanup function sets state",
-      code: js`
-        function Component() {
-          const [isMounted, setIsMounted] = useState(true);
-          useEffect(() => {
-            return () => setIsMounted(false);
-          }, []);
-        }
-      `,
-    },
   ],
   invalid: [
     {
@@ -518,7 +490,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      name: "From derived prop",
+      name: "From intermediate prop",
       code: js`
         function Form({ firstName, lastName }) {
           const [fullName, setFullName] = useState('');
@@ -537,7 +509,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      name: "From props via member function",
+      name: "From props via method",
       code: js`
         function DoubleList({ list }) {
           const [doubleList, setDoubleList] = useState([]);
@@ -555,8 +527,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      name: "From internal state via member function",
-      todo: true,
+      name: "From internal state via method",
       code: js`
         function DoubleList() {
           const [list, setList] = useState([]);
@@ -571,6 +542,12 @@ new MyRuleTester().run("no-derived-state", rule, {
         {
           messageId: "avoidDerivedState",
           data: { state: "doubleList" },
+        },
+        // TODO: Kinda confusing to double-flag... ideally we'd ignore the `concat` call, given it's a setter arg.
+        // Or even a different error message/rule for `no-mutate-state`...? If we can find a good heuristic.
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "list" },
         },
       ],
     },

@@ -41,6 +41,19 @@ new MyRuleTester().run("no-chain-state-updates", rule, {
         }
       `,
     },
+    {
+      name: "Synchronize internal state with literal",
+      code: js`
+        function Component() {
+          const [isMounted, setIsMounted] = useState(false);
+
+          useEffect(() => {
+            setIsMounted(true);
+            return () => setIsMounted(false);
+          }, [setIsMounted]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -49,7 +62,7 @@ new MyRuleTester().run("no-chain-state-updates", rule, {
         function Counter() {
           const [count, setCount] = useState(0);
           const [otherState, setOtherState] = useState();
-          
+
           useEffect(() => {
             setOtherState('Hello World');
           }, [count]);

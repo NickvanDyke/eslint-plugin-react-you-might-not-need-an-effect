@@ -24,7 +24,7 @@ new MyRuleTester().run("no-adjust-state-on-prop-change", rule, {
         function Counter() {
           const [count, setCount] = useState(0);
           const [otherState, setOtherState] = useState();
-          
+
           useEffect(() => {
             setOtherState('Hello World');
           }, [count]);
@@ -36,7 +36,7 @@ new MyRuleTester().run("no-adjust-state-on-prop-change", rule, {
       code: js`
         function Counter({ count }) {
           const [doubleCount, setDoubleCount] = useState(0);
-          
+
           useEffect(() => {
             setDoubleCount(count * 2);
           }, [count]);

@@ -135,6 +135,37 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
         }
       `,
     },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/37
+      // Alternate solutions exist, but this is arguably the most readable.
+      // TODO: There is probably a more granular opportunity here...
+      name: "Pass cleanup function that depends on ref",
+      code: js`
+        import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+
+        function DeleteDropTarget({ onDelete }) {
+          const ref = React.useRef(null);
+
+          React.useEffect(() => {
+            const element = ref.current;
+            if (!element) {
+              return;
+            }
+
+            const cleanup = dropTargetForElements({
+              element,
+              onDrop: ({ source }) => {
+                onDelete(source.data);
+              },
+            });
+
+            return cleanup;
+          }, [onDelete]);
+
+          return <div ref={ref}>Drop an item here to delete</div>;
+        };
+      `,
+    },
   ],
   invalid: [
     {
@@ -230,6 +261,9 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
       ],
     },
     {
+      // TODO: This could be done (possibly conditionally) in the parent because it doesn't depend on anything in the child?
+      // May fit better as a new, more general rule.
+      todo: true,
       name: "Pass window event data to parent",
       code: js`
         const Child = ({ onResized }) => {

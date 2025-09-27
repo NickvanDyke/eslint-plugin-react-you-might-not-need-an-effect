@@ -5,6 +5,7 @@ import {
   isState,
   isRef,
   isProp,
+  hasCleanup,
 } from "./util/react.js";
 import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
 
@@ -29,10 +30,12 @@ export default {
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
+      if (hasCleanup(node)) return;
 
       effectFnRefs
         .filter((ref) => isPropCallback(context, ref))
-        // We don't check `isDirectCall` because it shouldn't matter - passing data to the parent is passing data to the parent.
+        // We don't check `isDirectCall` because it shouldn't matter; passing data to the parent is passing data to the parent.
+        // And misuses are often indirect, e.g. retrieving and passing up external data in a Promise chain.
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
@@ -43,6 +46,8 @@ export default {
                 (ref) =>
                   !isState(context, ref) &&
                   !isProp(context, ref) &&
+                  // TODO: Should warn to use `forwardRef` instead?
+                  // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/22
                   !isRef(context, ref),
               )
           ) {

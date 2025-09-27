@@ -301,6 +301,37 @@ describe("recommended rules on real-world code", () => {
           }
         `,
       },
+      {
+        // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/30
+        name: "Ref callback",
+        code: js`
+          export const useOnScreen = () => {
+              const [element, setElement] = useState(null);
+              const [isIntersecting, setIntersecting] = useState(false);
+
+              const ref = useCallback((element) => {
+                  setElement(element);
+              }, []);
+
+              useEffect(() => {
+                  if (!element) {
+                      return;
+                  }
+
+                  const observer = new IntersectionObserver(([entry]) => {
+                      setIntersecting(entry?.isIntersecting ?? false);
+                  });
+
+                  observer.observe(element);
+                  return () => {
+                      observer.disconnect();
+                  };
+              }, [element]);
+
+              return { ref, isIntersecting };
+          };
+        `,
+      },
     ].forEach(({ name, code }) => {
       it(name, async () => {
         const results = await eslint.lintText(code);
