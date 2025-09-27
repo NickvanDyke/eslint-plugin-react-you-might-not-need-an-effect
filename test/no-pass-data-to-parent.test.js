@@ -138,7 +138,6 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
     {
       // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/37
       // Alternate solutions exist, but this is arguably the most readable.
-      // TODO: There is probably a more granular opportunity here...
       name: "Pass cleanup function that depends on ref",
       code: js`
         import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";

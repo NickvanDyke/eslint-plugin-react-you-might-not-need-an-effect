@@ -46,8 +46,11 @@ export default {
                 (ref) =>
                   !isState(context, ref) &&
                   !isProp(context, ref) &&
-                  // TODO: Should warn to use `forwardRef` instead?
+                  // TODO: Should advise to use `forwardRef` instead?
+                  // Not always the best solution, but usually, and outliers can silence the warning.
+                  // Could possibly check for refs on the "path" to this callback too.
                   // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/22
+                  // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/37
                   !isRef(context, ref),
               )
           ) {
