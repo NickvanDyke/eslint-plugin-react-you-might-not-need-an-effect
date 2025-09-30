@@ -21,7 +21,7 @@ new MyRuleTester().run("no-chain-state-updates", rule, {
         function Counter() {
           const [count, setCount] = useState(0);
           const [doubleCount, setDoubleCount] = useState(0);
-          
+
           useEffect(() => {
             setDoubleCount(count * 2);
           }, [count]);
@@ -59,13 +59,15 @@ new MyRuleTester().run("no-chain-state-updates", rule, {
     {
       name: "Setting state to literal when internal state changes",
       code: js`
-        function Counter() {
-          const [count, setCount] = useState(0);
-          const [otherState, setOtherState] = useState();
+        function Game() {
+          const [round, setRound] = useState(1);
+          const [isGameOver, setIsGameOver] = useState(false);
 
           useEffect(() => {
-            setOtherState('Hello World');
-          }, [count]);
+            if (round > 10) {
+              setIsGameOver(true);
+            }
+          }, [round]);
         }
       `,
       errors: [
