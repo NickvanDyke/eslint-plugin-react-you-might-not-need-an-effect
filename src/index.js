@@ -39,7 +39,7 @@ const recommendedRules = Object.keys(plugin.rules).reduce((acc, ruleName) => {
 }, {});
 const languageOptions = {
   globals: {
-    // NOTE: Required so we can resolve global references to their upstream global variables
+    // Required so we can resolve global references to their upstream global variables
     ...globals.browser,
   },
   parserOptions: {

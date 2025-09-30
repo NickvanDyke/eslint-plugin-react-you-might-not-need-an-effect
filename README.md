@@ -2,23 +2,23 @@
 
 ESLint plugin to catch [unnecessary React `useEffect`s](https://react.dev/learn/you-might-not-need-an-effect) to make your code easier to follow, faster to run, and less error-prone. Highly recommended for new React developers as you learn its mental model, and even experienced developers may be surprised.
 
-## 🚀 Setup
+## 📦 Installation
 
-### Installation
-
-#### NPM
+### NPM
 
 ```bash
 npm install --save-dev eslint-plugin-react-you-might-not-need-an-effect
 ```
 
-#### Yarn
+### Yarn
 
 ```bash
 yarn add -D eslint-plugin-react-you-might-not-need-an-effect
 ```
 
-### Configuration
+## ⚙️ Configuration
+
+### Recommended
 
 Add the plugin's recommended config to your ESLint configuration file.
 
@@ -40,6 +40,26 @@ import reactYouMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need
 export default [
   reactYouMightNotNeedAnEffect.configs.recommended
 ];
+```
+
+### Custom
+
+If not using the recommended config, manually set your `languageOptions`:
+
+```js
+import globals from "globals";
+
+// ...
+{
+  globals: {
+    ...globals.browser,
+  },
+  parserOptions: {
+    ecmaFeatures: {
+      jsx: true,
+    },
+  },
+};
 ```
 
 ### Suggested
