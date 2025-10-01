@@ -4,6 +4,26 @@ ESLint plugin to catch [unnecessary React `useEffect`s](https://react.dev/learn/
 
 ## 📦 Installation
 
+### Quick Try (No Installation)
+
+Run with `npx` using Bun for instant linting without installing to your project:
+
+```bash
+cd /path/to/your/project
+npx eslint-plugin-react-you-might-not-need-an-effect "src/**/*.jsx"
+npx eslint-plugin-react-you-might-not-need-an-effect --fix "src/**/*.{js,jsx,ts,tsx}"
+```
+
+**Features:**
+- ✅ Supports JavaScript (.js, .jsx) and TypeScript (.ts, .tsx)
+- ✅ Only enables plugin rules (no noise from other ESLint rules)
+- ✅ Automatic setup and cleanup
+- ✅ No installation required in your project
+
+**Requirements:**
+- [Bun](https://bun.sh) runtime installed
+- Run from your project directory (`cd` to your project first)
+
 ### NPM
 
 ```bash
@@ -210,6 +230,27 @@ Disallow empty effects:
 function Component() {
   useEffect(() => {}, []);
 }
+```
+
+## 🛠️ Development
+
+For local development and testing:
+
+```bash
+# Install CLI globally for testing
+make install
+
+# Test the CLI
+make test-cli
+
+# Run all checks (lint + test)
+make check
+
+# Uninstall global CLI
+make uninstall
+
+# See all available commands
+make help
 ```
 
 ## 💬 Feedback
