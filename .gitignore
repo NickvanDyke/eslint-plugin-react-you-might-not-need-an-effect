@@ -15,3 +15,6 @@ dist
 .pnp.*
 node_modules
 .aider*
+.test-cli-sample.jsx
+.test-cli-sample.tsx
+.claude/settings.local.json
