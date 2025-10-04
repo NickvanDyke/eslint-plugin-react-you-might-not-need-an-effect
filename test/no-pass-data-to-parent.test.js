@@ -165,6 +165,21 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
         };
       `,
     },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/43
+      name: "Effect inside custom hook returns MemberExpression cleanup",
+      code: js`
+        function useActorLogger(actorRef) {
+          useEffect(() => {
+            return actorRef.system.inspect((next) => {
+              if (next.type === '@xstate.snapshot') {
+                console.log('ACTOR SNAPSHOT', next.snapshot);
+              }
+            }).unsubscribe;
+          }, [actorRef]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
