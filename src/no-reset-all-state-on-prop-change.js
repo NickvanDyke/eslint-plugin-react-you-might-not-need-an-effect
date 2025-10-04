@@ -35,6 +35,9 @@ export default {
       const effectFnRefs = getEffectFnRefs(context, node);
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
+      // Skip custom hooks because they can't receive `key` like components can.
+      const containingNode = findContainingNode(node);
+      if (containingNode && isCustomHook(containingNode)) return;
 
       const propUsedToResetAllState = findPropUsedToResetAllState(
         context,

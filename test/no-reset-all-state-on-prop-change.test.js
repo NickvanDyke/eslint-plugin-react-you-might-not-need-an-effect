@@ -60,6 +60,20 @@ new MyRuleTester().run("no-reset-all-state-on-prop-change", rule, {
         }
       `,
     },
+    {
+      name: "Reset all state when a prop changes in a custom hook",
+      code: js`
+        function useCustomHook({ userId }) {
+          const [user, setUser] = useState(null);
+          const [comment, setComment] = useState('type something');
+
+          useEffect(() => {
+            setUser(null);
+            setComment('type something');
+          }, [userId]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
