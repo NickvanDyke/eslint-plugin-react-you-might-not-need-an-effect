@@ -16,11 +16,12 @@ export default {
     type: "suggestion",
     docs: {
       description: "Disallow initializing state in an effect.",
+      url: "https://tkdodo.eu/blog/avoiding-hydration-mismatches-with-use-sync-external-store",
     },
     schema: [],
     messages: {
       avoidInitializingState:
-        'Avoid initializing state in an effect. Instead, pass "{{state}}"\'s initial value to its `useState`.',
+        'Avoid initializing state in an effect. Instead, pass "{{state}}"\'s initial value to its `useState`. For SSR hydration, prefer `useSyncExternalStore`.',
     },
   },
   create: (context) => ({
