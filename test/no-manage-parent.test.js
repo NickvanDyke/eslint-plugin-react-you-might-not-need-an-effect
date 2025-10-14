@@ -1,5 +1,5 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import rule from "../src/no-manage-parent.js";
+import rule from "../src/rules/no-manage-parent.js";
 
 new MyRuleTester().run("no-manage-parent", rule, {
   valid: [

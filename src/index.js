@@ -1,15 +1,14 @@
-import noEmptyEffect from "./no-empty-effect.js";
-import noAdjustStateOnPropChange from "./no-adjust-state-on-prop-change.js";
-import noResetAllStateOnPropChange from "./no-reset-all-state-on-prop-change.js";
-import noEventHandler from "./no-event-handler.js";
-import noPassLiveStateToParent from "./no-pass-live-state-to-parent.js";
-import noInitializeState from "./no-initialize-state.js";
-import noChainStateUpdates from "./no-chain-state-updates.js";
-import noDerivedState from "./no-derived-state.js";
-import noPassDataToParent from "./no-pass-data-to-parent.js";
-import noManageParent from "./no-manage-parent.js";
+import noEmptyEffect from "./rules/no-empty-effect.js";
+import noAdjustStateOnPropChange from "./rules/no-adjust-state-on-prop-change.js";
+import noResetAllStateOnPropChange from "./rules/no-reset-all-state-on-prop-change.js";
+import noEventHandler from "./rules/no-event-handler.js";
+import noPassLiveStateToParent from "./rules/no-pass-live-state-to-parent.js";
+import noInitializeState from "./rules/no-initialize-state.js";
+import noChainStateUpdates from "./rules/no-chain-state-updates.js";
+import noDerivedState from "./rules/no-derived-state.js";
+import noPassDataToParent from "./rules/no-pass-data-to-parent.js";
+import noManageParent from "./rules/no-manage-parent.js";
 import globals from "globals";
-import "./util/javascript.js";
 
 /**
  * @type {import("eslint").ESLint.Plugin}
@@ -68,3 +67,8 @@ Object.assign(plugin.configs, {
 });
 
 export default plugin;
+
+// Wraps `Array.every()` to return false for empty arrays.
+Array.prototype.notEmptyEvery = function (predicate) {
+  return this.length > 0 && this.every(predicate);
+};

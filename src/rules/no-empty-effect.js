@@ -1,4 +1,4 @@
-import { isUseEffect, getEffectFnRefs } from "./util/react.js";
+import { isUseEffect, getEffectFnRefs } from "../util/ast.js";
 
 /**
  * @type {import("eslint").Rule.RuleModule}

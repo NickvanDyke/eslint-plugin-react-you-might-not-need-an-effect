@@ -1,5 +1,5 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import rule from "../src/no-empty-effect.js";
+import rule from "../src/rules/no-empty-effect.js";
 
 new MyRuleTester().run("no-empty-effect", rule, {
   valid: [

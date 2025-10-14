@@ -1,4 +1,4 @@
-import { getCallExpr } from "./util/ast.js";
+import { getCallExpr } from "../util/ast.js";
 import {
   getEffectDepsRefs,
   getEffectFnRefs,
@@ -7,7 +7,7 @@ import {
   isProp,
   isStateSetter,
   isUseEffect,
-} from "./util/react.js";
+} from "../util/ast.js";
 
 /**
  * @type {import("eslint").Rule.RuleModule}

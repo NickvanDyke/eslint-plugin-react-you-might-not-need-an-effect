@@ -3,9 +3,9 @@ import {
   getEffectDepsRefs,
   hasCleanup,
   isUseEffect,
-} from "./util/react.js";
-import { findDownstreamNodes, getDownstreamRefs } from "./util/ast.js";
-import { isState } from "./util/react.js";
+} from "../util/ast.js";
+import { findDownstreamNodes, getDownstreamRefs } from "../util/ast.js";
+import { isState } from "../util/ast.js";
 
 /**
  * @type {import("eslint").Rule.RuleModule}

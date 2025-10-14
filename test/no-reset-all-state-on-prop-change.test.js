@@ -1,4 +1,4 @@
-import rule from "../src/no-reset-all-state-on-prop-change.js";
+import rule from "../src/rules/no-reset-all-state-on-prop-change.js";
 import { MyRuleTester, js } from "./rule-tester.js";
 
 new MyRuleTester().run("no-reset-all-state-on-prop-change", rule, {

@@ -5,8 +5,8 @@ import {
   isPropCallback,
   isState,
   isUseEffect,
-} from "./util/react.js";
-import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
+} from "../util/ast.js";
+import { getCallExpr, getDownstreamRefs } from "../util/ast.js";
 
 /**
  * @type {import("eslint").Rule.RuleModule}

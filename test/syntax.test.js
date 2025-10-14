@@ -1,5 +1,5 @@
 import { MyRuleTester, js } from "./rule-tester.js";
-import noDerivedState from "../src/no-derived-state.js";
+import noDerivedState from "../src/rules/no-derived-state.js";
 
 // Analysis is quite syntax-dependent,
 // so here we have a bunch of semantically equivalent simple tests to verify various syntax.

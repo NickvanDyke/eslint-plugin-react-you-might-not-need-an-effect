@@ -2,8 +2,8 @@ import {
   getEffectFnRefs,
   getEffectDepsRefs,
   isUseEffect,
-} from "./util/react.js";
-import { isProp } from "./util/react.js";
+} from "../util/ast.js";
+import { isProp } from "../util/ast.js";
 
 /**
  * @type {import("eslint").Rule.RuleModule}
