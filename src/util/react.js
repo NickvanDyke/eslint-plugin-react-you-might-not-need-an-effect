@@ -1,4 +1,10 @@
-import { getUpstreamVariables, getDownstreamRefs, getCallExpr } from "./ast.js";
+import { getDownstreamRefs, getCallExpr } from "./ast.js";
+
+/**
+ * @import {Scope} from 'eslint'
+ * @import {Rule} from 'eslint'
+ * @import {AST} from 'eslint'
+ */
 
 export const isReactFunctionalComponent = (node) =>
   (node.type === "FunctionDeclaration" ||
@@ -130,23 +136,24 @@ export const isPropCallback = (context, ref) =>
 // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
 // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
 export const isState = (context, ref) =>
-  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
-    variable.defs.some((def) => isUseState(def.node)),
+  getUpstreamRefs(context, ref).notEmptyEvery((ref) =>
+    ref.resolved.defs.some((def) => isUseState(def.node)),
   );
 // Returns false for props of HOCs like `withRouter` because they usually have side effects.
 export const isProp = (context, ref) =>
-  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
-    variable.defs.some((def) => isPropDef(def)),
+  getUpstreamRefs(context, ref).notEmptyEvery((ref) =>
+    ref.resolved.defs.some((def) => isPropDef(def)),
   );
 export const isRef = (context, ref) =>
-  getUpstreamReactVariables(context, ref.resolved).notEmptyEvery((variable) =>
-    variable.defs.some((def) => isUseRef(def.node)),
+  getUpstreamRefs(context, ref).notEmptyEvery((ref) =>
+    ref.resolved.defs.some((def) => isUseRef(def.node)),
   );
 
 // TODO: Surely can be simplified/re-use other functions.
 // Needs a better API too so we can more easily get names etc. for messages.
 export const getUseStateNode = (context, ref) => {
-  return getUpstreamReactVariables(context, ref.resolved)
+  return getUpstreamRefs(context, ref)
+    .map((ref) => ref.resolved)
     .find((variable) => variable.defs.some((def) => isUseState(def.node)))
     ?.defs.find((def) => isUseState(def.node))?.node;
 };
@@ -186,25 +193,44 @@ export const isImmediateCall = (node) => {
 export const isArgsAllLiterals = (context, callExpr) =>
   callExpr.arguments
     .flatMap((arg) => getDownstreamRefs(context, arg))
-    .flatMap((ref) => getUpstreamReactVariables(context, ref.resolved))
-    .length === 0;
+    .flatMap((ref) => getUpstreamRefs(context, ref)).length === 0;
 
-export const getUpstreamReactVariables = (context, variable) =>
-  getUpstreamVariables(
-    context,
-    variable,
-    // Stop at the *usage* of `useState` - don't go up to the `useState` variable.
-    // Not needed for props - they don't go "too far".
-    // We could remove this and check for the `useState` variable instead,
-    // but then all our tests need to import it so we can traverse up to it.
-    // And would need to change `getUseStateNode()` too?
-    // TODO: Could probably organize these filters better.
-    (node) => !isUseState(node),
-  ).filter((variable) =>
-    variable.defs.every(
-      (def) =>
-        isPropDef(def) ||
-        // Ignore variables declared inside an anonymous function, like in `array.map()`.
-        def.type !== "Parameter",
-    ),
-  );
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Scope.Reference} ref
+ *
+ * @returns {Scope.Reference[]}
+ */
+export const getUpstreamRefs = (context, ref) => {
+  if (!ref.resolved) {
+    // I think this only happens when:
+    // 1. Import statement is missing
+    // 2. ESLint globals are misconfigured
+    return [];
+  } else if (
+    // Ignore function parameters references, aside from props.
+    // They are self-contained and essentially duplicate the argument reference.
+    ref.resolved.defs.every(
+      (def) => def.type === "Parameter" && !isPropDef(def),
+    )
+  ) {
+    return [];
+  }
+
+  const upstreamRefs = ref.resolved.defs
+    // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
+    // `init` covers for arrow functions; also needs `body` to descend into function declarations
+    // But then for function parameters (including props), `def.node.body` is the body of the function that they belong to,
+    // so we get *all* the downstream refs in it...
+    // We only want to descend when we're traversing up the function itself; no its parameters.
+    // Probably similar logic to in `getUpstreamReactVariables`.
+    .filter((def) => !!def.node.init)
+    // Stop before we get to `useState()` - we want references to the state and setter.
+    // May not be necessary if we adapt the check in `isState()`?
+    .filter((def) => !isUseState(def.node))
+    .flatMap((def) => getDownstreamRefs(context, def.node.init))
+    .flatMap((ref) => getUpstreamRefs(context, ref));
+
+  // Ultimately return only leaf refs
+  return upstreamRefs.length === 0 ? [ref] : upstreamRefs;
+};

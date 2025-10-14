@@ -5,10 +5,10 @@ import {
   isStateSetter,
   getUseStateNode,
   isProp,
-  getUpstreamReactVariables,
   isState,
   hasCleanup,
   isUseEffect,
+  getUpstreamRefs,
 } from "./util/react.js";
 import { getCallExpr, getDownstreamRefs } from "./util/ast.js";
 
@@ -52,14 +52,16 @@ export default {
             (ref) => isState(context, ref) || isProp(context, ref),
           );
 
-          const argsUpstreamVars = argsRefs.flatMap((ref) =>
-            getUpstreamReactVariables(context, ref.resolved),
+          const argsUpstreamRefs = argsRefs.flatMap((ref) =>
+            getUpstreamRefs(context, ref),
           );
-          const depsUpstreamVars = depsRefs.flatMap((ref) =>
-            getUpstreamReactVariables(context, ref.resolved),
+          const depsUpstreamRefs = depsRefs.flatMap((ref) =>
+            getUpstreamRefs(context, ref),
           );
-          const isAllArgsInDeps = argsUpstreamVars.notEmptyEvery((argVar) =>
-            depsUpstreamVars.some((depVar) => argVar.name === depVar.name),
+          const isAllArgsInDeps = argsUpstreamRefs.notEmptyEvery((argRef) =>
+            depsUpstreamRefs.some(
+              (depRef) => argRef.resolved.name === depRef.resolved.name,
+            ),
           );
           const isValueAlwaysInSync = isAllArgsInDeps && countCalls(ref) === 1;
 

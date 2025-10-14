@@ -1,5 +1,11 @@
 import { findVariable } from "eslint-utils";
 
+/**
+ * @import {Scope} from 'eslint'
+ * @import {Rule} from 'eslint'
+ * @import {AST} from 'eslint'
+ */
+
 export const traverse = (context, node, visit, visited = new Set()) => {
   if (visited.has(node)) {
     return;
@@ -31,42 +37,10 @@ export const findDownstreamNodes = (context, topNode, type) => {
   return nodes;
 };
 
-export const getUpstreamVariables = (
-  context,
-  variable,
-  filter,
-  visited = new Set(),
-) => {
-  if (visited.has(variable)) {
-    return [];
-  }
-
-  visited.add(variable);
-
-  const upstreamVariables = variable.defs
-    // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
-    // `init` covers for arrow functions; also needs `body` to descend into function declarations
-    // But then for function parameters (including props), `def.node.body` is the body of the function that they belong to,
-    // so we get *all* the downstream refs in it...
-    // We only want to descend when we're traversing up the function itself; no its parameters.
-    // Probably similar logic to in `getUpstreamReactVariables`.
-    .filter((def) => !!def.node.init)
-    .filter((def) => filter(def.node))
-    .flatMap((def) => getDownstreamRefs(context, def.node.init))
-    .map((ref) => ref.resolved)
-    // I think this only happens when:
-    // 1. There's genuinely no variable, i.e. `node` is a literal
-    // 2. Import statement is missing
-    // 3. ESLint globals are misconfigured
-    .filter(Boolean)
-    .flatMap((variable) =>
-      getUpstreamVariables(context, variable, filter, visited),
-    );
-
-  // Ultimately return only leaf variables
-  return upstreamVariables.length === 0 ? [variable] : upstreamVariables;
-};
-
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Rule.Node} node
+ */
 export const getDownstreamRefs = (context, node) =>
   findDownstreamNodes(context, node, "Identifier")
     .map((identifier) => getRef(context, identifier))

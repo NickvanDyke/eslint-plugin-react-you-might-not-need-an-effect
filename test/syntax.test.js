@@ -479,18 +479,17 @@ new MyRuleTester().run("syntax", noDerivedState, {
       code: js`
         import { useState, useEffect } from 'react';
 
-        function CountAccumulator({ count }) {
-          const [total, setTotal] = useState(count);
+         function DoubleCounter() {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
 
-          useEffect(() => {
-            setTotal((prev) => prev + count);
-          }, [count]);
-        }
+           useEffect(() => setDoubleCount(count * 2), [count]);
+         }
       `,
       errors: [
         {
           messageId: "avoidDerivedState",
-          data: { state: "total" },
+          data: { state: "doubleCount" },
         },
       ],
     },

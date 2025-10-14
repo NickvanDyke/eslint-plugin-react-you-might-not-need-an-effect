@@ -207,6 +207,11 @@ new MyRuleTester().run("no-derived-state", rule, {
           useEffect(() => {
             setCountJson(JSON.stringify(count));
           }, [count]);
+
+          return (
+            // So single-setter doesn't trigger
+            <button onClick={() => setCountJson(undefined)}>reset</button>
+          )
         }
       `,
     },
@@ -217,9 +222,13 @@ new MyRuleTester().run("no-derived-state", rule, {
           const [multipliedCount, setMultipliedCount] = useState();
 
           useEffect(() => {
-            const multipler = fetch('/multipler');
-            setMultipliedCount(count * multipler);
+            setMultipliedCount(count * fetch('/multipler'));
           }, [count]);
+
+          return (
+            // So single-setter doesn't trigger
+            <button onClick={() => setMultipliedCount(0)}>reset</button>
+          )
         }
       `,
     },
@@ -826,7 +835,7 @@ new MyRuleTester().run("no-derived-state", rule, {
 
           useEffect(() => {
             setFullName(computeName(firstName, lastName));
-          }, [firstName, lastName]);
+          }, [firstName, lastName, computeName]);
         }
       `,
       errors: [
