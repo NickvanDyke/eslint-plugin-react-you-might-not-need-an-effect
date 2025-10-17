@@ -43,7 +43,10 @@ export default {
           if (
             callExpr.arguments
               .flatMap((arg) => getDownstreamRefs(context, arg))
-              .notEmptyEvery(
+              // `every` instead of the usual `notEmptyEvery` because `getUpstreamRefs` filters out
+              // parameters, e.g. in Promise chains or callbacks, but we want to flag passing those.
+              // Ideally we'd identify and check the parameter's "source" though...
+              .every(
                 (ref) =>
                   !isState(context, ref) &&
                   !isProp(context, ref) &&

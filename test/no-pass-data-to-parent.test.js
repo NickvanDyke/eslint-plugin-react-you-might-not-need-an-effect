@@ -4,16 +4,6 @@ import rule from "../src/rules/no-pass-data-to-parent.js";
 new MyRuleTester().run("no-pass-data-to-parent", rule, {
   valid: [
     {
-      name: "Pass literal value to prop",
-      code: js`
-        const Child = ({ onTextChanged }) => {
-          useEffect(() => {
-            onTextChanged("Hello World");
-          }, [onTextChanged]);
-        }
-      `,
-    },
-    {
       name: "Pass internal state",
       code: js`
         const Child = ({ onTextChanged }) => {
@@ -182,6 +172,21 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
     },
   ],
   invalid: [
+    {
+      name: "Pass literal value",
+      code: js`
+        const Child = ({ onTextChanged }) => {
+          useEffect(() => {
+            onTextChanged("Hello World");
+          }, [onTextChanged]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidPassingDataToParent",
+        },
+      ],
+    },
     {
       name: "Pass external state",
       code: js`
