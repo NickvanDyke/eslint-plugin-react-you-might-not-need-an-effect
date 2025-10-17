@@ -187,13 +187,13 @@ new MyRuleTester().run("no-derived-state", rule, {
         function DoubleCounter({ count }) {
           const [doubleCount, setDoubleCount] = useState(0);
 
-          const derivedSetter = (count) => {
+          const derivedSetter = () => {
             const multipler = fetch('/multipler');
-            setDoubleCount(count); 
+            setDoubleCount(multiplier);
           }
 
           useEffect(() => {
-            derivedSetter(count);
+            derivedSetter();
           }, [count]);
         }
       `,
