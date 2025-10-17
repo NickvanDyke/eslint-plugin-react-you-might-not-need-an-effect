@@ -635,7 +635,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
       errors: [
         {
-          messageId: "avoidDerivedState",
+          messageId: "avoidSingleSetter",
           data: { state: "selectedPost" },
         },
       ],
@@ -655,7 +655,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
       errors: [
         {
-          messageId: "avoidDerivedState",
+          messageId: "avoidSingleSetter",
           data: { state: "fullName" },
         },
       ],
@@ -676,7 +676,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
       errors: [
         {
-          messageId: "avoidDerivedState",
+          messageId: "avoidSingleSetter",
           data: { state: "fullName" },
         },
       ],

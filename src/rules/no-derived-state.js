@@ -26,6 +26,8 @@ export default {
     messages: {
       avoidDerivedState:
         'Avoid storing derived state. Compute "{{state}}" directly during render, optionally with `useMemo` if it\'s expensive.',
+      avoidSingleSetter:
+        'Avoid storing derived state. "{{state}}" is only set here, and thus could be computed directly during render.',
     },
   },
   create: (context) => ({
@@ -62,10 +64,16 @@ export default {
           );
           const isValueAlwaysInSync = isAllArgsInDeps && countCalls(ref) === 1;
 
-          if (isAllArgsInternal || isValueAlwaysInSync) {
+          if (isAllArgsInternal) {
             context.report({
               node: callExpr,
               messageId: "avoidDerivedState",
+              data: { state: stateName },
+            });
+          } else if (isValueAlwaysInSync) {
+            context.report({
+              node: callExpr,
+              messageId: "avoidSingleSetter",
               data: { state: stateName },
             });
           }
