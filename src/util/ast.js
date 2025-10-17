@@ -129,25 +129,20 @@ export function getEffectDepsRefs(context, node) {
 // (Even though that is not recommended and should be prevented by a different rule).
 // And in the case of a prop, we can't differentiate state mutations from callbacks anyway.
 export const isStateSetter = (context, ref) =>
-  getCallExpr(ref) !== undefined && isState(context, ref);
+  getCallExpr(ref) !== undefined &&
+  getUpstreamRefs(context, ref).some((ref) => isState(ref));
 export const isPropCallback = (context, ref) =>
-  getCallExpr(ref) !== undefined && isProp(context, ref);
+  getCallExpr(ref) !== undefined &&
+  getUpstreamRefs(context, ref).some((ref) => isProp(ref));
 
 // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
 // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
-export const isState = (context, ref) =>
-  getUpstreamRefs(context, ref).notEmptyEvery((ref) =>
-    ref.resolved.defs.some((def) => isUseState(def.node)),
-  );
+export const isState = (ref) =>
+  ref.resolved.defs.some((def) => isUseState(def.node));
 // Returns false for props of HOCs like `withRouter` because they usually have side effects.
-export const isProp = (context, ref) =>
-  getUpstreamRefs(context, ref).notEmptyEvery((ref) =>
-    ref.resolved.defs.some((def) => isPropDef(def)),
-  );
-export const isRef = (context, ref) =>
-  getUpstreamRefs(context, ref).notEmptyEvery((ref) =>
-    ref.resolved.defs.some((def) => isUseRef(def.node)),
-  );
+export const isProp = (ref) => ref.resolved.defs.some((def) => isPropDef(def));
+export const isRef = (ref) =>
+  ref.resolved.defs.some((def) => isUseRef(def.node));
 
 // TODO: Surely can be simplified/re-use other functions.
 // Needs a better API too so we can more easily get names etc. for messages.
@@ -205,7 +200,8 @@ export const getUpstreamRefs = (context, ref) => {
   } else if (
     // Ignore function parameters references, aside from props.
     // They are self-contained and essentially duplicate the argument reference.
-    ref.resolved.defs.every(
+    // Important to use `notEmptyEvery` because global variables have an empty `defs`.
+    ref.resolved.defs.notEmptyEvery(
       (def) => def.type === "Parameter" && !isPropDef(def),
     )
   ) {

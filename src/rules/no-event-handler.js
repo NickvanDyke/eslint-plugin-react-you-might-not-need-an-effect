@@ -3,6 +3,7 @@ import {
   getEffectDepsRefs,
   hasCleanup,
   isUseEffect,
+  getUpstreamRefs,
 } from "../util/ast.js";
 import { findDownstreamNodes, getDownstreamRefs } from "../util/ast.js";
 import { isState } from "../util/ast.js";
@@ -37,8 +38,9 @@ export default {
         .filter((ifNode) => !ifNode.alternate)
         .filter((ifNode) =>
           getDownstreamRefs(context, ifNode.test)
+            .flatMap((ref) => getUpstreamRefs(context, ref))
             // TODO: Should flag props too, but maybe with a different message?
-            .notEmptyEvery((ref) => isState(context, ref)),
+            .notEmptyEvery((ref) => isState(ref)),
         )
         .forEach((ifNode) => {
           context.report({

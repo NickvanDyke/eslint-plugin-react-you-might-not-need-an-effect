@@ -1,4 +1,4 @@
-import { getCallExpr } from "../util/ast.js";
+import { getCallExpr, getUpstreamRefs } from "../util/ast.js";
 import {
   getEffectDepsRefs,
   getEffectFnRefs,
@@ -35,9 +35,9 @@ export default {
 
       // TODO: Should filter out setters before checking?
       // exhaustive-deps doesn't enforce one way or the other.
-      const isAllDepsState = depsRefs.notEmptyEvery((ref) =>
-        isState(context, ref),
-      );
+      const isAllDepsState = depsRefs
+        .flatMap((ref) => getUpstreamRefs(context, ref))
+        .notEmptyEvery((ref) => isState(ref));
 
       effectFnRefs
         .filter((ref) => isStateSetter(context, ref))

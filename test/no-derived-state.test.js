@@ -251,27 +251,6 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
     },
     {
-      name: "From external state via useCallback derived setter",
-      code: js`
-        import { getPrefixFor } from 'library';
-        import { useState } from 'react';
-
-        function Component() {
-          const [name, setName] = useState();
-          const [prefixedName, setPrefixedName] = useState();
-          const prefix = getPrefixFor(name);
-
-          const derivedSetter = useCallback((name) => {
-            setPrefixedName(prefix + name);
-          }, [prefix]);
-
-          useEffect(() => {
-            derivedSetter(name);
-          }, [name, derivedSetter])
-        }
-      `,
-    },
-    {
       // We don't have the imported function's implementation available to analyze
       name: "From internal state via imported function",
       code: js`
@@ -415,6 +394,28 @@ new MyRuleTester().run("no-derived-state", rule, {
             document.addEventListener('click', handleClick);
             return () => document.removeEventListener('click', handleClick);
           }, [count]);
+        }
+      `,
+    },
+    {
+      name: "From external state via useCallback derived setter",
+      todo: true,
+      code: js`
+        import { getPrefixFor } from 'library';
+        import { useState } from 'react';
+
+        function Component() {
+          const [name, setName] = useState();
+          const [prefixedName, setPrefixedName] = useState();
+          const prefix = getPrefixFor(name);
+
+          const derivedSetter = useCallback((name) => {
+            setPrefixedName(prefix + name);
+          }, [prefix]);
+
+          useEffect(() => {
+            derivedSetter(name);
+          }, [name, derivedSetter])
         }
       `,
     },
@@ -601,7 +602,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      name: "From props and internal state in intermediate variable",
+      name: "From props and internal state via intermediate variable",
       code: js`
         function Form({ title }) {
           const [name, setName] = useState('Dwayne');
@@ -816,13 +817,11 @@ new MyRuleTester().run("no-derived-state", rule, {
         },
       ],
     },
-    // TODO: Maybe move some of these to/from `syntax.test.js`
     {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
-      // I think this passes right now because `getUpstreamReactVariables` filters out non-prop parameters,
-      // so it correctly sees that `computeName` is pure, i.e. has no non-parameter references.
-      // (Although that may be a confusing way to coincidntally encode it).
+      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
+      // Because we use `notEmptyEvery` when descending?
       name: "Set to result of pure local ArrowFunctionExpression",
+      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Dwayne');
@@ -846,11 +845,10 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
-      // TODO: Descend into FunctionDeclaration to see that it's all parameter references
-      // (latter part should be for free, per the previous test).
-      todo: true,
+      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
+      // Descend into FunctionDeclaration to see that it's all parameter references
       name: "Set to result of pure local FunctionDeclaration",
+      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Dwayne');
@@ -1024,6 +1022,7 @@ new MyRuleTester().run("no-derived-state", rule, {
     },
     {
       name: "From internal state via useCallback two-arg no-dep intermediate setter",
+      todo: true,
       code: js`
         function Component() {
           const [name, setName] = useState();

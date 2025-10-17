@@ -1,4 +1,4 @@
-import { getCallExpr, traverse } from "../util/ast.js";
+import { getCallExpr, getUpstreamRefs, traverse } from "../util/ast.js";
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
@@ -74,7 +74,9 @@ const findPropUsedToResetAllState = (
       countUseStates(context, findContainingNode(useEffectNode));
 
   return isAllStateReset
-    ? depsRefs.find((ref) => isProp(context, ref))
+    ? depsRefs
+        .flatMap((ref) => getUpstreamRefs(context, ref))
+        .find((ref) => isProp(ref))
     : undefined;
 };
 

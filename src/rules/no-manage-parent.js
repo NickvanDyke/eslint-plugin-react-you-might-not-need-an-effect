@@ -2,6 +2,7 @@ import {
   getEffectFnRefs,
   getEffectDepsRefs,
   isUseEffect,
+  getUpstreamRefs,
 } from "../util/ast.js";
 import { isProp } from "../util/ast.js";
 
@@ -29,7 +30,12 @@ export default {
 
       if (effectFnRefs.length === 0) return;
 
-      if (effectFnRefs.concat(depsRefs).every((ref) => isProp(context, ref))) {
+      const isAllProps = effectFnRefs
+        .concat(depsRefs)
+        .flatMap((ref) => getUpstreamRefs(context, ref))
+        .notEmptyEvery((ref) => isProp(ref));
+
+      if (isAllProps) {
         context.report({
           node,
           messageId: "avoidManagingParent",

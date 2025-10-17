@@ -45,19 +45,16 @@ export default {
             useStateNode.id.elements[0] ?? useStateNode.id.elements[1]
           )?.name;
 
-          const argsRefs = callExpr.arguments.flatMap((arg) =>
-            getDownstreamRefs(context, arg),
-          );
-          const isAllArgsInternal = argsRefs.notEmptyEvery(
-            (ref) => isState(context, ref) || isProp(context, ref),
-          );
-
-          const argsUpstreamRefs = argsRefs.flatMap((ref) =>
-            getUpstreamRefs(context, ref),
-          );
+          const argsUpstreamRefs = callExpr.arguments
+            .flatMap((arg) => getDownstreamRefs(context, arg))
+            .flatMap((ref) => getUpstreamRefs(context, ref));
           const depsUpstreamRefs = depsRefs.flatMap((ref) =>
             getUpstreamRefs(context, ref),
           );
+          const isAllArgsInternal = argsUpstreamRefs.notEmptyEvery(
+            (ref) => isState(ref) || isProp(ref),
+          );
+
           const isAllArgsInDeps = argsUpstreamRefs.notEmptyEvery((argRef) =>
             depsUpstreamRefs.some(
               (depRef) => argRef.resolved.name === depRef.resolved.name,

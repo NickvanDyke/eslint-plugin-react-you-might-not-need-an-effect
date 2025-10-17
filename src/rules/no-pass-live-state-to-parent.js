@@ -5,6 +5,7 @@ import {
   isPropCallback,
   isState,
   isUseEffect,
+  getUpstreamRefs,
 } from "../util/ast.js";
 import { getCallExpr, getDownstreamRefs } from "../util/ast.js";
 
@@ -39,7 +40,8 @@ export default {
           const callExpr = getCallExpr(ref);
           const isStateInArgs = callExpr.arguments
             .flatMap((arg) => getDownstreamRefs(context, arg))
-            .some((ref) => isState(context, ref));
+            .flatMap((ref) => getUpstreamRefs(context, ref))
+            .some((ref) => isState(ref));
 
           if (isStateInArgs) {
             context.report({

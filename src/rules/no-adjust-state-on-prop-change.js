@@ -1,4 +1,4 @@
-import { getCallExpr } from "../util/ast.js";
+import { getCallExpr, getUpstreamRefs } from "../util/ast.js";
 import {
   getEffectDepsRefs,
   getEffectFnRefs,
@@ -32,9 +32,9 @@ export default {
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
-      const isAllDepsProps = depsRefs.notEmptyEvery((ref) =>
-        isProp(context, ref),
-      );
+      const isAllDepsProps = depsRefs
+        .flatMap((ref) => getUpstreamRefs(context, ref))
+        .notEmptyEvery((ref) => isProp(ref));
 
       effectFnRefs
         .filter((ref) => isStateSetter(context, ref))
