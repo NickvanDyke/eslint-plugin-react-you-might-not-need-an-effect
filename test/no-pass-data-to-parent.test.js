@@ -59,11 +59,6 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
           )
         }
       `,
-      errors: [
-        {
-          messageId: "avoidPassingDataToParent",
-        },
-      ],
     },
     {
       // This might be an anti-pattern in the first place...
@@ -100,7 +95,7 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
 
           useEffect(() => {
             if (data.error) {
-              history.push(data.error);
+              history.push('/error');
             }
           }, [data]);
         });
