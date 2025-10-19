@@ -103,7 +103,7 @@ new MyRuleTester().run("no-initialize-state", rule, {
       errors: [
         {
           messageId: "avoidInitializingState",
-          data: { state: "state" },
+          data: { state: "state", arguments: '"Hello"' },
         },
       ],
     },
@@ -122,7 +122,7 @@ new MyRuleTester().run("no-initialize-state", rule, {
       errors: [
         {
           messageId: "avoidInitializingState",
-          data: { state: "state" },
+          data: { state: "state", arguments: "otherState" },
         },
       ],
     },
@@ -141,7 +141,25 @@ new MyRuleTester().run("no-initialize-state", rule, {
       errors: [
         {
           messageId: "avoidInitializingState",
-          data: { state: "state" },
+          data: { state: "state", arguments: "'Hello World'" },
+        },
+      ],
+    },
+    {
+      name: "To undefined",
+      code: js`
+        function MyComponent() {
+          const [state, setState] = useState('Meow');
+
+          useEffect(() => {
+            setState();
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInitializingState",
+          data: { state: "state", arguments: "undefined" },
         },
       ],
     },

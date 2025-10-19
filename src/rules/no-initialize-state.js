@@ -21,7 +21,7 @@ export default {
     schema: [],
     messages: {
       avoidInitializingState:
-        'Avoid initializing state in an effect. Instead, pass "{{state}}"\'s initial value to its `useState`. For SSR hydration, prefer `useSyncExternalStore`.',
+        'Avoid initializing state in an effect. Instead, initialize "{{state}}"\'s `useState()` with "{{arguments}}". For SSR hydration, prefer `useSyncExternalStore()`.',
     },
   },
   create: (context) => ({
@@ -38,15 +38,19 @@ export default {
         .filter((ref) => isStateSetter(context, ref))
         .filter((ref) => isImmediateCall(ref.identifier))
         .forEach((ref) => {
+          const callExpr = getCallExpr(ref);
           const useStateNode = getUseStateNode(context, ref);
           const stateName = (
             useStateNode.id.elements[0] ?? useStateNode.id.elements[1]
           )?.name;
+          const argumentText = callExpr.arguments[0]
+            ? context.sourceCode.getText(callExpr.arguments[0])
+            : "undefined";
 
           context.report({
             node: getCallExpr(ref),
             messageId: "avoidInitializingState",
-            data: { state: stateName },
+            data: { state: stateName, arguments: argumentText },
           });
         });
     },
