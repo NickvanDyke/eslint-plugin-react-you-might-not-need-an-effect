@@ -332,6 +332,88 @@ describe("recommended rules on real-world code", () => {
           };
         `,
       },
+      {
+        // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/49
+        name: "Effect with recursion", // Particularly likely for `no-manage-parent` because it checks *all* refs in the effect
+        code: js`
+        function Component() {
+          useEffect(() => {
+            const container = ctnDom.current
+            if (!container) return
+
+            // WebGL setup (~30 lines)
+            const renderer = new Renderer({ alpha: true, premultipliedAlpha: false })
+            const gl = renderer.gl
+            const program = new Program(gl, {
+              vertex: vert,
+              fragment: frag,
+              uniforms: {
+                iTime: { value: 0 },
+                iResolution: { value: new Vec3(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height) },
+                hue: { value: hue },
+                hover: { value: 0 },
+                rot: { value: 0 },
+                hoverIntensity: { value: hoverIntensity },
+              },
+            })
+            const mesh = new Mesh(gl, { geometry, program })
+
+            // Nested function 4: animation loop with recursion
+            let rafId
+            let lastTime = 0
+            let currentRot = 0
+            const rotationSpeed = 0.3
+
+            const update = (t) => {
+              rafId = requestAnimationFrame(update) // Recursive call
+              const dt = (t - lastTime) * 0.001
+              lastTime = t
+              const currentTime = t * 0.001
+              program.uniforms.iTime.value = currentTime
+
+              // Color cycle
+              if (cycleHue) {
+                const cyclicHue = (hue + currentTime * hueCycleSpeed) % 360
+                program.uniforms.hue.value = cyclicHue
+              } else {
+                program.uniforms.hue.value = hue
+              }
+
+              program.uniforms.hoverIntensity.value = hoverIntensity
+
+              const effectiveHover = forceHoverState ? 1 : targetHover
+              program.uniforms.hover.value += (effectiveHover - program.uniforms.hover.value) * 0.1
+
+              if (rotateOnHover && effectiveHover > 0.5) {
+                currentRot += dt * rotationSpeed
+              }
+              program.uniforms.rot.value = currentRot
+
+              renderer.render({ scene: mesh })
+            }
+            rafId = requestAnimationFrame(update)
+
+            // Cleanup function
+            return () => {
+              cancelAnimationFrame(rafId)
+              window.removeEventListener("resize", resize)
+              container.removeEventListener("mousemove", handleMouseMove)
+              container.removeEventListener("mouseleave", handleMouseLeave)
+              container.removeChild(gl.canvas)
+              gl.getExtension("WEBGL_lose_context")?.loseContext()
+            }
+          }, [
+            hue,
+            hoverIntensity,
+            rotateOnHover,
+            forceHoverState,
+            cycleHue,
+            hueCycleSpeed,
+            size,
+          ])
+        }
+      `,
+      },
     ].forEach(({ name, code }) => {
       it(name, async () => {
         const results = await eslint.lintText(code);

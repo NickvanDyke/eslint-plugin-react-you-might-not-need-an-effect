@@ -191,8 +191,10 @@ export const isImmediateCall = (node) => {
  *
  * @returns {Scope.Reference[]}
  */
-export const getUpstreamRefs = (context, ref) => {
-  if (!ref.resolved) {
+export const getUpstreamRefs = (context, ref, visited = new Set()) => {
+  if (visited.has(ref)) {
+    return [];
+  } else if (!ref.resolved) {
     // I think this only happens when:
     // 1. Import statement is missing
     // 2. ESLint globals are misconfigured
@@ -208,6 +210,10 @@ export const getUpstreamRefs = (context, ref) => {
     return [];
   }
 
+  // TODO: Probably best to track this here but let the downstream `traverse()` handle it.
+  // Especially if we can simplify/eliminate `getDownstreamRefs()` -> `findDownstreamNodes()` from the path.
+  visited.add(ref);
+
   const upstreamRefs = ref.resolved.defs
     // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
     // `init` covers for arrow functions; also needs `body` to descend into function declarations
@@ -220,7 +226,7 @@ export const getUpstreamRefs = (context, ref) => {
     // May not be necessary if we adapt the check in `isState()`?
     .filter((def) => !isUseState(def.node))
     .flatMap((def) => getDownstreamRefs(context, def.node.init))
-    .flatMap((ref) => getUpstreamRefs(context, ref));
+    .flatMap((ref) => getUpstreamRefs(context, ref, visited));
 
   // Ultimately return only leaf refs
   return upstreamRefs.length === 0 ? [ref] : upstreamRefs;
