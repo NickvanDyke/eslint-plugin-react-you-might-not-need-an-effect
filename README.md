@@ -174,6 +174,31 @@ function Child({ onDataFetched }) {
 }
 ```
 
+### `no-pass-ref-to-parent` — [docs](https://react.dev/reference/react/forwardRef)
+
+Disallow passing refs, or data from callbacks registered on them, to parents in an effect. Use `forwardRef` instead:
+
+```js
+function Child({ onRef }) {
+  const ref = useRef();
+
+  useEffect(() => {
+    onRef(ref.current);
+  }, [onRef, ref.current]);
+}
+```
+
+```js
+const Child = ({ onClicked }) => {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current.addEventListener('click', (event) => {
+      onClicked(event);
+    });
+  }, [onClicked]);
+}
+```
+
 ### `no-initialize-state`
 
 Disallow initializing state in an effect:

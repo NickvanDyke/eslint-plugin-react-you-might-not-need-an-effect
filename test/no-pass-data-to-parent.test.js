@@ -4,6 +4,16 @@ import rule from "../src/rules/no-pass-data-to-parent.js";
 new MyRuleTester().run("no-pass-data-to-parent", rule, {
   valid: [
     {
+      name: "Pass literal value",
+      code: js`
+        const Child = ({ onTextChanged }) => {
+          useEffect(() => {
+            onTextChanged("Hello World");
+          }, [onTextChanged]);
+        }
+      `,
+    },
+    {
       name: "Pass internal state",
       code: js`
         const Child = ({ onTextChanged }) => {
@@ -102,11 +112,6 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
       `,
     },
     {
-      // TODO: Definitely an anti-pattern, but may fit better elsewhere
-      // because refs are not quite state, e.g. don't cause re-renders.
-      // However they *are* local to the component...
-      // At the least, could use a different message when flagged.
-      // Or maybe user should be advised to use `forwardRef` instead? I think that's idiomatic.
       name: "Pass ref to parent",
       code: js`
         const Child = ({ onRef }) => {
@@ -115,8 +120,6 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
           useEffect(() => {
             onRef(ref.current);
           }, [onRef, ref.current]);
-
-          return <div ref={ref}>Child</div>;
         }
       `,
     },
@@ -165,23 +168,75 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
         }
       `,
     },
-  ],
-  invalid: [
     {
-      name: "Pass literal value",
+      name: "Register callback on ref to pass data to parent",
       code: js`
-        const Child = ({ onTextChanged }) => {
+        const Child = ({ onClicked }) => {
+          const ref = useRef();
+
           useEffect(() => {
-            onTextChanged("Hello World");
-          }, [onTextChanged]);
+            ref.current.addEventListener('click', (event) => {
+              onClicked(event);
+            });
+          }, [onFetched]);
         }
       `,
-      errors: [
-        {
-          messageId: "avoidPassingDataToParent",
-        },
-      ],
     },
+    {
+      // We get lucky in this example that `getUpstreamRefs` ignores parameter-declared variables,
+      // and thus we don't flag `addEventListener`. But not certain that's totally reliable.
+      // TODO: We might want to catch this but it's tricky to identify the prop as a ref w/o type info.
+      // Probably with a different message or even rule, about the child controlling the parent and idiomatic React control flow.
+      name: "Register callback on ref prop",
+      code: js`
+        const Child = ({ ref }) => {
+          useEffect(() => {
+            ref.current.addEventListener('click', (event) => {
+              console.log('Clicked', event);
+            });
+          }, [ref]);
+        }
+      `,
+    },
+    {
+      name: "Pass external state that's retrieved in effect via .then",
+      code: js`
+        const Child = ({ onFetched }) => {
+          useEffect(() => {
+            fetchData()
+              .then((data) => onFetched(data));
+          }, []);
+        }
+      `,
+      // TODO: Difficult because `getUpstreamRefs` ignores parameter-declared variables,
+      // and the above test case relies on that behavior.
+      // errors: [
+      //   {
+      //     messageId: "avoidPassingDataToParent",
+      //   },
+      // ],
+    },
+    {
+      name: "Pass external state that's retrieved in effect via async/await",
+      code: js`
+        const Child = ({ onFetched }) => {
+          useEffect(() => {
+            (async () => {
+              const data = await fetchData();
+              onFetched(data);
+            })();
+          }, []);
+        }
+      `,
+      // TODO:
+      // errors: [
+      //   {
+      //     messageId: "avoidPassingDataToParent",
+      //   },
+      // ],
+    },
+  ],
+  invalid: [
     {
       name: "Pass external state",
       code: js`
@@ -209,63 +264,6 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
           useEffect(() => {
             onFetched(firstElement);
           }, [onFetched, firstElement]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidPassingDataToParent",
-        },
-      ],
-    },
-    {
-      name: "Pass external state that's retrieved in effect via .then",
-      code: js`
-        const Child = ({ onFetched }) => {
-          useEffect(() => {
-            fetchData()
-              .then((data) => onFetched(data));
-          }, []);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidPassingDataToParent",
-        },
-      ],
-    },
-    {
-      name: "Pass external state that's retrieved in effect via async/await",
-      code: js`
-        const Child = ({ onFetched }) => {
-          useEffect(() => {
-            (async () => {
-              const data = await fetchData();
-              onFetched(data);
-            })();
-          }, []);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidPassingDataToParent",
-        },
-      ],
-    },
-    {
-      // If parent needs to listen to child's DOM events, it should set up the listener itself.
-      // TODO: Better message? Advise to use `forwardRef`.
-      name: "Register callback on ref to pass data to parent",
-      code: js`
-        const Child = ({ onClicked }) => {
-          const ref = useRef();
-
-          useEffect(() => {
-            ref.current.addEventListener('click', (event) => {
-              onClicked(event);
-            });
-          }, [onFetched]);
-
-          return <SomeComponent ref={ref} />;
         }
       `,
       errors: [

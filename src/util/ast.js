@@ -134,6 +134,9 @@ export const isStateSetter = (context, ref) =>
 export const isPropCallback = (context, ref) =>
   getCallExpr(ref) !== undefined &&
   getUpstreamRefs(context, ref).some((ref) => isProp(ref));
+export const isRefCall = (context, ref) =>
+  getCallExpr(ref) !== undefined &&
+  getUpstreamRefs(context, ref).some((ref) => isRef(ref));
 
 // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
 // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
