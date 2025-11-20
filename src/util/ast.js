@@ -286,6 +286,7 @@ export const getUpstreamRefs = (context, ref, visited = new Set()) => {
     // Ignore function parameters references, aside from props.
     // They are self-contained and essentially duplicate the argument reference.
     // Important to use `notEmptyEvery` because global variables have an empty `defs`.
+    // May be combinable with the `def.type !== "Parameter"` check below...
     ref.resolved.defs.notEmptyEvery(
       (def) => def.type === "Parameter" && !isPropDef(def),
     )
@@ -298,17 +299,15 @@ export const getUpstreamRefs = (context, ref, visited = new Set()) => {
   visited.add(ref);
 
   const upstreamRefs = ref.resolved.defs
-    // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
-    // `init` covers for arrow functions; also needs `body` to descend into function declarations
-    // But then for function parameters (including props), `def.node.body` is the body of the function that they belong to,
-    // so we get *all* the downstream refs in it...
-    // We only want to descend when we're traversing up the function itself; no its parameters.
-    // Probably similar logic to in `getUpstreamReactVariables`.
-    .filter((def) => !!def.node.init)
     // Stop before we get to `useState()` - we want references to the state and setter.
     // May not be necessary if we adapt the check in `isState()`?
     .filter((def) => !isUseState(def.node))
-    .flatMap((def) => getDownstreamRefs(context, def.node.init))
+    // `def.node.init` is for ArrowFunctionExpression.
+    // `def.node.body` is for FunctionDeclaration
+    // (minus parameters because we only want to traverse references to the function, not to its parameters).
+    .map((def) => def.node.init ?? (def.type !== "Parameter" && def.node.body))
+    .filter(Boolean)
+    .flatMap((node) => getDownstreamRefs(context, node))
     .flatMap((ref) => getUpstreamRefs(context, ref, visited));
 
   // Ultimately return only leaf refs

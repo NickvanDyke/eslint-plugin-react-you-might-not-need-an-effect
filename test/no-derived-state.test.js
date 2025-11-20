@@ -818,8 +818,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
-      // Because we use `notEmptyEvery` when descending?
+      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/53
       name: "Set to result of pure local ArrowFunctionExpression",
       todo: true,
       code: js`
@@ -845,8 +844,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/34
-      // Descend into FunctionDeclaration to see that it's all parameter references
+      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/53
       name: "Set to result of pure local FunctionDeclaration",
       todo: true,
       code: js`
@@ -861,7 +859,7 @@ new MyRuleTester().run("no-derived-state", rule, {
 
           useEffect(() => {
             setFullName(computeName(firstName, lastName));
-          }, [firstName, lastName]);
+          }, [firstName, lastName, computeName]);
         }
       `,
       errors: [
@@ -874,8 +872,7 @@ new MyRuleTester().run("no-derived-state", rule, {
     {
       // It's not technically a pure function since it closes over state,
       // but it's pure relative to the React component.
-      // TODO: Fails for FunctionDeclaration - same as previous test.
-      name: "Set to result of semi-pure local function",
+      name: "Set to result of semi-pure local ArrowFunctionExpression",
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Dwayne');
@@ -884,6 +881,30 @@ new MyRuleTester().run("no-derived-state", rule, {
 
           useEffect(() => {
             const computeName = () => firstName + ' ' + lastName;
+
+            setFullName(computeName());
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "Set to result of semi-pure local FunctionDeclaration",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            function computeName() {
+              return firstName + ' ' + lastName;
+            }
 
             setFullName(computeName());
           }, [firstName, lastName]);
@@ -941,7 +962,8 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      // TODO: `getCallExpr` leads us to analyze the args passed to `doSet`, not the eventual `setFullName`.
+      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/38
+      // `getCallExpr` leads us to analyze the args passed to `doSet`, not the eventual `setFullName`.
       // Do we need to flatMap downstream refs into CallExpressions?
       // That makes sense, so it follows the same path as `isState`.
       name: "Via no-arg intermediate setter",
