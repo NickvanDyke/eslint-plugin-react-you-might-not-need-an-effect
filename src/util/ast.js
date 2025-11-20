@@ -1,11 +1,13 @@
 import { findVariable } from "eslint-utils";
 
 /**
- * @import {Scope} from 'eslint'
- * @import {Rule} from 'eslint'
- * @import {AST} from 'eslint'
+ * @import {Scope,Rule} from 'eslint'
  */
 
+/**
+ * @param {Rule.Node} node
+ * @returns {boolean}
+ */
 export const isReactFunctionalComponent = (node) =>
   (node.type === "FunctionDeclaration" ||
     (node.type === "VariableDeclarator" &&
@@ -14,10 +16,16 @@ export const isReactFunctionalComponent = (node) =>
   node.id.type === "Identifier" &&
   node.id.name[0].toUpperCase() === node.id.name[0];
 
-// NOTE: Returns false for known pure HOCs -- `memo` and `forwardRef`.
-// Basically this is meant to detect custom HOCs that may have side effects, particularly when using their props.
-// TODO: Will not detect when they define the component normally and then export it wrapped in the HOC.
-// e.g. `const MyComponent = (props) => {...}; export default memo(MyComponent);`
+/**
+ * Excludes known pure HOCs like `memo` and `forwardRef`.
+ * Basically this is meant to detect custom HOCs that may have side effects, particularly when using their props.
+ *
+ * TODO: Will not detect when the component is defined normally and then exported wrapped in an HOC.
+ * e.g. `const MyComponent = (props) => {...}; export default memo(MyComponent);`
+ *
+ * @param {Rule.Node} node
+ * @returns {boolean}
+ */
 export const isReactFunctionalHOC = (node) =>
   node.type === "VariableDeclarator" &&
   node.init &&
@@ -30,6 +38,10 @@ export const isReactFunctionalHOC = (node) =>
   node.id.type === "Identifier" &&
   node.id.name[0].toUpperCase() === node.id.name[0];
 
+/**
+ * @param {Rule.Node} node
+ * @returns {boolean}
+ */
 export const isCustomHook = (node) =>
   (node.type === "FunctionDeclaration" ||
     (node.type === "VariableDeclarator" &&
@@ -40,6 +52,10 @@ export const isCustomHook = (node) =>
   node.id.name.startsWith("use") &&
   node.id.name[3] === node.id.name[3].toUpperCase();
 
+/**
+ * @param {Rule.Node} node
+ * @returns {boolean}
+ */
 export const isUseState = (node) =>
   node.type === "VariableDeclarator" &&
   node.init &&
@@ -54,10 +70,16 @@ export const isUseState = (node) =>
     return !el || el.type === "Identifier";
   });
 
-// While it *could* be an anti-pattern or unnecessary, effects *are* meant to synchronize systems.
-// So we presume that a "subscription effect" is usually valid, or at least may be more readable.
-// TODO: We might be able to use this more granularly, e.g. ignore state setters inside a subscription effect,
-// instead of ignoring the whole effect...? But it'd have to be more complicated, like also ignore the same state setters called in the body.
+/**
+ * While it *could* be an anti-pattern or unnecessary, effects *are* meant to synchronize systems.
+ * So we presume that a "subscription effect" is usually valid, or at least may be more readable.
+ *
+ * TODO: We might be able to use this more granularly, e.g. ignore state setters inside a subscription effect,
+ * instead of ignoring the whole effect...? But it'd have to be more complicated, like also ignore the same state setters called in the body.
+ *
+ * @param {Rule.Node} node - The `useEffect` `CallExpression` node
+ * @returns {boolean}
+ */
 export const hasCleanup = (node) => {
   const effectFn = node.arguments[0];
   return (
@@ -70,6 +92,10 @@ export const hasCleanup = (node) => {
   );
 };
 
+/**
+ * @param {Scope.Definition} def
+ * @returns {boolean}
+ */
 export const isPropDef = (def) => {
   const declaringNode =
     def.node.type === "ArrowFunctionExpression"
@@ -85,6 +111,10 @@ export const isPropDef = (def) => {
   );
 };
 
+/**
+ * @param {Rule.Node} node
+ * @returns {boolean}
+ */
 export const isUseRef = (node) =>
   node.type === "VariableDeclarator" &&
   node.init &&
@@ -92,9 +122,14 @@ export const isUseRef = (node) =>
   node.init.callee.name === "useRef" &&
   node.id.type === "Identifier";
 
-// NOTE: Does not include `useLayoutEffect`.
-// When used correctly, it interacts with the DOM = external system = (probably) valid effect.
-// When used incorrectly, it's probably too difficult to accurately analyze anyway.
+/**
+ * Does not include `useLayoutEffect`.
+ * When used correctly, it interacts with the DOM = external system = (probably) valid effect.
+ * When used incorrectly, it's probably too difficult to accurately analyze anyway.
+ *
+ * @param {Rule.Node} node
+ * @returns {boolean}
+ */
 export const isUseEffect = (node) =>
   node.type === "CallExpression" &&
   ((node.callee.type === "Identifier" && node.callee.name === "useEffect") ||
@@ -102,7 +137,11 @@ export const isUseEffect = (node) =>
       node.callee.object.name === "React" &&
       node.callee.property.name === "useEffect"));
 
-// NOTE: When `MemberExpression` (even nested ones), a `Reference` is only the root object, not the function.
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Rule.Node} node - The `useEffect` `CallExpression` node
+ * @returns {Scope.Reference[] | undefined}
+ */
 export const getEffectFnRefs = (context, node) => {
   const effectFn = node.arguments[0];
   if (
@@ -115,6 +154,11 @@ export const getEffectFnRefs = (context, node) => {
   return getDownstreamRefs(context, effectFn);
 };
 
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Rule.Node} node - The `useEffect` `CallExpression` node
+ * @returns {Scope.Reference[] | undefined}
+ */
 export function getEffectDepsRefs(context, node) {
   const depsArr = node.arguments[1];
   if (depsArr?.type !== "ArrayExpression") {
@@ -128,27 +172,60 @@ export function getEffectDepsRefs(context, node) {
 // Arguably preferable, as mutating the state is functionally the same as calling the setter.
 // (Even though that is not recommended and should be prevented by a different rule).
 // And in the case of a prop, we can't differentiate state mutations from callbacks anyway.
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
 export const isStateSetter = (context, ref) =>
   getCallExpr(ref) !== undefined &&
   getUpstreamRefs(context, ref).some((ref) => isState(ref));
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
 export const isPropCallback = (context, ref) =>
   getCallExpr(ref) !== undefined &&
   getUpstreamRefs(context, ref).some((ref) => isProp(ref));
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
 export const isRefCall = (context, ref) =>
   getCallExpr(ref) !== undefined &&
   getUpstreamRefs(context, ref).some((ref) => isRef(ref));
 
 // NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
 // Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
+/**
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
 export const isState = (ref) =>
   ref.resolved.defs.some((def) => isUseState(def.node));
-// Returns false for props of HOCs like `withRouter` because they usually have side effects.
+/**
+ * Returns false for props of HOCs (e.g. `withRouter`) because they usually have side effects.
+ *
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
 export const isProp = (ref) => ref.resolved.defs.some((def) => isPropDef(def));
+/**
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
 export const isRef = (ref) =>
   ref.resolved.defs.some((def) => isUseRef(def.node));
 
 // TODO: Surely can be simplified/re-use other functions.
 // Needs a better API too so we can more easily get names etc. for messages.
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Scope.Reference} ref
+ * @returns {Rule.Node | undefined}
+ */
 export const getUseStateNode = (context, ref) => {
   return getUpstreamRefs(context, ref)
     .map((ref) => ref.resolved)
@@ -165,6 +242,9 @@ export const getUseStateNode = (context, ref) => {
  * Otherwise returns `true`.
  *
  * Inspired by https://eslint-react.xyz/docs/rules/hooks-extra-no-direct-set-state-in-use-effect
+ *
+ * @param {Rule.Node} node
+ * @returns {boolean}
  */
 export const isImmediateCall = (node) => {
   if (!node.parent) {
@@ -235,6 +315,12 @@ export const getUpstreamRefs = (context, ref, visited = new Set()) => {
   return upstreamRefs.length === 0 ? [ref] : upstreamRefs;
 };
 
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Rule.Node} node
+ * @param {(node: Rule.Node) => void} visit
+ * @param {Set<Rule.Node>} visited
+ */
 export const traverse = (context, node, visit, visited = new Set()) => {
   if (visited.has(node)) {
     return;
@@ -256,6 +342,11 @@ export const traverse = (context, node, visit, visited = new Set()) => {
     .forEach((child) => traverse(context, child, visit, visited));
 };
 
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Rule.Node} topNode
+ * @param {string} type
+ */
 export const findDownstreamNodes = (context, topNode, type) => {
   const nodes = [];
   traverse(context, topNode, (node) => {
@@ -275,12 +366,23 @@ export const getDownstreamRefs = (context, node) =>
     .map((identifier) => getRef(context, identifier))
     .filter(Boolean);
 
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Rule.Node} identifier
+ *
+ * @returns {Scope.Reference | undefined}
+ */
 const getRef = (context, identifier) =>
   findVariable(
     context.sourceCode.getScope(identifier),
     identifier,
   )?.references.find((ref) => ref.identifier === identifier);
 
+/**
+ * @param {Scope.Reference} ref
+ * @param {Rule.Node} current
+ * @returns {Rule.Node | undefined}
+ */
 export const getCallExpr = (ref, current = ref.identifier.parent) => {
   if (current.type === "CallExpression") {
     // We've reached the top - confirm that the ref is the (eventual) callee, as opposed to an argument.
@@ -301,6 +403,11 @@ export const getCallExpr = (ref, current = ref.identifier.parent) => {
   return undefined;
 };
 
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Rule.Node} callExpr
+ * @returns {boolean}
+ */
 export const isArgsAllLiterals = (context, callExpr) =>
   callExpr.arguments
     .flatMap((arg) => getDownstreamRefs(context, arg))
