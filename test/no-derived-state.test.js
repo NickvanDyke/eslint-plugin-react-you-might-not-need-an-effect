@@ -644,19 +644,19 @@ new MyRuleTester().run("no-derived-state", rule, {
       name: "From derived external state with single setter call",
       code: js`
         function Form() {
-          const name = useQuery('/name');
-          const [fullName, setFullName] = useState('');
+          const prefix = useQuery('/prefix');
+          const [name, setName] = useState();
+          const [prefixedName, setPrefixedName] = useState();
 
           useEffect(() => {
-            const prefixedName = 'Dr. ' + name;
-            setFullName(prefixedName) 
-          }, [name, setFullName]);
+            setPrefixedName(prefix + name)
+          }, [prefix, name]);
         }
       `,
       errors: [
         {
           messageId: "avoidSingleSetter",
-          data: { state: "fullName" },
+          data: { state: "prefixedName" },
         },
       ],
     },

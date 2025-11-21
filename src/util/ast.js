@@ -235,8 +235,9 @@ export const getUseStateNode = (context, ref) => {
 
 /**
  * Walks up the AST until a `useEffect` call, returning `false` if never found, or finds any of the following on the way:
- * - An async function
- * - A function declaration, which may be called at an arbitrary later time
+ * - An `async` function
+ * - A function declaration, which may be called at an arbitrary later time.
+ *   - While we return false for *this* call, we may still return true for a call to a function containing this call. Combined with `getUpstreamRefs()`, it will still flag calls to the containing function.
  * - A function passed as a callback to another function or `new` - event handler, `setTimeout`, `Promise.then()` `new ResizeObserver()`, etc.
  *
  * Otherwise returns `true`.
@@ -256,7 +257,6 @@ export const isImmediateCall = (node) => {
     // Obviously not immediate if async. I think this never occurs in isolation from the below conditions? But just in case for now.
     node.async ||
     // Inside a named or anonymous function that may be called later, either as a callback or by the developer.
-    // Note while we return false for *this* call, we may still return true for a call to the function containing this call.
     node.type === "FunctionDeclaration" ||
     node.type === "FunctionExpression" ||
     node.type === "ArrowFunctionExpression"
