@@ -1,16 +1,17 @@
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
+  getDownstreamRefs,
   isImmediateCall,
   isStateSetter,
-  getUseStateNode,
+  getUseStateDecl,
   isProp,
-  isState,
+  isUseState,
   hasCleanup,
   isUseEffect,
   getUpstreamRefs,
+  getCallExpr,
 } from "../util/ast.js";
-import { getCallExpr, getDownstreamRefs } from "../util/ast.js";
 
 /**
  * @type {import('eslint').Rule.RuleModule}
@@ -42,7 +43,7 @@ export default {
         .filter((ref) => isImmediateCall(ref.identifier))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
-          const useStateNode = getUseStateNode(context, ref);
+          const useStateNode = getUseStateDecl(context, ref);
           const stateName = (
             useStateNode.id.elements[0] ?? useStateNode.id.elements[1]
           )?.name;
@@ -54,12 +55,12 @@ export default {
             getUpstreamRefs(context, ref),
           );
           const isAllArgsInternal = argsUpstreamRefs.notEmptyEvery(
-            (ref) => isState(ref) || isProp(ref),
+            (ref) => isUseState(ref) || isProp(ref),
           );
 
           const isAllArgsInDeps = argsUpstreamRefs.notEmptyEvery((argRef) =>
             depsUpstreamRefs.some(
-              (depRef) => argRef.resolved.name === depRef.resolved.name,
+              (depRef) => argRef.resolved == depRef.resolved,
             ),
           );
           const isValueAlwaysInSync = isAllArgsInDeps && countCalls(ref) === 1;

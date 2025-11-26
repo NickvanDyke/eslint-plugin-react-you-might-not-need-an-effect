@@ -2,7 +2,7 @@ import {
   getEffectFnRefs,
   getEffectDepsRefs,
   isPropCallback,
-  isRef,
+  isUseRef,
   hasCleanup,
   isUseEffect,
   getUpstreamRefs,
@@ -44,7 +44,7 @@ export default {
           const hasRefArg = callExpr.arguments
             .flatMap((arg) => getDownstreamRefs(context, arg))
             .flatMap((ref) => getUpstreamRefs(context, ref))
-            .some((ref) => isRef(ref));
+            .some((ref) => isUseRef(ref));
 
           if (hasRefArg) {
             context.report({

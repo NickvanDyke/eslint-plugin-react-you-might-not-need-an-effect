@@ -1,5 +1,3 @@
-import { findVariable } from "eslint-utils";
-
 /**
  * @import {Scope,Rule} from 'eslint'
  */
@@ -53,74 +51,47 @@ export const isCustomHook = (node) =>
   node.id.name[3] === node.id.name[3].toUpperCase();
 
 /**
- * @param {Rule.Node} node
+ * @param {Scope.Reference} ref
  * @returns {boolean}
  */
-export const isUseState = (node) =>
-  node.type === "VariableDeclarator" &&
-  node.init &&
-  node.init.type === "CallExpression" &&
-  node.init.callee.name === "useState" &&
-  node.id.type === "ArrayPattern" &&
-  // Not sure its usecase, but may just have the setter
-  (node.id.elements.length === 1 || node.id.elements.length === 2) &&
-  node.id.elements.every((el) => {
-    // Apparently skipping the state element is a valid use.
-    // I suppose technically the state can still be read via setter callback.
-    return !el || el.type === "Identifier";
+export const isUseState = (ref) =>
+  (ref.identifier.type === "Identifier" &&
+    ref.identifier.name === "useState") ||
+  (ref.identifier.parent.type === "MemberExpression" &&
+    ref.identifier.parent.object.name === "React" &&
+    ref.identifier.parent.property.name === "useState");
+
+/**
+ * Returns false for props of HOCs (e.g. `withRouter`) because they usually have side effects.
+ *
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
+export const isProp = (ref) =>
+  ref.resolved?.defs.some((def) => {
+    const declaringNode =
+      def.node.type === "ArrowFunctionExpression"
+        ? def.node.parent.type === "CallExpression"
+          ? def.node.parent.parent
+          : def.node.parent
+        : def.node;
+    return (
+      def.type === "Parameter" &&
+      ((isReactFunctionalComponent(declaringNode) &&
+        !isReactFunctionalHOC(declaringNode)) ||
+        isCustomHook(declaringNode))
+    );
   });
 
 /**
- * While it *could* be an anti-pattern or unnecessary, effects *are* meant to synchronize systems.
- * So we presume that a "subscription effect" is usually valid, or at least may be more readable.
- *
- * TODO: We might be able to use this more granularly, e.g. ignore state setters inside a subscription effect,
- * instead of ignoring the whole effect...? But it'd have to be more complicated, like also ignore the same state setters called in the body.
- *
- * @param {Rule.Node} node - The `useEffect` `CallExpression` node
+ * @param {Scope.Reference} ref
  * @returns {boolean}
  */
-export const hasCleanup = (node) => {
-  const effectFn = node.arguments[0];
-  return (
-    (effectFn.type === "ArrowFunctionExpression" ||
-      effectFn.type === "FunctionExpression") &&
-    effectFn.body.type === "BlockStatement" &&
-    effectFn.body.body.some(
-      (stmt) => stmt.type === "ReturnStatement" && stmt.argument,
-    )
-  );
-};
-
-/**
- * @param {Scope.Definition} def
- * @returns {boolean}
- */
-export const isPropDef = (def) => {
-  const declaringNode =
-    def.node.type === "ArrowFunctionExpression"
-      ? def.node.parent.type === "CallExpression"
-        ? def.node.parent.parent
-        : def.node.parent
-      : def.node;
-  return (
-    def.type === "Parameter" &&
-    ((isReactFunctionalComponent(declaringNode) &&
-      !isReactFunctionalHOC(declaringNode)) ||
-      isCustomHook(declaringNode))
-  );
-};
-
-/**
- * @param {Rule.Node} node
- * @returns {boolean}
- */
-export const isUseRef = (node) =>
-  node.type === "VariableDeclarator" &&
-  node.init &&
-  node.init.type === "CallExpression" &&
-  node.init.callee.name === "useRef" &&
-  node.id.type === "Identifier";
+export const isUseRef = (ref) =>
+  (ref.identifier.type === "Identifier" && ref.identifier.name === "useRef") ||
+  (ref.identifier.parent.type === "MemberExpression" &&
+    ref.identifier.parent.object.name === "React" &&
+    ref.identifier.parent.property.name === "useRef");
 
 /**
  * Does not include `useLayoutEffect`.
@@ -179,7 +150,7 @@ export function getEffectDepsRefs(context, node) {
  */
 export const isStateSetter = (context, ref) =>
   getCallExpr(ref) !== undefined &&
-  getUpstreamRefs(context, ref).some((ref) => isState(ref));
+  getUpstreamRefs(context, ref).some((ref) => isUseState(ref));
 /**
  * @param {Rule.RuleContext} context
  * @param {Scope.Reference} ref
@@ -195,42 +166,21 @@ export const isPropCallback = (context, ref) =>
  */
 export const isRefCall = (context, ref) =>
   getCallExpr(ref) !== undefined &&
-  getUpstreamRefs(context, ref).some((ref) => isRef(ref));
+  getUpstreamRefs(context, ref).some((ref) => isUseRef(ref));
 
-// NOTE: Global variables (like `JSON` in `JSON.stringify()`) have an empty `defs`; fortunately `[].some() === false`.
-// Also, I'm not sure so far when `defs.length > 1`... haven't seen it with shadowed variables or even redeclared variables with `var`.
 /**
+ * @param context {Rule.RuleContext}
  * @param {Scope.Reference} ref
- * @returns {boolean}
+ * @returns {Rule.Node | undefined} The `VariableDeclarator` node of the `useState` call.
  */
-export const isState = (ref) =>
-  ref.resolved.defs.some((def) => isUseState(def.node));
-/**
- * Returns false for props of HOCs (e.g. `withRouter`) because they usually have side effects.
- *
- * @param {Scope.Reference} ref
- * @returns {boolean}
- */
-export const isProp = (ref) => ref.resolved.defs.some((def) => isPropDef(def));
-/**
- * @param {Scope.Reference} ref
- * @returns {boolean}
- */
-export const isRef = (ref) =>
-  ref.resolved.defs.some((def) => isUseRef(def.node));
-
-// TODO: Surely can be simplified/re-use other functions.
-// Needs a better API too so we can more easily get names etc. for messages.
-/**
- * @param {Rule.RuleContext} context
- * @param {Scope.Reference} ref
- * @returns {Rule.Node | undefined}
- */
-export const getUseStateNode = (context, ref) => {
-  return getUpstreamRefs(context, ref)
-    .map((ref) => ref.resolved)
-    .find((variable) => variable.defs.some((def) => isUseState(def.node)))
-    ?.defs.find((def) => isUseState(def.node))?.node;
+export const getUseStateDecl = (context, ref) => {
+  let node = getUpstreamRefs(context, ref).find((ref) =>
+    isUseState(ref),
+  )?.identifier;
+  while (node && node.type !== "VariableDeclarator") {
+    node = node.parent;
+  }
+  return node;
 };
 
 /**
@@ -281,16 +231,20 @@ export const getUpstreamRefs = (context, ref, visited = new Set()) => {
     // I think this only happens when:
     // 1. Import statement is missing
     // 2. ESLint globals are misconfigured
-    return [];
+    // But we still want to return the ref itself to later analyze it.
+    return [ref];
   } else if (
+    !isProp(ref) &&
+    ref.resolved.defs.some((def) => def.type === "Parameter")
+  ) {
+    // TODO: Should be in the chain below, but we have to check it first because
+    // we do `getDownstreamRefs` on CallExpr.arguments, then call this.
+    // Should instead just get the reference to the argument root.
+
     // Ignore function parameters references, aside from props.
     // They are self-contained and essentially duplicate the argument reference.
     // Important to use `notEmptyEvery` because global variables have an empty `defs`.
-    // May be combinable with the `def.type !== "Parameter"` check below...
-    ref.resolved.defs.notEmptyEvery(
-      (def) => def.type === "Parameter" && !isPropDef(def),
-    )
-  ) {
+    // May be combinable with the `def.type !== "Parameter"` check above...
     return [];
   }
 
@@ -299,19 +253,24 @@ export const getUpstreamRefs = (context, ref, visited = new Set()) => {
   visited.add(ref);
 
   const upstreamRefs = ref.resolved.defs
-    // Stop before we get to `useState()` - we want references to the state and setter.
-    // May not be necessary if we adapt the check in `isState()`?
-    .filter((def) => !isUseState(def.node))
-    // `def.node.init` is for ArrowFunctionExpression.
-    // `def.node.body` is for FunctionDeclaration
+    // `def.node.init` is for ArrowFunctionExpression, VariableDeclarator, (etc?).
+    // `def.node.body` is for FunctionDeclaration specifically.
     // (minus parameters because we only want to traverse references to the function, not to its parameters).
     .map((def) => def.node.init ?? (def.type !== "Parameter" && def.node.body))
     .filter(Boolean)
     .flatMap((node) => getDownstreamRefs(context, node))
+    // Prevent infinite recursion from circular references
+    .filter((ref) => !visited.has(ref))
     .flatMap((ref) => getUpstreamRefs(context, ref, visited));
 
-  // Ultimately return only leaf refs
-  return upstreamRefs.length === 0 ? [ref] : upstreamRefs;
+  if (upstreamRefs.length === 0) {
+    // Ultimately return only terminal nodes
+    return [ref];
+  } else {
+    return upstreamRefs;
+  }
+
+  // TODO: Maybe the real issue is that pure functions are considered leafs?
 };
 
 /**
@@ -372,10 +331,9 @@ export const getDownstreamRefs = (context, node) =>
  * @returns {Scope.Reference | undefined}
  */
 const getRef = (context, identifier) =>
-  findVariable(
-    context.sourceCode.getScope(identifier),
-    identifier,
-  )?.references.find((ref) => ref.identifier === identifier);
+  context.sourceCode
+    .getScope(identifier)
+    ?.references.find((ref) => ref.identifier == identifier);
 
 /**
  * @param {Scope.Reference} ref
@@ -400,6 +358,28 @@ export const getCallExpr = (ref, current = ref.identifier.parent) => {
   }
 
   return undefined;
+};
+
+/**
+ * While it *could* be an anti-pattern or unnecessary, effects *are* meant to synchronize systems.
+ * So we presume that a "subscription effect" is usually valid, or at least may be more readable.
+ *
+ * TODO: We might be able to use this more granularly, e.g. ignore state setters inside a subscription effect,
+ * instead of ignoring the whole effect...? But it'd have to be more complicated, like also ignore the same state setters called in the body.
+ *
+ * @param {Rule.Node} node - The `useEffect` `CallExpression` node
+ * @returns {boolean}
+ */
+export const hasCleanup = (node) => {
+  const effectFn = node.arguments[0];
+  return (
+    (effectFn.type === "ArrowFunctionExpression" ||
+      effectFn.type === "FunctionExpression") &&
+    effectFn.body.type === "BlockStatement" &&
+    effectFn.body.body.some(
+      (stmt) => stmt.type === "ReturnStatement" && stmt.argument,
+    )
+  );
 };
 
 /**

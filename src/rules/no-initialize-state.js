@@ -2,7 +2,7 @@ import { getCallExpr } from "../util/ast.js";
 import {
   getEffectDepsRefs,
   getEffectFnRefs,
-  getUseStateNode,
+  getUseStateDecl,
   isImmediateCall,
   isStateSetter,
   isUseEffect,
@@ -39,7 +39,7 @@ export default {
         .filter((ref) => isImmediateCall(ref.identifier))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
-          const useStateNode = getUseStateNode(context, ref);
+          const useStateNode = getUseStateDecl(context, ref);
           const stateName = (
             useStateNode.id.elements[0] ?? useStateNode.id.elements[1]
           )?.name;

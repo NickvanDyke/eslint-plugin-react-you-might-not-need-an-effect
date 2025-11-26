@@ -62,6 +62,72 @@ new MyRuleTester().run("syntax", noDerivedState, {
   ],
   invalid: [
     {
+      name: "Derived state, with imports",
+      code: js`
+        import { useState, useEffect } from 'react';
+
+         function DoubleCounter() {
+           const [count, setCount] = useState(0);
+           const [doubleCount, setDoubleCount] = useState(0);
+
+           useEffect(() => setDoubleCount(count * 2), [count]);
+         }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "doubleCount" },
+        },
+      ],
+    },
+    {
+      name: "Derived state, without imports",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Taylor');
+          const [lastName, setLastName] = useState('Swift');
+
+          const [fullName, setFullName] = useState('');
+          useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
+        }
+      `,
+      errors: 1,
+    },
+    {
+      name: "Derived state, React.useEffect import",
+      code: js`
+        import * as React from 'react';
+
+        function DoubleCounter() {
+          const [count, setCount] = React.useState(0);
+          const [doubleCount, setDoubleCount] = React.useState(0);
+
+          React.useEffect(() => {
+            setDoubleCount(count * 2);
+          }, [count]);
+        }
+      `,
+      errors: 1,
+    },
+    {
+      name: "Derived state, with renamed import",
+      // Would have to check the import statement, not the identifier.
+      // But that has complexities of its own.
+      todo: true,
+      code: js`
+        import { useState as stateUser, useEffect } from 'react';
+
+        function Form() {
+          const [firstName, setFirstName] = stateUser('Taylor');
+          const [lastName, setLastName] = stateUser('Swift');
+
+          const [fullName, setFullName] = stateUser('');
+          useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
+        }
+      `,
+      errors: 1,
+    },
+    {
       name: "Function component",
       code: js`
          function DoubleCounter() {
@@ -147,20 +213,6 @@ new MyRuleTester().run("syntax", noDerivedState, {
            useEffect(function() { setDoubleCount(count * 2); }, [count]);
          }
        `,
-      errors: 1,
-    },
-    {
-      name: "React.useEffect",
-      code: js`
-          function DoubleCounter() {
-            const [count, setCount] = useState(0);
-            const [doubleCount, setDoubleCount] = useState(0);
-
-            React.useEffect(() => {
-              setDoubleCount(count * 2);
-            }, [count]);
-          }
-        `,
       errors: 1,
     },
     {
@@ -468,27 +520,6 @@ new MyRuleTester().run("syntax", noDerivedState, {
         {
           messageId: "avoidDerivedState",
           data: { state: "filteredPosts" },
-        },
-      ],
-    },
-    {
-      // TODO: All tests should have imports, to mimick real-world usage.
-      // And then one test without imports I guess, to verify behavior.
-      name: "With imports",
-      code: js`
-        import { useState, useEffect } from 'react';
-
-         function DoubleCounter() {
-           const [count, setCount] = useState(0);
-           const [doubleCount, setDoubleCount] = useState(0);
-
-           useEffect(() => setDoubleCount(count * 2), [count]);
-         }
-      `,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "doubleCount" },
         },
       ],
     },

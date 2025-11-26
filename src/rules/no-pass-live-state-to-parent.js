@@ -3,7 +3,7 @@ import {
   getEffectDepsRefs,
   isImmediateCall,
   isPropCallback,
-  isState,
+  isUseState,
   isUseEffect,
   getUpstreamRefs,
 } from "../util/ast.js";
@@ -41,7 +41,7 @@ export default {
           const isStateInArgs = callExpr.arguments
             .flatMap((arg) => getDownstreamRefs(context, arg))
             .flatMap((ref) => getUpstreamRefs(context, ref))
-            .some((ref) => isState(ref));
+            .some((ref) => isUseState(ref));
 
           if (isStateInArgs) {
             context.report({

@@ -5,7 +5,7 @@ import {
   hasCleanup,
   isArgsAllLiterals,
   isImmediateCall,
-  isState,
+  isUseState,
   isStateSetter,
   isUseEffect,
 } from "../util/ast.js";
@@ -37,7 +37,7 @@ export default {
       // exhaustive-deps doesn't enforce one way or the other.
       const isAllDepsState = depsRefs
         .flatMap((ref) => getUpstreamRefs(context, ref))
-        .notEmptyEvery((ref) => isState(ref));
+        .notEmptyEvery((ref) => isUseState(ref));
 
       effectFnRefs
         .filter((ref) => isStateSetter(context, ref))

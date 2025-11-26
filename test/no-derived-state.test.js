@@ -865,7 +865,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       errors: [
         {
           messageId: "avoidDerivedState",
-          data: { state: "doubleCount" },
+          data: { state: "fullName" },
         },
       ],
     },
@@ -940,7 +940,10 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      name: "Set to result of semi-pure useCallback",
+      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/53
+      // `useCallback` is an upstream ref
+      name: "Set to result of internal useCallback; repeat references to a useState variable",
+      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Dwayne');

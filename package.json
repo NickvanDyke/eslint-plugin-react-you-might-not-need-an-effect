@@ -42,7 +42,6 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "eslint-utils": "^3.0.0",
     "globals": "^16.2.0"
   },
   "devDependencies": {

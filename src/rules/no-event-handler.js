@@ -6,7 +6,7 @@ import {
   getUpstreamRefs,
 } from "../util/ast.js";
 import { findDownstreamNodes, getDownstreamRefs } from "../util/ast.js";
-import { isState } from "../util/ast.js";
+import { isUseState } from "../util/ast.js";
 
 /**
  * @type {import("eslint").Rule.RuleModule}
@@ -40,7 +40,7 @@ export default {
           getDownstreamRefs(context, ifNode.test)
             .flatMap((ref) => getUpstreamRefs(context, ref))
             // TODO: Should flag props too, but maybe with a different message?
-            .notEmptyEvery((ref) => isState(ref)),
+            .notEmptyEvery((ref) => isUseState(ref)),
         )
         .forEach((ifNode) => {
           context.report({

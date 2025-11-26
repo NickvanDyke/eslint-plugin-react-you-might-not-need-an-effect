@@ -1,11 +1,13 @@
-import { getCallExpr, getUpstreamRefs, traverse } from "../util/ast.js";
 import {
+  getCallExpr,
+  getDownstreamRefs,
+  getUpstreamRefs,
+  isUseState,
   getEffectFnRefs,
   getEffectDepsRefs,
   isStateSetter,
   isProp,
-  getUseStateNode,
-  isUseState,
+  getUseStateDecl,
   isReactFunctionalComponent,
   isReactFunctionalHOC,
   isCustomHook,
@@ -82,7 +84,7 @@ const findPropUsedToResetAllState = (
 
 const isSetStateToInitialValue = (context, setterRef) => {
   const setStateToValue = getCallExpr(setterRef).arguments[0];
-  const stateInitialValue = getUseStateNode(context, setterRef).init
+  const stateInitialValue = getUseStateDecl(context, setterRef).init
     .arguments[0];
 
   // `useState()` (with no args) defaults to `undefined`,
@@ -119,16 +121,9 @@ const countUseStates = (context, componentNode) => {
     return 0;
   }
 
-  let count = 0;
-
-  traverse(context, componentNode, (node) => {
-    // TODO: Could optimize by not descending into nested functions/components, since hooks must be at the top level.
-    if (isUseState(node)) {
-      count++;
-    }
-  });
-
-  return count;
+  return getDownstreamRefs(context, componentNode).filter((ref) =>
+    isUseState(ref),
+  ).length;
 };
 
 // Returns the component or custom hook that contains the `useEffect` node.

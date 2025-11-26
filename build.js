@@ -7,5 +7,5 @@ build({
   format: "cjs",
   outfile: "./dist/index.cjs",
   platform: "node",
-  external: ["eslint", "eslint-utils", "globals"],
+  external: ["eslint", "globals"],
 });

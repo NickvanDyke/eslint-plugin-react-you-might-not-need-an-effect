@@ -2,8 +2,8 @@ import {
   getEffectFnRefs,
   getEffectDepsRefs,
   isPropCallback,
-  isState,
-  isRef,
+  isUseState,
+  isUseRef,
   isProp,
   hasCleanup,
   isUseEffect,
@@ -47,7 +47,7 @@ export default {
               .flatMap((arg) => getDownstreamRefs(context, arg))
               .flatMap((ref) => getUpstreamRefs(context, ref))
               .notEmptyEvery(
-                (ref) => !isState(ref) && !isProp(ref) && !isRef(ref),
+                (ref) => !isUseState(ref) && !isProp(ref) && !isUseRef(ref),
               );
 
           if (isAllData) {
