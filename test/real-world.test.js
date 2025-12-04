@@ -184,19 +184,6 @@ describe("recommended rules on real-world code", () => {
       `,
       },
       {
-        name: "JSON.stringifying in deps",
-        code: js`
-        function Feed() {
-          const [posts, setPosts] = useState([]);
-          const [scrollPosition, setScrollPosition] = useState(0);
-
-          useEffect(() => {
-            setScrollPosition(0);
-          }, [JSON.stringify(posts)]);
-        }
-      `,
-      },
-      {
         name: "CountryPicker",
         code: js`
         function CountryPicker({ withEmoji }) {
@@ -334,7 +321,7 @@ describe("recommended rules on real-world code", () => {
       },
       {
         // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/49
-        name: "Effect with recursion", // Particularly likely for `no-manage-parent` because it checks *all* refs in the effect
+        name: "Effect with recursion",
         code: js`
         function Component() {
           useEffect(() => {

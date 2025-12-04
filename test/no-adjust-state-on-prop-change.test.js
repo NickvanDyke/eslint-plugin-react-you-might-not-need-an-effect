@@ -19,7 +19,7 @@ new MyRuleTester().run("no-adjust-state-on-prop-change", rule, {
       `,
     },
     {
-      name: "Setting state to literal when internal state changes",
+      name: "Set state to literal when internal state changes",
       code: js`
         function Counter() {
           const [count, setCount] = useState(0);
@@ -32,7 +32,7 @@ new MyRuleTester().run("no-adjust-state-on-prop-change", rule, {
       `,
     },
     {
-      name: "Setting state to a value derived from props",
+      name: "Set state to a value derived from props",
       code: js`
         function Counter({ count }) {
           const [doubleCount, setDoubleCount] = useState(0);
@@ -46,7 +46,7 @@ new MyRuleTester().run("no-adjust-state-on-prop-change", rule, {
   ],
   invalid: [
     {
-      name: "Setting state to literal when props change",
+      name: "Set state to literal when prop changes",
       code: js`
         function List({ items }) {
           const [selection, setSelection] = useState();
@@ -63,7 +63,43 @@ new MyRuleTester().run("no-adjust-state-on-prop-change", rule, {
       ],
     },
     {
-      name: "Conditionally setting state to literal when internal prop changes",
+      name: "Set state to internal state when prop changes",
+      code: js`
+        function List({ items }) {
+          const [selection, setSelection] = useState();
+          const [internalData, setInternalData] = useState();
+
+          useEffect(() => {
+            setSelection(internalData);
+          }, [items, internalData]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidAdjustingStateWhenAPropChanges",
+        },
+      ],
+    },
+    {
+      name: "Set state to external state when prop changes",
+      code: js`
+        function List({ items }) {
+          const [selection, setSelection] = useState();
+          const { data: externalData } = useDataSource();
+
+          useEffect(() => {
+            setSelection(externalData);
+          }, [items]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidAdjustingStateWhenAPropChanges",
+        },
+      ],
+    },
+    {
+      name: "Conditionally set state to literal when prop changes",
       code: js`
         function Form({ result }) {
           const [error, setError] = useState();

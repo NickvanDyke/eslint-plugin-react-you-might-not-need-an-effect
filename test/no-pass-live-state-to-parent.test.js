@@ -98,9 +98,6 @@ new MyRuleTester().run("no-pass-live-state-to-parent", rule, {
       `,
     },
     {
-      // TODO: Definitely an anti-pattern, but may fit better elsewhere
-      // because refs are not quite state, e.g. don't cause re-renders.
-      // However they *are* local to the component...
       name: "Pass ref to parent",
       code: js`
         const Child = ({ onRef }) => {

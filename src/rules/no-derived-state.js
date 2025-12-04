@@ -54,18 +54,20 @@ export default {
           const depsUpstreamRefs = depsRefs.flatMap((ref) =>
             getUpstreamRefs(context, ref),
           );
-          const isAllArgsInternal = argsUpstreamRefs.notEmptyEvery(
+          const isSomeArgsInternal = argsUpstreamRefs.some(
             (ref) => isUseState(ref) || isProp(ref),
           );
 
-          const isAllArgsInDeps = argsUpstreamRefs.notEmptyEvery((argRef) =>
-            depsUpstreamRefs.some(
-              (depRef) => argRef.resolved == depRef.resolved,
-            ),
-          );
+          const isAllArgsInDeps =
+            argsUpstreamRefs.length &&
+            argsUpstreamRefs.every((argRef) =>
+              depsUpstreamRefs.some(
+                (depRef) => argRef.resolved == depRef.resolved,
+              ),
+            );
           const isValueAlwaysInSync = isAllArgsInDeps && countCalls(ref) === 1;
 
-          if (isAllArgsInternal) {
+          if (isSomeArgsInternal) {
             context.report({
               node: callExpr,
               messageId: "avoidDerivedState",

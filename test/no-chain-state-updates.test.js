@@ -4,7 +4,7 @@ import rule from "../src/rules/no-chain-state-updates.js";
 new MyRuleTester().run("no-chain-state-updates", rule, {
   valid: [
     {
-      name: "Setting state to literal when props change",
+      name: "Set state to literal when props change",
       code: js`
         function List({ items }) {
           const [selection, setSelection] = useState();
@@ -16,7 +16,7 @@ new MyRuleTester().run("no-chain-state-updates", rule, {
       `,
     },
     {
-      name: "Setting state to a value derived from state",
+      name: "Set state to derived internal state when internal state changes",
       code: js`
         function Counter() {
           const [count, setCount] = useState(0);
@@ -29,7 +29,7 @@ new MyRuleTester().run("no-chain-state-updates", rule, {
       `,
     },
     {
-      name: "Setting state to literal when external state changes",
+      name: "Set state to literal when external state changes",
       code: js`
         function Feed() {
           const { data: posts } = useQuery('/posts');
@@ -54,10 +54,24 @@ new MyRuleTester().run("no-chain-state-updates", rule, {
         }
       `,
     },
+    {
+      name: "Set state to internal plus external state",
+      code: js`
+        function Game() {
+          const [round, setRound] = useState(1);
+          const [isGameOver, setIsGameOver] = useState(false);
+          const { data: players } = useQuery('/players');
+
+          useEffect(() => {
+            setIsGameOver(round > 10 || players.length === 0);
+          }, [round, players]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
-      name: "Setting state to literal when internal state changes",
+      name: "Set state to literal when internal state changes",
       code: js`
         function Game() {
           const [round, setRound] = useState(1);
@@ -77,17 +91,78 @@ new MyRuleTester().run("no-chain-state-updates", rule, {
       ],
     },
     {
-      name: "Conditionally setting state to literal when internal state changes",
+      name: "Set state to derived literal when internal state changes",
       code: js`
-        function Form() {
-          const [error, setError] = useState();
-          const [result, setResult] = useState();
+        function Game() {
+          const [round, setRound] = useState(1);
+          const [isGameOver, setIsGameOver] = useState(false);
 
           useEffect(() => {
-            if (result.data) {
-              setError(null);
+            if (round > 10) {
+              const finalRound = true;
+              setIsGameOver(finalRound);
             }
-          }, [result]);
+          }, [round]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidChainingStateUpdates",
+        },
+      ],
+    },
+    {
+      name: "JSON.stringifying internal state in deps",
+      code: js`
+        function Feed() {
+          const [posts, setPosts] = useState([]);
+          const [scrollPosition, setScrollPosition] = useState(0);
+
+          useEffect(() => {
+            setScrollPosition(0);
+          }, [JSON.stringify(posts)]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidChainingStateUpdates",
+        },
+      ],
+    },
+    {
+      name: "Set state to literal when internal or external state changes",
+      code: js`
+        function Game() {
+          const [round, setRound] = useState(1);
+          const [isGameOver, setIsGameOver] = useState(false);
+          const { data: players } = useQuery('/players');
+
+          useEffect(() => {
+            if (round > 10 || players.length === 0) {
+              setIsGameOver(true);
+            }
+          }, [round, players]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidChainingStateUpdates",
+        },
+      ],
+    },
+    {
+      name: "Set state to external state when internal state changes",
+      code: js`
+        function Game() {
+          const [round, setRound] = useState(1);
+          const [isGameOver, setIsGameOver] = useState(false);
+          const { data: players } = useQuery('/players');
+
+          useEffect(() => {
+            if (round > 10) {
+              setIsGameOver(players.length === 0);
+            }
+          }, [round, players]);
         }
       `,
       errors: [

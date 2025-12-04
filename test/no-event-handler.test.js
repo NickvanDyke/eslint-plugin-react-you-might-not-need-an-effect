@@ -35,32 +35,6 @@ new MyRuleTester().run("no-event-handler", rule, {
       `,
     },
     {
-      name: "If test includes non-state",
-      code: js`
-        function Form() {
-          const [name, setName] = useState();
-          const [dataToSubmit, setDataToSubmit] = useState();
-
-          useEffect(() => {
-            if (dataToSubmit && Date.now() % 2 === 0) {
-              submitData(dataToSubmit);
-            }
-          }, [dataToSubmit]);
-
-          return (
-            <div>
-              <input
-                name="name"
-                type="text"
-                onChange={(e) => setName(e.target.value)}
-              />
-              <button onClick={() => setDataToSubmit({ name })}>Submit</button>
-            </div>
-          )
-        }
-      `,
-    },
-    {
       name: "Using prop to handle an event and call a prop",
       code: js`
         function Form({ dataToSubmit, submitData }) {
@@ -69,40 +43,6 @@ new MyRuleTester().run("no-event-handler", rule, {
               submitData(dataToSubmit);
             }
           }, [dataToSubmit]);
-        }
-      `,
-    },
-    {
-      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/7
-      name: "Klarna",
-      code: js`
-        function Klarna({ klarnaAppId }) {
-          const [countryCode] = useState(qs.parse('countryCode=meow'));
-          const [result, setResult] = useState();
-          const klarnaEnabled = useSelector('idk') && shouldKlarnaBeEnabled(countryCode);
-          const currentLocale = getCurrentLocale(useGetCurrentLanguage());
-
-          const loadSignInWithKlarna = (klarnaAppId, klarnaEnvironment, countryCode, currentLocale) => {
-            const klarnaResult = doSomething();
-            setResult(klarnaResult);
-          };
-
-          useEffect(() => {
-            if (klarnaEnabled) {
-              return loadSignInWithKlarna(
-                  klarnaAppId,
-                  klarnaEnvironment,
-                  countryCode?.toUpperCase(),
-                  currentLocale,
-              );
-            }
-          }, [
-            countryCode,
-            klarnaAppId,
-            klarnaEnabled,
-            klarnaEnvironment,
-            currentLocale,
-          ]);
         }
       `,
     },
@@ -224,6 +164,76 @@ new MyRuleTester().run("no-event-handler", rule, {
               <button onClick={() => setDataToSubmit({ name })}>Submit</button>
             </div>
           )
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidEventHandler",
+        },
+      ],
+    },
+    {
+      name: "If test includes non-state",
+      code: js`
+        function Form() {
+          const [name, setName] = useState();
+          const [dataToSubmit, setDataToSubmit] = useState();
+
+          useEffect(() => {
+            if (dataToSubmit && Date.now() % 2 === 0) {
+              submitData(dataToSubmit);
+            }
+          }, [dataToSubmit]);
+
+          return (
+            <div>
+              <input
+                name="name"
+                type="text"
+                onChange={(e) => setName(e.target.value)}
+              />
+              <button onClick={() => setDataToSubmit({ name })}>Submit</button>
+            </div>
+          )
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidEventHandler",
+        },
+      ],
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/7
+      name: "Klarna",
+      code: js`
+        function Klarna({ klarnaAppId }) {
+          const [countryCode] = useState(qs.parse('countryCode=meow'));
+          const [result, setResult] = useState();
+          const klarnaEnabled = useSelector('idk') && shouldKlarnaBeEnabled(countryCode);
+          const currentLocale = getCurrentLocale(useGetCurrentLanguage());
+
+          const loadSignInWithKlarna = (klarnaAppId, klarnaEnvironment, countryCode, currentLocale) => {
+            const klarnaResult = doSomething();
+            setResult(klarnaResult);
+          };
+
+          useEffect(() => {
+            if (klarnaEnabled) {
+              return loadSignInWithKlarna(
+                  klarnaAppId,
+                  klarnaEnvironment,
+                  countryCode?.toUpperCase(),
+                  currentLocale,
+              );
+            }
+          }, [
+            countryCode,
+            klarnaAppId,
+            klarnaEnabled,
+            klarnaEnvironment,
+            currentLocale,
+          ]);
         }
       `,
       errors: [

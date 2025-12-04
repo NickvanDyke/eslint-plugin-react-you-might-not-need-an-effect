@@ -1,9 +1,10 @@
-import { getCallExpr, getUpstreamRefs } from "../util/ast.js";
 import {
+  getCallExpr,
+  getDownstreamRefs,
+  getUpstreamRefs,
   getEffectDepsRefs,
   getEffectFnRefs,
   hasCleanup,
-  isArgsAllLiterals,
   isImmediateCall,
   isUseState,
   isStateSetter,
@@ -33,11 +34,9 @@ export default {
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
-      // TODO: Should filter out setters before checking?
-      // exhaustive-deps doesn't enforce one way or the other.
-      const isAllDepsState = depsRefs
+      const isSomeDepsState = depsRefs
         .flatMap((ref) => getUpstreamRefs(context, ref))
-        .notEmptyEvery((ref) => isUseState(ref));
+        .some((ref) => isUseState(ref));
 
       effectFnRefs
         .filter((ref) => isStateSetter(context, ref))
@@ -45,7 +44,15 @@ export default {
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
-          if (isAllDepsState && isArgsAllLiterals(context, callExpr)) {
+          const argsUpstreamRefs = callExpr.arguments
+            .flatMap((arg) => getDownstreamRefs(context, arg))
+            .flatMap((ref) => getUpstreamRefs(context, ref));
+          // Avoid overlap with no-derived-state
+          const isSomeArgsState = argsUpstreamRefs.some((ref) =>
+            isUseState(ref),
+          );
+
+          if (isSomeDepsState && !isSomeArgsState) {
             context.report({
               node: callExpr,
               messageId: "avoidChainingStateUpdates",

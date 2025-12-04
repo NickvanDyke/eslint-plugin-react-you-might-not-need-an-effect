@@ -1,8 +1,9 @@
-import { getCallExpr, getUpstreamRefs } from "../util/ast.js";
 import {
+  getCallExpr,
+  getDownstreamRefs,
+  getUpstreamRefs,
   getEffectDepsRefs,
   getEffectFnRefs,
-  isArgsAllLiterals,
   isImmediateCall,
   isProp,
   isStateSetter,
@@ -32,9 +33,9 @@ export default {
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
 
-      const isAllDepsProps = depsRefs
+      const isSomeDepsProps = depsRefs
         .flatMap((ref) => getUpstreamRefs(context, ref))
-        .notEmptyEvery((ref) => isProp(ref));
+        .some((ref) => isProp(ref));
 
       effectFnRefs
         .filter((ref) => isStateSetter(context, ref))
@@ -42,8 +43,18 @@ export default {
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
-          // TODO: Flag non-literals too? e.g. I think this is the correct warning for https://github.com/getsentry/sentry/pull/100177/files#diff-cf3aceaba5cdab4553d92644581e23d54914923199d31807fe090e0d49b786caR97
-          if (isAllDepsProps && isArgsAllLiterals(context, callExpr)) {
+          const argsUpstreamRefs = callExpr.arguments
+            .flatMap((arg) => getDownstreamRefs(context, arg))
+            .flatMap((ref) => getUpstreamRefs(context, ref));
+          // Avoid overlap with no-derived-state
+          const isSomeArgsNotProps =
+            // TODO: literals check may be less reliable with *all* upstream refs...
+            // What if that was `getUpstreamNodes()` instead, returning AST nodes?
+            // Could get complicated though. Ideally we may restructure the rules to not need this at all?
+            argsUpstreamRefs.length === 0 || // All literals
+            argsUpstreamRefs.some((ref) => !isProp(ref));
+
+          if (isSomeDepsProps && isSomeArgsNotProps) {
             context.report({
               node: callExpr,
               messageId: "avoidAdjustingStateWhenAPropChanges",

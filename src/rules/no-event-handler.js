@@ -40,7 +40,7 @@ export default {
           getDownstreamRefs(context, ifNode.test)
             .flatMap((ref) => getUpstreamRefs(context, ref))
             // TODO: Should flag props too, but maybe with a different message?
-            .notEmptyEvery((ref) => isUseState(ref)),
+            .some((ref) => isUseState(ref)),
         )
         .forEach((ifNode) => {
           context.report({

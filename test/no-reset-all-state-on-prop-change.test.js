@@ -74,6 +74,20 @@ new MyRuleTester().run("no-reset-all-state-on-prop-change", rule, {
         }
       `,
     },
+    {
+      name: "Reset all state to derived initial state when a prop changes",
+      code: js`
+        function ProfilePage({ userId }) {
+          const initialState = 'meow meow'
+          const [comment, setComment] = useState(initialState);
+
+          useEffect(() => {
+            const derivedInitialState = initialState + '!';
+            setComment(derivedInitialState);
+          }, [userId]);
+        }
+      `,
+    },
   ],
   invalid: [
     {

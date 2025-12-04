@@ -27,6 +27,8 @@ export default {
         "Avoid passing refs to parents in an effect. Use `forwardRef` instead.",
       avoidPropCallbackInRefCallback:
         "Avoid calling props inside callbacks registered on refs in an effect. Use `forwardRef` to register the callback in the parent instead.",
+      avoidReceivingRefFromParent:
+        "Avoid receiving refs from parents to use in an effect. Use `forwardRef` instead.",
     },
   },
   create: (context) => ({
@@ -59,17 +61,30 @@ export default {
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
-          const passesCallbackDataToParent = callExpr.arguments
+          const passesDataToParent = callExpr.arguments
             .flatMap((arg) => getDownstreamRefs(context, arg))
             .flatMap((ref) => getUpstreamRefs(context, ref))
             .some((ref) => isPropCallback(context, ref));
 
-          if (passesCallbackDataToParent) {
+          if (passesDataToParent) {
             context.report({
-              node: getCallExpr(ref),
+              node: callExpr,
               messageId: "avoidPropCallbackInRefCallback",
             });
           }
+        });
+
+      effectFnRefs
+        .filter(
+          (ref) => isPropCallback(context, ref) && isRefCall(context, ref),
+        )
+        .forEach((ref) => {
+          const callExpr = getCallExpr(ref);
+
+          context.report({
+            node: callExpr,
+            messageId: "avoidReceivingRefFromParent",
+          });
         });
     },
   }),

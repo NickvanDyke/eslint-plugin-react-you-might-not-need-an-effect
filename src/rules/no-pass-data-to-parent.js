@@ -9,6 +9,7 @@ import {
   isUseEffect,
   getUpstreamRefs,
   isImmediateCall,
+  isRefCall,
 } from "../util/ast.js";
 import { getCallExpr, getDownstreamRefs } from "../util/ast.js";
 
@@ -37,20 +38,22 @@ export default {
 
       effectFnRefs
         .filter((ref) => isPropCallback(context, ref))
+        .filter((ref) => !isRefCall(context, ref))
         .filter((ref) => isImmediateCall(ref.identifier))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
-          const isAllData =
-            callExpr.arguments.length &
-            callExpr.arguments
-              .flatMap((arg) => getDownstreamRefs(context, arg))
-              .flatMap((ref) => getUpstreamRefs(context, ref))
-              .notEmptyEvery(
-                (ref) => !isUseState(ref) && !isProp(ref) && !isUseRef(ref),
-              );
+          const argsUpstreamRefs = callExpr.arguments
+            .flatMap((arg) => getDownstreamRefs(context, arg))
+            .flatMap((ref) => getUpstreamRefs(context, ref));
+          // TODO: Includes literals. I think that makes sense, but could have a better message.
+          const isSomeArgsData =
+            callExpr.arguments.length & argsUpstreamRefs.length &&
+            argsUpstreamRefs.some(
+              (ref) => !isUseState(ref) && !isProp(ref) && !isUseRef(ref),
+            );
 
-          if (isAllData) {
+          if (isSomeArgsData) {
             context.report({
               node: callExpr,
               messageId: "avoidPassingDataToParent",

@@ -14,6 +14,19 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
       `,
     },
     {
+      name: "Pass derived literal value",
+      code: js`
+        const Child = ({ onTextChanged }) => {
+          const hello = "Hello";
+          const world = "World";
+          const greeting = hello + " " + world;
+          useEffect(() => {
+            onTextChanged(greeting);
+          }, [onTextChanged]);
+        }
+      `,
+    },
+    {
       name: "Pass internal state",
       code: js`
         const Child = ({ onTextChanged }) => {
@@ -169,7 +182,7 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
       `,
     },
     {
-      name: "Register callback on ref to pass data to parent",
+      name: "Register callback on own ref to pass data to parent",
       code: js`
         const Child = ({ onClicked }) => {
           const ref = useRef();
@@ -178,16 +191,12 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
             ref.current.addEventListener('click', (event) => {
               onClicked(event);
             });
-          }, [onFetched]);
+          }, [onClicked, ref]);
         }
       `,
     },
     {
-      // We get lucky in this example that `getUpstreamRefs` ignores parameter-declared variables,
-      // and thus we don't flag `addEventListener`. But not certain that's totally reliable.
-      // TODO: We might want to catch this but it's tricky to identify the prop as a ref w/o type info.
-      // Probably with a different message or even rule, about the child controlling the parent and idiomatic React control flow.
-      name: "Register callback on ref prop",
+      name: "Register external callback on ref prop",
       code: js`
         const Child = ({ ref }) => {
           useEffect(() => {
@@ -235,6 +244,31 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
       //   },
       // ],
     },
+    {
+      // TODO: This could be done (possibly conditionally) in the parent because it doesn't depend on anything in the child?
+      // May fit better as a new, more general rule.
+      // Unflagged right now because it's not a synchronous call. I don't remember the GH issue we added that for... but it's somewhere.
+      name: "Pass window event data to parent",
+      code: js`
+        const Child = ({ onResized }) => {
+          useEffect(() => {
+            window.addEventListener('resize', (event) => {
+              onResized({
+                width: window.innerWidth,
+                height: window.innerHeight,
+              });
+            });
+            return () => window.removeEventListener('resize', handleResize);
+          }, [onResized]);
+        }
+      `,
+      // TODO:
+      // errors: [
+      //   {
+      //     messageId: "avoidPassingDataToParent",
+      //   },
+      // ],
+    },
   ],
   invalid: [
     {
@@ -264,30 +298,6 @@ new MyRuleTester().run("no-pass-data-to-parent", rule, {
           useEffect(() => {
             onFetched(firstElement);
           }, [onFetched, firstElement]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidPassingDataToParent",
-        },
-      ],
-    },
-    {
-      // TODO: This could be done (possibly conditionally) in the parent because it doesn't depend on anything in the child?
-      // May fit better as a new, more general rule.
-      todo: true,
-      name: "Pass window event data to parent",
-      code: js`
-        const Child = ({ onResized }) => {
-          useEffect(() => {
-            window.addEventListener('resize', (event) => {
-              onResized({
-                width: window.innerWidth,
-                height: window.innerHeight,
-              });
-            });
-            return () => window.removeEventListener('resize', handleResize);
-          }, [onResized]);
         }
       `,
       errors: [

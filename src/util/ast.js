@@ -94,6 +94,20 @@ export const isUseRef = (ref) =>
     ref.identifier.parent.property.name === "useRef");
 
 /**
+ * Whether the reference's `current` property is being accessed.
+ * Heuristic for whether the reference is a React ref object.
+ * Because we don't always have access to the `useRef` call itself.
+ * For example when receiving a ref from props.
+ *
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
+export const isRefCurrent = (ref) =>
+  ref.identifier.parent.type === "MemberExpression" &&
+  ref.identifier.parent.property.type === "Identifier" &&
+  ref.identifier.parent.property.name === "current";
+
+/**
  * Does not include `useLayoutEffect`.
  * When used correctly, it interacts with the DOM = external system = (probably) valid effect.
  * When used incorrectly, it's probably too difficult to accurately analyze anyway.
@@ -166,7 +180,8 @@ export const isPropCallback = (context, ref) =>
  */
 export const isRefCall = (context, ref) =>
   getCallExpr(ref) !== undefined &&
-  getUpstreamRefs(context, ref).some((ref) => isUseRef(ref));
+  (isRefCurrent(ref) ||
+    getUpstreamRefs(context, ref).some((ref) => isUseRef(ref)));
 
 /**
  * @param context {Rule.RuleContext}
@@ -225,52 +240,49 @@ export const isImmediateCall = (node) => {
  * @returns {Scope.Reference[]}
  */
 export const getUpstreamRefs = (context, ref, visited = new Set()) => {
-  if (visited.has(ref)) {
-    return [];
-  } else if (!ref.resolved) {
-    // I think this only happens when:
-    // 1. Import statement is missing
-    // 2. ESLint globals are misconfigured
-    // But we still want to return the ref itself to later analyze it.
-    return [ref];
-  } else if (
-    !isProp(ref) &&
-    ref.resolved.defs.some((def) => def.type === "Parameter")
-  ) {
-    // TODO: Should be in the chain below, but we have to check it first because
-    // we do `getDownstreamRefs` on CallExpr.arguments, then call this.
-    // Should instead just get the reference to the argument root.
-
-    // Ignore function parameters references, aside from props.
-    // They are self-contained and essentially duplicate the argument reference.
-    // Important to use `notEmptyEvery` because global variables have an empty `defs`.
-    // May be combinable with the `def.type !== "Parameter"` check above...
-    return [];
-  }
-
-  // TODO: Probably best to track this here but let the downstream `traverse()` handle it.
+  // TODO: Probably best to track this here but let the downstream `traverse()` handle it?
   // Especially if we can simplify/eliminate `getDownstreamRefs()` -> `findDownstreamNodes()` from the path.
   visited.add(ref);
 
-  const upstreamRefs = ref.resolved.defs
+  const upstreamRefs = ref.resolved?.defs
+    // We have no analytical use for import statements; terminate at the previous reference (actually using the imported thing).
+    .filter((def) => def.type !== "ImportBinding")
+    // Don't traverse parameter definitions.
+    // Their definition node is the function, so downstream would include the whole function body.
+    .filter((def) => def.type !== "Parameter")
     // `def.node.init` is for ArrowFunctionExpression, VariableDeclarator, (etc?).
-    // `def.node.body` is for FunctionDeclaration specifically.
-    // (minus parameters because we only want to traverse references to the function, not to its parameters).
-    .map((def) => def.node.init ?? (def.type !== "Parameter" && def.node.body))
+    // `def.node.body` is for FunctionDeclaration.
+    .map((def) => def.node.init ?? def.node.body)
     .filter(Boolean)
     .flatMap((node) => getDownstreamRefs(context, node))
-    // Prevent infinite recursion from circular references
+    // Prevent infinite recursion from circular references.
     .filter((ref) => !visited.has(ref))
     .flatMap((ref) => getUpstreamRefs(context, ref, visited));
 
-  if (upstreamRefs.length === 0) {
-    // Ultimately return only terminal nodes
-    return [ref];
-  } else {
-    return upstreamRefs;
-  }
+  const isLeafRef =
+    // Unresolvable references (e.g. missing imports, misconfigured globals).
+    upstreamRefs === undefined ||
+    // Actually terminal references (e.g. parameters, imports, globals).
+    upstreamRefs.length === 0;
 
-  // TODO: Maybe the real issue is that pure functions are considered leafs?
+  return (
+    // Mid-stream references are skipped in the ultimate return value.
+    // We could concat `ref` if we want mid-stream references. Unsure.
+    // It'd make edge-case handling easier because we don't need to so
+    // carefully filter out things like pure function references to use `every`.
+    // But may be less accurate for other use cases.
+    // Maybe using `visited.length === 1` to detect the initial call if needed.
+    isLeafRef ? [ref] : upstreamRefs
+    // We don't care to analyze non-prop parameters.
+    // They are local to the function and essentially duplicate the argument reference.
+    // NOTE: Okay to return them while we use `some()` on the result.
+    // .filter(
+    //   (ref) =>
+    //     isProp(ref) ||
+    //     !ref.resolved ||
+    //     ref.resolved.defs.some((def) => def.type !== "Parameter"),
+    // )
+  );
 };
 
 /**
@@ -381,13 +393,3 @@ export const hasCleanup = (node) => {
     )
   );
 };
-
-/**
- * @param {Rule.RuleContext} context
- * @param {Rule.Node} callExpr
- * @returns {boolean}
- */
-export const isArgsAllLiterals = (context, callExpr) =>
-  callExpr.arguments
-    .flatMap((arg) => getDownstreamRefs(context, arg))
-    .flatMap((ref) => getUpstreamRefs(context, ref)).length === 0;

@@ -27,26 +27,6 @@ new MyRuleTester().run("syntax", noDerivedState, {
       `,
     },
     {
-      name: "Variable name shadows state name",
-      code: js`
-        import { getCountries } from 'library';
-
-        function CountrySelect({ translation }) {
-          const [countries, setCountries] = useState();
-
-          useEffect(() => {
-            // Verify that the shadowing variable is not considered a state ref
-            const countries = getCountries(translation);
-            setCountries(countries);
-          },
-            // Important to the test: Leads us to check useState initializers,
-            // so we can verify that we don't try to find a useState for the shadowing variable
-            [translation]
-          );
-        }
-      `,
-    },
-    {
       name: "Reacting to external state changes with member access in deps",
       code: js`
         function Feed() {
@@ -470,19 +450,19 @@ new MyRuleTester().run("syntax", noDerivedState, {
     },
     {
       // We don't follow functions passed directly to the effect right now
-      todo: true,
       name: "Passing non-anonymous function to effect",
+      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('');
           const [lastName, setLastName] = useState('');
           const [name, setName] = useState('');
 
-          function deriveName() {
+          function setDerivedName() {
             setName(firstName + ' ' + lastName);
           }
 
-          useEffect(deriveName, [firstName, lastName]);
+          useEffect(setDerivedName, [firstName, lastName]);
         }
       `,
       errors: [

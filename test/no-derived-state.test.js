@@ -23,7 +23,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
     },
     {
-      name: "From external state change",
+      name: "Set to literal on external state change",
       code: js`
         function Feed() {
           const { data: posts } = useQuery('/posts');
@@ -36,7 +36,21 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
     },
     {
-      name: "From external state change, with multiple setter calls",
+      name: "Set to derived literal on external state change",
+      code: js`
+        function Feed() {
+          const { data: posts } = useQuery('/posts');
+          const [scrollPosition, setScrollPosition] = useState(0);
+
+          useEffect(() => {
+            const initialPosition = 0;
+            setScrollPosition(initialPosition);
+          }, [posts]);
+        }
+      `,
+    },
+    {
+      name: "Set to external state, with multiple setter calls",
       code: js`
         function Feed() {
           const { data: posts } = useQuery('/posts');
@@ -166,22 +180,6 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
     },
     {
-      name: "Via unpure local function",
-      code: js`
-        function Counter() {
-          const [count, setCount] = useState(0);
-
-          function calculate(count) {
-            return count * fetch('/multipler');
-          }
-
-          useEffect(() => {
-            setCount(calculate(count));
-          }, [count]);
-        }
-      `,
-    },
-    {
       name: "From props via unpure derived setter",
       code: js`
         function DoubleCounter({ count }) {
@@ -199,30 +197,15 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
     },
     {
-      name: "Via pure global function",
-      code: js`
-        function Counter({ count }) {
-          const [countJson, setCountJson] = useState();
-
-          useEffect(() => {
-            setCountJson(JSON.stringify(count));
-          }, [count]);
-
-          return (
-            // So single-setter doesn't trigger
-            <button onClick={() => setCountJson(undefined)}>reset</button>
-          )
-        }
-      `,
-    },
-    {
-      name: "Via unpure global function",
+      name: "Via unpure promise global function",
       code: js`
         function Counter({ count }) {
           const [multipliedCount, setMultipliedCount] = useState();
 
           useEffect(() => {
-            setMultipliedCount(count * fetch('/multipler'));
+            fetch('/multiplier')
+              .then((res) => res.json())
+              .then((multiplier) => setMultipliedCount(count * multiplier));
           }, [count]);
 
           return (
@@ -231,61 +214,12 @@ new MyRuleTester().run("no-derived-state", rule, {
           )
         }
       `,
-    },
-    {
-      name: "From internal state and external state via intermediate variable",
-      code: js`
-        import { getPrefixFor } from 'library';
-        import { useState } from 'react';
-
-        function Component() {
-          const [name, setName] = useState();
-          const [prefixedName, setPrefixedName] = useState();
-
-          useEffect(() => {
-            const prefix = getPrefixFor(name);
-            const newValue = prefix + name; // Make it a little more interesting
-            setPrefixedName(newValue);
-          }, [name])
-        }
-      `,
-    },
-    {
-      // We don't have the imported function's implementation available to analyze
-      name: "From internal state via imported function",
-      code: js`
-        import { computeName } from 'library';
-        import { useState } from 'react';
-
-        function Component() {
-          const [firstName, setFirstName] = useState('Dwayne');
-          const [lastName, setLastName] = useState('The Rock');
-          const [fullName, setFullName] = useState('');
-
-          useEffect(() => {
-            setFullName(computeName(firstName, lastName));
-          }, [name])
-        }
-      `,
-    },
-    {
-      name: "From internal state via local unpure function",
-      code: js`
-        function Form() {
-          const [firstName, setFirstName] = useState('Dwayne');
-          const [lastName, setLastName] = useState('The Rock');
-          const [fullName, setFullName] = useState('');
-
-          function computeName(firstName, lastName) {
-            console.log('meow');
-            return firstName + ' ' + lastName;
-          }
-
-          useEffect(() => {
-            setFullName(computeName(firstName, lastName));
-          }, [firstName, lastName]);
-        }
-      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "multipliedCount" },
+        },
+      ],
     },
     // TODO: Maybe move some of these to/from `syntax.test.js`
     {
@@ -398,24 +332,20 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
     },
     {
-      name: "From external state via useCallback derived setter",
-      todo: true,
+      name: "Pass internal args to external local function",
       code: js`
-        import { getPrefixFor } from 'library';
-        import { useState } from 'react';
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
 
-        function Component() {
-          const [name, setName] = useState();
-          const [prefixedName, setPrefixedName] = useState();
-          const prefix = getPrefixFor(name);
-
-          const derivedSetter = useCallback((name) => {
-            setPrefixedName(prefix + name);
-          }, [prefix]);
+          const doSet = (arg1, arg2) => {
+            console.log(arg1, arg2);
+          }
 
           useEffect(() => {
-            derivedSetter(name);
-          }, [name, derivedSetter])
+            doSet(firstName, lastName);
+          }, [firstName, lastName]);
         }
       `,
     },
@@ -472,6 +402,95 @@ new MyRuleTester().run("no-derived-state", rule, {
           useEffect(() => {
             setFullName(name) 
           }, [name]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "From internal state via pure global function",
+      code: js`
+        function Counter({ count }) {
+          const [countJson, setCountJson] = useState();
+
+          useEffect(() => {
+            setCountJson(JSON.stringify(count));
+          }, [count]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "countJson" },
+        },
+      ],
+    },
+    {
+      name: "From internal state via local unpure function",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          function computeName(firstName, lastName) {
+            console.log('meow');
+            return firstName + ' ' + lastName;
+          }
+
+          useEffect(() => {
+            setFullName(computeName(firstName, lastName));
+          }, [firstName, lastName]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "From internal state and external state",
+      code: js`
+        import { usePrefix } from 'library';
+
+        function Component() {
+          const [name, setName] = useState();
+          const [prefixedName, setPrefixedName] = useState();
+          const prefix = usePrefix(name);
+
+          useEffect(() => {
+            const newValue = prefix + name;
+            setPrefixedName(newValue);
+          }, [prefix, name])
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "prefixedName" },
+        },
+      ],
+    },
+    {
+      // We don't have the imported function's implementation available to analyze
+      name: "From internal state via external function",
+      code: js`
+        import { computeName } from 'library';
+
+        function Component() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          useEffect(() => {
+            setFullName(computeName(firstName, lastName));
+          }, [firstName, lastName])
         }
       `,
       errors: [
@@ -641,7 +660,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      name: "From derived external state with single setter call",
+      name: "From internal plus external state with single setter call",
       code: js`
         function Form() {
           const prefix = useQuery('/prefix');
@@ -655,14 +674,13 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
       errors: [
         {
-          messageId: "avoidSingleSetter",
+          messageId: "avoidDerivedState",
           data: { state: "prefixedName" },
         },
       ],
     },
     {
       name: "From HOC prop with single setter call",
-      todo: true,
       code: js`
         import { withRouter } from 'react-router-dom';
 
@@ -671,13 +689,13 @@ new MyRuleTester().run("no-derived-state", rule, {
 
           useEffect(() => {
             setLocation(history.location);
-          }, [history.location, setLocation]);
+          }, [history.location]);
         });
       `,
       errors: [
         {
           messageId: "avoidSingleSetter",
-          data: { state: "fullName" },
+          data: { state: "location" },
         },
       ],
     },
@@ -818,9 +836,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/53
       name: "Set to result of pure local ArrowFunctionExpression",
-      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Dwayne');
@@ -844,9 +860,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/53
       name: "Set to result of pure local FunctionDeclaration",
-      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Dwayne');
@@ -940,10 +954,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/53
-      // `useCallback` is an upstream ref
       name: "Set to result of internal useCallback; repeat references to a useState variable",
-      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Dwayne');
@@ -994,9 +1005,33 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      // TODO: It thinks `prefix` is an external reference?
-      name: "From internal state via useCallback one-arg one-dep intermediate setter",
+      // TODO: same as above
+      name: "From internal state via useCallback no-arg two-dep intermediate setter",
       todo: true,
+      code: js`
+        function Component() {
+          const [name, setName] = useState();
+          const [fullName, setFullName] = useState();
+          const prefix = 'Dr.'
+
+          const intermediateSetter = useCallback(() => {
+            setFullName(prefix + ' ' + name);
+          }, [prefix, name]);
+
+          useEffect(() => {
+            intermediateSetter();
+          }, [intermediateSetter]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      name: "From internal state via useCallback one-arg one-dep intermediate setter",
       code: js`
         function Component() {
           const [name, setName] = useState();
@@ -1020,34 +1055,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      // TODO: It thinks `prefix`, and maybe `name`, is an external reference?
-      todo: true,
-      name: "From internal state via useCallback no-arg two-dep intermediate setter",
-      code: js`
-        function Component() {
-          const [name, setName] = useState();
-          const [fullName, setFullName] = useState();
-          const prefix = 'Dr.'
-
-          const intermediateSetter = useCallback(() => {
-            setFullName(prefix + ' ' + name);
-          }, [prefix, name]);
-
-          useEffect(() => {
-            intermediateSetter(name);
-          }, [name, intermediateSetter]);
-        }
-      `,
-      errors: [
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "fullName" },
-        },
-      ],
-    },
-    {
       name: "From internal state via useCallback two-arg no-dep intermediate setter",
-      todo: true,
       code: js`
         function Component() {
           const [name, setName] = useState();

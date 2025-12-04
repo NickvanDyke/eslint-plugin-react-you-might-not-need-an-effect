@@ -163,5 +163,25 @@ new MyRuleTester().run("no-initialize-state", rule, {
         },
       ],
     },
+    {
+      name: "To equivalent derived literals",
+      code: js`
+        function MyComponent() {
+          const upstream = 'Meow';
+          const [state, setState] = useState(upstream);
+
+          useEffect(() => {
+            const upstreamTwo = 'Meow';
+            setState(upstreamTwo);
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidInitializingState",
+          data: { state: "state", arguments: "upstreamTwo" },
+        },
+      ],
+    },
   ],
 });

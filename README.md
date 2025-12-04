@@ -237,20 +237,6 @@ function Component() {
 }
 ```
 
-### `no-manage-parent`
-
-Disallow effects that only use props:
-
-```js
-function Child({ isOpen, onClose }) {
-  useEffect(() => {
-    if (!isOpen) {
-      onClose();
-    }
-  }, [isOpen, onClose]);
-}
-```
-
 ### `no-empty-effect`
 
 Disallow empty effects:
@@ -263,7 +249,7 @@ function Component() {
 
 ## 💬 Feedback
 
-The ways to (mis)use an effect in real-world code are practically endless! This plugin is not exhaustive, and minimizes false positives at the expense of occasional false negatives. If you encounter unexpected behavior or see opportunities for improvement, please open an issue. Your feedback helps improve the plugin for everyone!
+The ways to (mis)use an effect in real-world code are practically endless! This plugin is not exhaustive. If you encounter unexpected behavior or see opportunities for improvement, please open an issue. Your feedback helps improve the plugin for everyone!
 
 ## 📖 Learn More
 

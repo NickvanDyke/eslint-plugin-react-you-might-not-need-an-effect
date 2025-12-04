@@ -49,15 +49,33 @@ new MyRuleTester().run("no-pass-ref-to-parent", rule, {
       `,
     },
     {
-      name: "Register callback on ref prop",
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/37
+      // Alternate solutions exist, but this is arguably the most readable.
+      name: "Pass cleanup function that depends on ref",
       code: js`
-        const Child = ({ ref }) => {
-          useEffect(() => {
-            ref.current.addEventListener('click', (event) => {
-              console.log('Clicked', event);
+        import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+
+        function DeleteDropTarget({ onDelete }) {
+          const ref = React.useRef(null);
+
+          React.useEffect(() => {
+            const element = ref.current;
+            if (!element) {
+              return;
+            }
+
+            const cleanup = dropTargetForElements({
+              element,
+              onDrop: ({ source }) => {
+                onDelete(source.data);
+              },
             });
-          }, [ref]);
-        }
+
+            return cleanup;
+          }, [onDelete]);
+
+          return <div ref={ref}>Drop an item here to delete</div>;
+        };
       `,
     },
   ],
@@ -79,7 +97,7 @@ new MyRuleTester().run("no-pass-ref-to-parent", rule, {
       ],
     },
     {
-      name: "Pass ref object to parent callback",
+      name: "Pass local ref object to prop callback",
       code: js`
         const Child = ({ onRef }) => {
           const ref = useRef();
@@ -95,7 +113,24 @@ new MyRuleTester().run("no-pass-ref-to-parent", rule, {
       ],
     },
     {
-      name: "Register callback on ref to pass event to parent",
+      name: "Register callback on prop ref",
+      code: js`
+        const Child = ({ ref }) => {
+          useEffect(() => {
+            ref.current.addEventListener('click', (event) => {
+              console.log('Clicked', event);
+            });
+          }, [ref]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidReceivingRefFromParent",
+        },
+      ],
+    },
+    {
+      name: "Register callback on local ref to pass event to parent",
       code: js`
         const Child = ({ onClicked }) => {
           const ref = useRef();
