@@ -30,7 +30,7 @@
   "scripts": {
     "build": "node build.js",
     "lint": "eslint",
-    "test": "mocha"
+    "test": "mocha --recursive"
   },
   "keywords": [
     "eslint",

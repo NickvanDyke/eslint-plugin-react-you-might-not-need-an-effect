@@ -2,6 +2,8 @@ import {
   getCallExpr,
   getDownstreamRefs,
   getUpstreamRefs,
+} from "../util/ast.js";
+import {
   isUseState,
   getEffectFnRefs,
   getEffectDepsRefs,
@@ -12,7 +14,7 @@ import {
   isReactFunctionalHOC,
   isCustomHook,
   isUseEffect,
-} from "../util/ast.js";
+} from "../util/react.js";
 
 /**
  * @type {import("eslint").Rule.RuleModule}

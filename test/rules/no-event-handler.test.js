@@ -1,5 +1,5 @@
-import rule from "../src/rules/no-event-handler.js";
-import { MyRuleTester, js } from "./rule-tester.js";
+import { MyRuleTester, js } from "../rule-tester.js";
+import rule from "../../src/rules/no-event-handler.js";
 
 new MyRuleTester().run("no-event-handler", rule, {
   valid: [

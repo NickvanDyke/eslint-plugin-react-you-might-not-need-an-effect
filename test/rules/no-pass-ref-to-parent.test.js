@@ -1,5 +1,5 @@
-import { MyRuleTester, js } from "./rule-tester.js";
-import rule from "../src/rules/no-pass-ref-to-parent.js";
+import { MyRuleTester, js } from "../rule-tester.js";
+import rule from "../../src/rules/no-pass-ref-to-parent.js";
 
 new MyRuleTester().run("no-pass-ref-to-parent", rule, {
   valid: [

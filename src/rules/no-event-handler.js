@@ -1,12 +1,15 @@
 import {
+  findDownstreamNodes,
+  getDownstreamRefs,
+  getUpstreamRefs,
+} from "../util/ast.js";
+import {
   getEffectFnRefs,
   getEffectDepsRefs,
   hasCleanup,
   isUseEffect,
-  getUpstreamRefs,
-} from "../util/ast.js";
-import { findDownstreamNodes, getDownstreamRefs } from "../util/ast.js";
-import { isUseState } from "../util/ast.js";
+  isUseState,
+} from "../util/react.js";
 
 /**
  * @type {import("eslint").Rule.RuleModule}

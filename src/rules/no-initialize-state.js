@@ -1,12 +1,12 @@
-import { getCallExpr } from "../util/ast.js";
+import { getCallExpr, isSynchronous } from "../util/ast.js";
 import {
   getEffectDepsRefs,
+  getEffectFn,
   getEffectFnRefs,
   getUseStateDecl,
-  isImmediateCall,
   isStateSetter,
   isUseEffect,
-} from "../util/ast.js";
+} from "../util/react.js";
 
 /**
  * @type {import("eslint").Rule.RuleModule}
@@ -36,7 +36,7 @@ export default {
 
       effectFnRefs
         .filter((ref) => isStateSetter(context, ref))
-        .filter((ref) => isImmediateCall(ref.identifier))
+        .filter((ref) => isSynchronous(ref.identifier, getEffectFn(node)))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
           const useStateNode = getUseStateDecl(context, ref);

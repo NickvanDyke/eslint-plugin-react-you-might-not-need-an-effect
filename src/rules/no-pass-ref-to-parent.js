@@ -1,14 +1,17 @@
 import {
+  getCallExpr,
+  getDownstreamRefs,
+  getUpstreamRefs,
+} from "../util/ast.js";
+import {
   getEffectFnRefs,
   getEffectDepsRefs,
   isPropCallback,
   isUseRef,
   hasCleanup,
   isUseEffect,
-  getUpstreamRefs,
   isRefCall,
-} from "../util/ast.js";
-import { getCallExpr, getDownstreamRefs } from "../util/ast.js";
+} from "../util/react.js";
 
 /**
  * @type {import("eslint").Rule.RuleModule}
