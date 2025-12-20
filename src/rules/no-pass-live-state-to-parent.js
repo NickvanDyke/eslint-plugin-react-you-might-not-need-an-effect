@@ -1,14 +1,13 @@
 import {
+  getArgsUpstreamRefs,
   getCallExpr,
-  getDownstreamRefs,
-  getUpstreamRefs,
   isSynchronous,
 } from "../util/ast.js";
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
-  isPropCallback,
-  isUseState,
+  callsProp,
+  isState,
   isUseEffect,
   getEffectFn,
 } from "../util/react.js";
@@ -38,14 +37,13 @@ export default {
       if (!effectFnRefs || !depsRefs) return;
 
       effectFnRefs
-        .filter((ref) => isPropCallback(context, ref))
+        .filter((ref) => callsProp(context, ref))
         .filter((ref) => isSynchronous(ref.identifier, getEffectFn(node)))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
-          const isStateInArgs = callExpr.arguments
-            .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) => getUpstreamRefs(context, ref))
-            .some((ref) => isUseState(ref));
+          const isStateInArgs = getArgsUpstreamRefs(context, ref).some((ref) =>
+            isState(ref),
+          );
 
           if (isStateInArgs) {
             context.report({

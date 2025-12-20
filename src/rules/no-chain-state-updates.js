@@ -1,6 +1,6 @@
 import {
+  getArgsUpstreamRefs,
   getCallExpr,
-  getDownstreamRefs,
   getUpstreamRefs,
   isSynchronous,
 } from "../util/ast.js";
@@ -8,8 +8,8 @@ import {
   getEffectDepsRefs,
   getEffectFnRefs,
   hasCleanup,
-  isUseState,
-  isStateSetter,
+  isState,
+  callsStateSetter,
   isUseEffect,
   getEffectFn,
 } from "../util/react.js";
@@ -39,20 +39,17 @@ export default {
 
       const isSomeDepsState = depsRefs
         .flatMap((ref) => getUpstreamRefs(context, ref))
-        .some((ref) => isUseState(ref));
+        .some((ref) => isState(ref));
 
       effectFnRefs
-        .filter((ref) => isStateSetter(context, ref))
+        .filter((ref) => callsStateSetter(context, ref))
         .filter((ref) => isSynchronous(ref.identifier, getEffectFn(node)))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
-          const argsUpstreamRefs = callExpr.arguments
-            .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) => getUpstreamRefs(context, ref));
           // Avoid overlap with no-derived-state
-          const isSomeArgsState = argsUpstreamRefs.some((ref) =>
-            isUseState(ref),
+          const isSomeArgsState = getArgsUpstreamRefs(context, ref).some(
+            (ref) => isState(ref),
           );
 
           if (isSomeDepsState && !isSomeArgsState) {

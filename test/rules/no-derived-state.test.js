@@ -349,6 +349,19 @@ new MyRuleTester().run("no-derived-state", rule, {
         }
       `,
     },
+    {
+      name: "Mutate internal state",
+      code: js`
+        function DoubleList() {
+          const [list, setList] = useState([]);
+          const [doubleList, setDoubleList] = useState([]);
+
+          useEffect(() => {
+            doubleList.push(...list);
+          }, [list]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -569,32 +582,6 @@ new MyRuleTester().run("no-derived-state", rule, {
       `,
       errors: [
         {
-          messageId: "avoidDerivedState",
-          data: { state: "doubleList" },
-        },
-        // TODO: Kinda confusing to double-flag... ideally we'd ignore the `concat` call, given it's a setter arg.
-        // Or even a different error message/rule for `no-mutate-state`...? If we can find a good heuristic.
-        {
-          messageId: "avoidDerivedState",
-          data: { state: "list" },
-        },
-      ],
-    },
-    {
-      name: "Mutate internal state",
-      code: js`
-        function DoubleList() {
-          const [list, setList] = useState([]);
-          const [doubleList, setDoubleList] = useState([]);
-
-          useEffect(() => {
-            doubleList.push(...list);
-          }, [list]);
-        }
-      `,
-      errors: [
-        {
-          // We consider `doubleList.push` to essentially be a state setter call
           messageId: "avoidDerivedState",
           data: { state: "doubleList" },
         },
@@ -976,12 +963,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      // TODO: https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/38
-      // `getCallExpr` leads us to analyze the args passed to `doSet`, not the eventual `setFullName`.
-      // Do we need to flatMap downstream refs into CallExpressions?
-      // That makes sense, so it follows the same path as `isState`.
       name: "Via no-arg intermediate setter",
-      todo: true,
       code: js`
         function Form() {
           const [firstName, setFirstName] = useState('Dwayne');
@@ -1005,9 +987,7 @@ new MyRuleTester().run("no-derived-state", rule, {
       ],
     },
     {
-      // TODO: same as above
       name: "From internal state via useCallback no-arg two-dep intermediate setter",
-      todo: true,
       code: js`
         function Component() {
           const [name, setName] = useState();
@@ -1069,6 +1049,31 @@ new MyRuleTester().run("no-derived-state", rule, {
           useEffect(() => {
             intermediateSetter(prefix, name);
           }, [prefix, name, intermediateSetter]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          data: { state: "fullName" },
+        },
+      ],
+    },
+    {
+      // Actually a false positive - just tracking this behavior.
+      name: "Pass state to derived setter which ignores args",
+      code: js`
+        function Form() {
+          const [firstName, setFirstName] = useState('Dwayne');
+          const [lastName, setLastName] = useState('The Rock');
+          const [fullName, setFullName] = useState('');
+
+          const setDerivedFullName = (firstName, lastName) => {
+            setFullName("Sparky");
+          }
+
+          useEffect(() => {
+            setDerivedFullName(firstName, lastName);
+          }, [firstName, lastName]);
         }
       `,
       errors: [

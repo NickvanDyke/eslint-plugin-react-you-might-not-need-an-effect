@@ -1,16 +1,12 @@
-import {
-  getCallExpr,
-  getDownstreamRefs,
-  getUpstreamRefs,
-} from "../util/ast.js";
+import { getArgsUpstreamRefs, getCallExpr } from "../util/ast.js";
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
-  isPropCallback,
-  isUseRef,
+  callsProp,
+  isRef,
   hasCleanup,
   isUseEffect,
-  isRefCall,
+  callsRef,
 } from "../util/react.js";
 
 /**
@@ -42,14 +38,13 @@ export default {
       if (!effectFnRefs || !depsRefs) return;
 
       effectFnRefs
-        .filter((ref) => isPropCallback(context, ref))
+        .filter((ref) => callsProp(context, ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
-          const hasRefArg = callExpr.arguments
-            .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) => getUpstreamRefs(context, ref))
-            .some((ref) => isUseRef(ref));
+          const hasRefArg = getArgsUpstreamRefs(context, ref).some((ref) =>
+            isRef(ref),
+          );
 
           if (hasRefArg) {
             context.report({
@@ -60,14 +55,13 @@ export default {
         });
 
       effectFnRefs
-        .filter((ref) => isRefCall(context, ref))
+        .filter((ref) => callsRef(context, ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
-          const passesDataToParent = callExpr.arguments
-            .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) => getUpstreamRefs(context, ref))
-            .some((ref) => isPropCallback(context, ref));
+          const passesDataToParent = getArgsUpstreamRefs(context, ref).some(
+            (ref) => callsProp(context, ref),
+          );
 
           if (passesDataToParent) {
             context.report({
@@ -78,9 +72,7 @@ export default {
         });
 
       effectFnRefs
-        .filter(
-          (ref) => isPropCallback(context, ref) && isRefCall(context, ref),
-        )
+        .filter((ref) => callsProp(context, ref) && callsRef(context, ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 

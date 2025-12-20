@@ -7,8 +7,8 @@ import {
   getEffectFnRefs,
   getEffectDepsRefs,
   hasCleanup,
+  isState,
   isUseEffect,
-  isUseState,
 } from "../util/react.js";
 
 /**
@@ -43,7 +43,7 @@ export default {
           getDownstreamRefs(context, ifNode.test)
             .flatMap((ref) => getUpstreamRefs(context, ref))
             // TODO: Should flag props too, but maybe with a different message?
-            .some((ref) => isUseState(ref)),
+            .some((ref) => isState(ref)),
         )
         .forEach((ifNode) => {
           context.report({

@@ -7,13 +7,15 @@ import {
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
-  isPropCallback,
+  callsProp,
+  isConstant,
+  isRefCurrent,
   isUseState,
   isUseRef,
   isProp,
   hasCleanup,
   isUseEffect,
-  isRefCall,
+  callsRef,
   getEffectFn,
 } from "../util/react.js";
 
@@ -41,21 +43,32 @@ export default {
       if (!effectFnRefs || !depsRefs) return;
 
       effectFnRefs
-        .filter((ref) => isPropCallback(context, ref))
-        .filter((ref) => !isRefCall(context, ref))
+        .filter((ref) => callsProp(context, ref))
+        .filter((ref) => !callsRef(context, ref))
         .filter((ref) => isSynchronous(ref.identifier, getEffectFn(node)))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
-          const argsUpstreamRefs = callExpr.arguments
+          const argsUpstreamRefs = getUpstreamRefs(context, ref)
+            .map((ref) => getCallExpr(ref))
+            .filter(Boolean)
+            .flatMap((callExpr) => callExpr.arguments)
             .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) => getUpstreamRefs(context, ref));
-          // TODO: Includes literals. I think that makes sense, but could have a better message.
-          const isSomeArgsData =
-            callExpr.arguments.length & argsUpstreamRefs.length &&
-            argsUpstreamRefs.some(
-              (ref) => !isUseState(ref) && !isProp(ref) && !isUseRef(ref),
-            );
+            // Leaf because our "is data" check is essentially "is not all this other stuff",
+            // and the "other stuff" only works on leaf nodes.
+            // Mid-stream nodes are effectively nothing, and so would pass those.
+            // TODO: DIYing getArgsUpstreamRefs for that reason.
+            .flatMap((ref) => getUpstreamRefs(context, ref, "leaf"));
+          const isSomeArgsData = argsUpstreamRefs.some(
+            (ref) =>
+              // TODO: Ideally would use isState and isRef, not the hooks.
+              // But because it goes to leaves. Must be some other way?
+              !isUseState(ref) &&
+              !isProp(ref) &&
+              !isUseRef(ref) &&
+              !isRefCurrent(ref) &&
+              !isConstant(ref),
+          );
 
           if (isSomeArgsData) {
             context.report({

@@ -1,6 +1,6 @@
 import {
+  getArgsUpstreamRefs,
   getCallExpr,
-  getDownstreamRefs,
   getUpstreamRefs,
   isSynchronous,
 } from "../util/ast.js";
@@ -9,7 +9,7 @@ import {
   getEffectFn,
   getEffectFnRefs,
   isProp,
-  isStateSetter,
+  callsStateSetter,
   isUseEffect,
 } from "../util/react.js";
 
@@ -41,23 +41,17 @@ export default {
         .some((ref) => isProp(ref));
 
       effectFnRefs
-        .filter((ref) => isStateSetter(context, ref))
+        .filter((ref) => callsStateSetter(context, ref))
         .filter((ref) => isSynchronous(ref.identifier, getEffectFn(node)))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
-          const argsUpstreamRefs = callExpr.arguments
-            .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) => getUpstreamRefs(context, ref));
           // Avoid overlap with no-derived-state
-          const isSomeArgsNotProps =
-            // TODO: literals check may be less reliable with *all* upstream refs...
-            // What if that was `getUpstreamNodes()` instead, returning AST nodes?
-            // Could get complicated though. Ideally we may restructure the rules to not need this at all?
-            argsUpstreamRefs.length === 0 || // All literals
-            argsUpstreamRefs.some((ref) => !isProp(ref));
+          const isSomeArgsProps = getArgsUpstreamRefs(context, ref).some(
+            (ref) => isProp(ref),
+          );
 
-          if (isSomeDepsProps && isSomeArgsNotProps) {
+          if (isSomeDepsProps && !isSomeArgsProps) {
             context.report({
               node: callExpr,
               messageId: "avoidAdjustingStateWhenAPropChanges",

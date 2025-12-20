@@ -3,14 +3,21 @@
  */
 
 /**
- * Get all terminal references that ultimately flow into `ref`.
+ * Get all references that ultimately flow into `ref`.
  *
  * @param {Rule.RuleContext} context
  * @param {Scope.Reference} ref
+ * @param {"leaf" | "all"} [mode="all"]
+ * @param {Set<Scope.Reference>} visited
  *
  * @returns {Scope.Reference[]}
  */
-export const getUpstreamRefs = (context, ref, visited = new Set()) => {
+export const getUpstreamRefs = (
+  context,
+  ref,
+  mode = "all",
+  visited = new Set(),
+) => {
   // TODO: Probably best to track this here but let the downstream `traverse()` handle it?
   // Especially if we can simplify/eliminate `getDownstreamRefs()` -> `findDownstreamNodes()` from the path.
   visited.add(ref);
@@ -28,7 +35,7 @@ export const getUpstreamRefs = (context, ref, visited = new Set()) => {
     .flatMap((node) => getDownstreamRefs(context, node))
     // Prevent infinite recursion from circular references.
     .filter((ref) => !visited.has(ref))
-    .flatMap((ref) => getUpstreamRefs(context, ref, visited));
+    .flatMap((ref) => getUpstreamRefs(context, ref, mode, visited));
 
   const isLeafRef =
     // Unresolvable references (e.g. missing imports, misconfigured globals).
@@ -36,24 +43,20 @@ export const getUpstreamRefs = (context, ref, visited = new Set()) => {
     // Actually terminal references (e.g. parameters, imports, globals).
     upstreamRefs.length === 0;
 
-  return (
-    // Mid-stream references are skipped in the ultimate return value.
-    // We could concat `ref` if we want mid-stream references. Unsure.
-    // It'd make edge-case handling easier because we don't need to so
-    // carefully filter out things like pure function references to use `every`.
-    // But may be less accurate for other use cases.
-    // Maybe using `visited.length === 1` to detect the initial call if needed.
-    isLeafRef ? [ref] : upstreamRefs
-    // We don't care to analyze non-prop parameters.
-    // They are local to the function and essentially duplicate the argument reference.
-    // NOTE: Okay to return them while we use `some()` on the result.
-    // .filter(
-    //   (ref) =>
-    //     isProp(ref) ||
-    //     !ref.resolved ||
-    //     ref.resolved.defs.some((def) => def.type !== "Parameter"),
-    // )
-  );
+  return mode === "leaf"
+    ? isLeafRef
+      ? [ref]
+      : upstreamRefs
+    : [ref].concat(upstreamRefs ?? []);
+  // We don't care to analyze non-prop parameters.
+  // They are local to the function and essentially duplicate the argument reference.
+  // NOTE: Okay to return them while we use `some()` on the result.
+  // .filter(
+  //   (ref) =>
+  //     isProp(ref) ||
+  //     !ref.resolved ||
+  //     ref.resolved.defs.some((def) => def.type !== "Parameter"),
+  // )
 };
 
 /**
@@ -134,6 +137,23 @@ export const getCallExpr = (ref, current = ref.identifier.parent) => {
 };
 
 /**
+ * When using this, we assume that args passed to the derived function are always eventually passed to underlying functions.
+ * Which they may not be. Would be better to trace the actual flow of values, but that's complex. We'll start with this for now.
+ *
+ * @param {Rule.RuleContext} context
+ * @param {Scope.Reference} ref
+ * @param {"leaf" | "all"} [mode="all"] Whether to return all refs, or only leaf refs. Note that "all" includes `ref` itself.
+ * @returns {Rule.Node[]}
+ */
+export const getArgsUpstreamRefs = (context, ref, mode) =>
+  getUpstreamRefs(context, ref, mode)
+    .map((ref) => getCallExpr(ref))
+    .filter(Boolean)
+    .flatMap((callExpr) => callExpr.arguments)
+    .flatMap((arg) => getDownstreamRefs(context, arg))
+    .flatMap((ref) => getUpstreamRefs(context, ref));
+
+/**
  * Walks up the AST until `within` (returns `true`) or finding any of (returns `false`):
  * - An `async` function
  * - A function declaration, which may be called at an arbitrary later time.
@@ -171,7 +191,7 @@ export const isSynchronous = (node, within) => {
  *
  * @returns {Scope.Reference | undefined}
  */
-const getRef = (context, identifier) =>
+export const getRef = (context, identifier) =>
   context.sourceCode
     .getScope(identifier)
     ?.references.find((ref) => ref.identifier == identifier);

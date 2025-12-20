@@ -4,15 +4,15 @@ import {
   getUpstreamRefs,
 } from "../util/ast.js";
 import {
-  isUseState,
   getEffectFnRefs,
   getEffectDepsRefs,
-  isStateSetter,
+  callsStateSetter,
   isProp,
   getUseStateDecl,
   isReactFunctionalComponent,
   isReactFunctionalHOC,
   isCustomHook,
+  isState,
   isUseEffect,
 } from "../util/react.js";
 
@@ -68,7 +68,7 @@ const findPropUsedToResetAllState = (
   useEffectNode,
 ) => {
   const stateSetterRefs = effectFnRefs.filter((ref) =>
-    isStateSetter(context, ref),
+    callsStateSetter(context, ref),
   );
 
   const isAllStateReset =
@@ -123,9 +123,8 @@ const countUseStates = (context, componentNode) => {
     return 0;
   }
 
-  return getDownstreamRefs(context, componentNode).filter((ref) =>
-    isUseState(ref),
-  ).length;
+  return getDownstreamRefs(context, componentNode).filter((ref) => isState(ref))
+    .length;
 };
 
 // Returns the component or custom hook that contains the `useEffect` node.

@@ -91,9 +91,6 @@ new MyRuleTester().run("syntax", noDerivedState, {
     },
     {
       name: "Derived state, with renamed import",
-      // Would have to check the import statement, not the identifier.
-      // But that has complexities of its own.
-      todo: true,
       code: js`
         import { useState as stateUser, useEffect } from 'react';
 
@@ -105,7 +102,13 @@ new MyRuleTester().run("syntax", noDerivedState, {
           useEffect(() => setFullName(firstName + ' ' + lastName), [firstName, lastName]);
         }
       `,
-      errors: 1,
+      errors: [
+        {
+          messageId: "avoidDerivedState",
+          // FIX: should be "fullName" here. It fails to find the useState declaration because of the renamed import.
+          data: { state: "undefined" },
+        },
+      ],
     },
     {
       name: "Function component",

@@ -64,6 +64,35 @@ export const isUseState = (ref) =>
     ref.identifier.parent.property.name === "useState");
 
 /**
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
+export const isState = (ref) =>
+  ref.resolved?.defs.some(
+    (def) =>
+      def.node.type === "VariableDeclarator" &&
+      def.node.id.type === "ArrayPattern" &&
+      (def.node.id.elements.length === 1 ||
+        def.node.id.elements.length === 2) &&
+      def.node.id.elements[0]?.type === "Identifier" &&
+      def.node.id.elements[0].name === ref.identifier.name,
+  );
+
+/**
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
+export const isStateSetter = (ref) =>
+  ref.resolved?.defs.some(
+    (def) =>
+      def.node.type === "VariableDeclarator" &&
+      def.node.id.type === "ArrayPattern" &&
+      def.node.id.elements.length === 2 &&
+      def.node.id.elements[1]?.type === "Identifier" &&
+      def.node.id.elements[1].name === ref.identifier.name,
+  );
+
+/**
  * Returns false for props of HOCs (e.g. `withRouter`) because they usually have side effects.
  *
  * @param {Scope.Reference} ref
@@ -89,11 +118,41 @@ export const isProp = (ref) =>
  * @param {Scope.Reference} ref
  * @returns {boolean}
  */
+export const isConstant = (ref) =>
+  (ref.resolved?.defs ?? []).some(
+    (def) =>
+      (def.node.type === "VariableDeclarator" &&
+        def.node.init?.type === "Literal") ||
+      def.node.init?.type === "TemplateLiteral" ||
+      def.node.init?.type === "ArrayExpression" ||
+      def.node.init?.type === "ObjectExpression",
+  );
+
+/**
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
 export const isUseRef = (ref) =>
   (ref.identifier.type === "Identifier" && ref.identifier.name === "useRef") ||
   (ref.identifier.parent.type === "MemberExpression" &&
     ref.identifier.parent.object.name === "React" &&
     ref.identifier.parent.property.name === "useRef");
+
+/**
+ * @param {Scope.Reference} ref
+ * @returns {boolean}
+ */
+export const isRef = (ref) =>
+  ref.resolved?.defs.some(
+    (def) =>
+      def.node.type === "VariableDeclarator" &&
+      def.node.init?.type === "CallExpression" &&
+      ((def.node.init.callee.type === "Identifier" &&
+        def.node.init.callee.name === "useRef") ||
+        (def.node.init.callee.type === "MemberExpression" &&
+          def.node.init.callee.object.name === "React" &&
+          def.node.init.callee.property.name === "useRef")),
+  );
 
 /**
  * Whether the reference's `current` property is being accessed.
@@ -164,35 +223,50 @@ export function getEffectDepsRefs(context, node) {
   return getDownstreamRefs(context, depsArr);
 }
 
-// NOTE: These return true for MemberExpressions *on* state, like `list.concat()`.
-// Arguably preferable, as mutating the state is functionally the same as calling the setter.
-// (Even though that is not recommended and should be prevented by a different rule).
-// And in the case of a prop, we can't differentiate state mutations from callbacks anyway.
 /**
  * @param {Rule.RuleContext} context
  * @param {Scope.Reference} ref
- * @returns {boolean}
+ * @param {(ref: Scope.Reference) => boolean} predicate
+ * @returns {boolean} Whether this reference eventually calls a function matching the given predicate.
  */
-export const isStateSetter = (context, ref) =>
+const isEventualCallTo = (context, ref, predicate) =>
+  // TODO: Should this be core to getUpstreamRefs?
+  // For functions, only traverse up them when they're actually called (i.e. are CallExpressions)?
+  // Not just referenced. But, seems rare to do that.
+  // I think this needs some refinement/double-checking still.
+  // But seems like an improvement nonetheless.
   getCallExpr(ref) !== undefined &&
-  getUpstreamRefs(context, ref).some((ref) => isUseState(ref));
+  getUpstreamRefs(context, ref).some(
+    // FIX: This misses when one reference is set exactly to another, and the former reference is called.
+    // The predicate will fail on the former reference, and the latter reference (which would pass the predicate)
+    // won't be checked because it's not a CallExpression itself.
+    // But that's basically renaming the variable, which is probably rare enough to ignore for now.
+    (ref) => getCallExpr(ref) !== undefined && predicate(ref),
+  );
+
 /**
  * @param {Rule.RuleContext} context
  * @param {Scope.Reference} ref
- * @returns {boolean}
+ * @returns {boolean} Whether this reference eventually calls a state setter function or a method on state.
  */
-export const isPropCallback = (context, ref) =>
-  getCallExpr(ref) !== undefined &&
-  getUpstreamRefs(context, ref).some((ref) => isProp(ref));
+export const callsStateSetter = (context, ref) =>
+  isEventualCallTo(context, ref, isStateSetter);
+
 /**
  * @param {Rule.RuleContext} context
  * @param {Scope.Reference} ref
- * @returns {boolean}
+ * @returns {boolean} Whether this reference eventually calls a prop function or a method on a prop.
  */
-export const isRefCall = (context, ref) =>
-  getCallExpr(ref) !== undefined &&
-  (isRefCurrent(ref) ||
-    getUpstreamRefs(context, ref).some((ref) => isUseRef(ref)));
+export const callsProp = (context, ref) =>
+  isEventualCallTo(context, ref, isProp);
+
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Scope.Reference} ref
+ * @returns {boolean} Whether this reference eventually calls a method on a ref.
+ */
+export const callsRef = (context, ref) =>
+  isEventualCallTo(context, ref, (ref) => isRefCurrent(ref) || isRef(ref));
 
 /**
  * @param context {Rule.RuleContext}

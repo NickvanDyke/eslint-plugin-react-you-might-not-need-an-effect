@@ -1,17 +1,17 @@
 import {
+  getArgsUpstreamRefs,
   getCallExpr,
-  getDownstreamRefs,
   getUpstreamRefs,
   isSynchronous,
 } from "../util/ast.js";
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
-  isStateSetter,
+  callsStateSetter,
   getUseStateDecl,
   isProp,
-  isUseState,
   hasCleanup,
+  isState,
   isUseEffect,
   getEffectFn,
 } from "../util/react.js";
@@ -42,23 +42,21 @@ export default {
       if (!effectFnRefs || !depsRefs) return;
 
       effectFnRefs
-        .filter((ref) => isStateSetter(context, ref))
+        .filter((ref) => callsStateSetter(context, ref))
         .filter((ref) => isSynchronous(ref.identifier, getEffectFn(node)))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
           const useStateNode = getUseStateDecl(context, ref);
           const stateName = (
-            useStateNode.id.elements[0] ?? useStateNode.id.elements[1]
+            useStateNode?.id.elements[0] ?? useStateNode?.id.elements[1]
           )?.name;
 
-          const argsUpstreamRefs = callExpr.arguments
-            .flatMap((arg) => getDownstreamRefs(context, arg))
-            .flatMap((ref) => getUpstreamRefs(context, ref));
+          const argsUpstreamRefs = getArgsUpstreamRefs(context, ref);
           const depsUpstreamRefs = depsRefs.flatMap((ref) =>
             getUpstreamRefs(context, ref),
           );
           const isSomeArgsInternal = argsUpstreamRefs.some(
-            (ref) => isUseState(ref) || isProp(ref),
+            (ref) => isState(ref) || isProp(ref),
           );
 
           const isAllArgsInDeps =

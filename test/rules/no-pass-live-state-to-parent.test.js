@@ -192,12 +192,35 @@ new MyRuleTester().run("no-pass-live-state-to-parent", rule, {
       code: js`
         const Child = ({ onFetched }) => {
           const [data, setData] = useState();
-          // No idea why someone would do this, but hey we can catch it
-          const onFetchedWrapper = onFetched
+          const onFetchedWrapper = (v) => onFetched(v);
 
           useEffect(() => {
             onFetchedWrapper(data);
           }, [onFetched, data]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidPassingLiveStateToParent",
+        },
+      ],
+    },
+    {
+      // FIX: Not sure why the change to isEventualCallTo makes onFetchedWrapper not get detected as a call to onFetched.
+      // Maybe because this is the only way for a reference to call another, without being a function or CallExpression itself?
+      name: "Pass live internal state via identical derived prop",
+      todo: true,
+      code: js`
+        const Child = ({ onFetched }) => {
+          const [data, setData] = useState();
+          // No idea why someone would do this. But good to know we catch it.
+          const onFetchedWrapper = onFetched;
+          // Passes when written as:
+          // const onFetchedWrapper = (v) => onFetched(v);
+
+          useEffect(() => {
+            onFetchedWrapper(data);
+          }, [onFetchedWrapper, data]);
         }
       `,
       errors: [
