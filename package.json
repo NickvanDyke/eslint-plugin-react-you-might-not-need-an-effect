@@ -58,7 +58,7 @@
   "peerDependencies": {
     "eslint": ">=8.40.0"
   },
-  "packageManager": "yarn@4.6.0",
+  "packageManager": "yarn@4.12.0",
   "simple-git-hooks": {
     "pre-commit": "yarn lint-staged"
   },

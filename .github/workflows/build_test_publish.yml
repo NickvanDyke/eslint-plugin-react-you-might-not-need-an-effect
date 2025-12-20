@@ -5,8 +5,9 @@ on:
     branches:
       - main
 
-env:
-  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
 
 jobs:
   build_and_test:
