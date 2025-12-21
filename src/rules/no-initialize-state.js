@@ -4,7 +4,7 @@ import {
   getEffectFn,
   getEffectFnRefs,
   getUseStateDecl,
-  callsStateSetter,
+  isStateSetterCall,
   isUseEffect,
 } from "../util/react.js";
 
@@ -35,7 +35,7 @@ export default {
       if (depsRefs.length > 0) return;
 
       effectFnRefs
-        .filter((ref) => callsStateSetter(context, ref))
+        .filter((ref) => isStateSetterCall(context, ref))
         .filter((ref) => isSynchronous(ref.identifier, getEffectFn(node)))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);

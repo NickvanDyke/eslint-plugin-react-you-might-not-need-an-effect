@@ -2,11 +2,11 @@ import { getArgsUpstreamRefs, getCallExpr } from "../util/ast.js";
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
-  callsProp,
+  isPropCall,
   isRef,
   hasCleanup,
   isUseEffect,
-  callsRef,
+  isRefCall,
 } from "../util/react.js";
 
 /**
@@ -38,7 +38,7 @@ export default {
       if (!effectFnRefs || !depsRefs) return;
 
       effectFnRefs
-        .filter((ref) => callsProp(context, ref))
+        .filter((ref) => isPropCall(context, ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
@@ -55,12 +55,12 @@ export default {
         });
 
       effectFnRefs
-        .filter((ref) => callsRef(context, ref))
+        .filter((ref) => isRefCall(context, ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 
           const passesDataToParent = getArgsUpstreamRefs(context, ref).some(
-            (ref) => callsProp(context, ref),
+            (ref) => isPropCall(context, ref),
           );
 
           if (passesDataToParent) {
@@ -72,7 +72,7 @@ export default {
         });
 
       effectFnRefs
-        .filter((ref) => callsProp(context, ref) && callsRef(context, ref))
+        .filter((ref) => isPropCall(context, ref) && isRefCall(context, ref))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
 

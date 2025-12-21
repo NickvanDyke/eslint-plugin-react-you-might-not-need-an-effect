@@ -6,7 +6,7 @@ import {
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
-  callsStateSetter,
+  isStateSetterCall,
   isProp,
   getUseStateDecl,
   isReactFunctionalComponent,
@@ -68,7 +68,7 @@ const findPropUsedToResetAllState = (
   useEffectNode,
 ) => {
   const stateSetterRefs = effectFnRefs.filter((ref) =>
-    callsStateSetter(context, ref),
+    isStateSetterCall(context, ref),
   );
 
   const isAllStateReset =

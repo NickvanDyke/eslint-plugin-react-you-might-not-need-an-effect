@@ -7,7 +7,7 @@ import {
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
-  callsProp,
+  isPropCall,
   isConstant,
   isRefCurrent,
   isUseState,
@@ -15,7 +15,7 @@ import {
   isProp,
   hasCleanup,
   isUseEffect,
-  callsRef,
+  isRefCall,
   getEffectFn,
 } from "../util/react.js";
 
@@ -43,8 +43,8 @@ export default {
       if (!effectFnRefs || !depsRefs) return;
 
       effectFnRefs
-        .filter((ref) => callsProp(context, ref))
-        .filter((ref) => !callsRef(context, ref))
+        .filter((ref) => isPropCall(context, ref))
+        .filter((ref) => !isRefCall(context, ref))
         .filter((ref) => isSynchronous(ref.identifier, getEffectFn(node)))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);

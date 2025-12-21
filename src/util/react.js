@@ -228,7 +228,7 @@ export function getEffectDepsRefs(context, node) {
  * @param {Scope.Reference} ref
  * @returns {boolean} Whether this reference eventually calls a state setter function or a method on state.
  */
-export const callsStateSetter = (context, ref) =>
+export const isStateSetterCall = (context, ref) =>
   isEventualCallTo(context, ref, isStateSetter);
 
 /**
@@ -236,7 +236,7 @@ export const callsStateSetter = (context, ref) =>
  * @param {Scope.Reference} ref
  * @returns {boolean} Whether this reference eventually calls a prop function or a method on a prop.
  */
-export const callsProp = (context, ref) =>
+export const isPropCall = (context, ref) =>
   isEventualCallTo(context, ref, isProp);
 
 /**
@@ -244,7 +244,7 @@ export const callsProp = (context, ref) =>
  * @param {Scope.Reference} ref
  * @returns {boolean} Whether this reference eventually calls a method on a ref.
  */
-export const callsRef = (context, ref) =>
+export const isRefCall = (context, ref) =>
   isEventualCallTo(context, ref, (ref) => isRefCurrent(ref) || isRef(ref));
 
 /**

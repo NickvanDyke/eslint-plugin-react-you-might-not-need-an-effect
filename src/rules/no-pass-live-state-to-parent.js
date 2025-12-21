@@ -6,7 +6,7 @@ import {
 import {
   getEffectFnRefs,
   getEffectDepsRefs,
-  callsProp,
+  isPropCall,
   isState,
   isUseEffect,
   getEffectFn,
@@ -37,7 +37,7 @@ export default {
       if (!effectFnRefs || !depsRefs) return;
 
       effectFnRefs
-        .filter((ref) => callsProp(context, ref))
+        .filter((ref) => isPropCall(context, ref))
         .filter((ref) => isSynchronous(ref.identifier, getEffectFn(node)))
         .forEach((ref) => {
           const callExpr = getCallExpr(ref);
