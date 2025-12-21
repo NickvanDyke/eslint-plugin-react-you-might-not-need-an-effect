@@ -8,6 +8,7 @@ new MyRuleTester().run("no-pass-ref-to-parent", rule, {
       code: js`
         const Child = ({ onTextChanged }) => {
           const [text, setText] = useState();
+
           useEffect(() => {
             onTextChanged(text);
           }, [onTextChanged, text]);
@@ -29,6 +30,7 @@ new MyRuleTester().run("no-pass-ref-to-parent", rule, {
       code: js`
         function Form({ onClose }) {
           const [isOpen, setIsOpen] = useState(true);
+
           useEffect(() => {
             if (!isOpen) {
               onClose();
@@ -42,6 +44,7 @@ new MyRuleTester().run("no-pass-ref-to-parent", rule, {
       code: js`
         const Child = ({ onFetched }) => {
           const data = useSomeAPI();
+
           useEffect(() => {
             onFetched(data);
           }, [onFetched, data]);
@@ -85,8 +88,30 @@ new MyRuleTester().run("no-pass-ref-to-parent", rule, {
       code: js`
         const Child = ({ onRef }) => {
           const ref = useRef();
+
           useEffect(() => {
             onRef(ref.current);
+          }, [onRef, ref.current]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidPassingRefToParent",
+        },
+      ],
+    },
+    {
+      name: "Pass derived ref.current to parent callback",
+      code: js`
+        const Child = ({ onRef }) => {
+          const ref = useRef();
+
+          useEffect(() => {
+            const element = ref.current;
+
+            if (element) {
+              onRef(element);
+            }
           }, [onRef, ref.current]);
         }
       `,
@@ -101,6 +126,7 @@ new MyRuleTester().run("no-pass-ref-to-parent", rule, {
       code: js`
         const Child = ({ onRef }) => {
           const ref = useRef();
+
           useEffect(() => {
             onRef(ref);
           }, [onRef, ref]);
@@ -134,10 +160,34 @@ new MyRuleTester().run("no-pass-ref-to-parent", rule, {
       code: js`
         const Child = ({ onClicked }) => {
           const ref = useRef();
+
           useEffect(() => {
             ref.current.addEventListener('click', (event) => {
               onClicked(event);
             });
+          }, [onClicked]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidPropCallbackInRefCallback",
+        },
+      ],
+    },
+    {
+      name: "Register callback on derived local ref to pass event to parent",
+      code: js`
+        const Child = ({ onClicked }) => {
+          const ref = useRef();
+
+          useEffect(() => {
+            const element = ref.current;
+
+            if (element) {
+              element.addEventListener('click', (event) => {
+                onClicked(event);
+              });
+            }
           }, [onClicked]);
         }
       `,

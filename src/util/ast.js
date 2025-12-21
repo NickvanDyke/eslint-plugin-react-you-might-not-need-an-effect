@@ -195,3 +195,13 @@ export const getRef = (context, identifier) =>
   context.sourceCode
     .getScope(identifier)
     ?.references.find((ref) => ref.identifier == identifier);
+
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Scope.Reference} ref
+ * @param {(ref: Scope.Reference) => boolean} predicate
+ * @returns {boolean} Whether this reference eventually calls a function matching the given predicate.
+ */
+export const isEventualCallTo = (context, ref, predicate) =>
+  getCallExpr(ref) !== undefined &&
+  getUpstreamRefs(context, ref).some(predicate);

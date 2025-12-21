@@ -1,4 +1,4 @@
-import { getCallExpr, getDownstreamRefs, getUpstreamRefs } from "./ast.js";
+import { getDownstreamRefs, getUpstreamRefs, isEventualCallTo } from "./ast.js";
 
 /**
  * @import {Scope,Rule} from 'eslint'
@@ -222,27 +222,6 @@ export function getEffectDepsRefs(context, node) {
 
   return getDownstreamRefs(context, depsArr);
 }
-
-/**
- * @param {Rule.RuleContext} context
- * @param {Scope.Reference} ref
- * @param {(ref: Scope.Reference) => boolean} predicate
- * @returns {boolean} Whether this reference eventually calls a function matching the given predicate.
- */
-const isEventualCallTo = (context, ref, predicate) =>
-  // TODO: Should this be core to getUpstreamRefs?
-  // For functions, only traverse up them when they're actually called (i.e. are CallExpressions)?
-  // Not just referenced. But, seems rare to do that.
-  // I think this needs some refinement/double-checking still.
-  // But seems like an improvement nonetheless.
-  getCallExpr(ref) !== undefined &&
-  getUpstreamRefs(context, ref).some(
-    // FIX: This misses when one reference is set exactly to another, and the former reference is called.
-    // The predicate will fail on the former reference, and the latter reference (which would pass the predicate)
-    // won't be checked because it's not a CallExpression itself.
-    // But that's basically renaming the variable, which is probably rare enough to ignore for now.
-    (ref) => getCallExpr(ref) !== undefined && predicate(ref),
-  );
 
 /**
  * @param {Rule.RuleContext} context

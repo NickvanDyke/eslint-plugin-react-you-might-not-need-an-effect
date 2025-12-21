@@ -206,10 +206,7 @@ new MyRuleTester().run("no-pass-live-state-to-parent", rule, {
       ],
     },
     {
-      // FIX: Not sure why the change to isEventualCallTo makes onFetchedWrapper not get detected as a call to onFetched.
-      // Maybe because this is the only way for a reference to call another, without being a function or CallExpression itself?
       name: "Pass live internal state via identical derived prop",
-      todo: true,
       code: js`
         const Child = ({ onFetched }) => {
           const [data, setData] = useState();
@@ -221,6 +218,24 @@ new MyRuleTester().run("no-pass-live-state-to-parent", rule, {
           useEffect(() => {
             onFetchedWrapper(data);
           }, [onFetchedWrapper, data]);
+        }
+      `,
+      errors: [
+        {
+          messageId: "avoidPassingLiveStateToParent",
+        },
+      ],
+    },
+    {
+      name: "Pass live internal state via later-destructured prop",
+      code: js`
+        const Child = (props) => {
+          const [data, setData] = useState();
+          const { onFetched } = props;
+
+          useEffect(() => {
+            onFetched(data);
+          }, [onFetched, data]);
         }
       `,
       errors: [
