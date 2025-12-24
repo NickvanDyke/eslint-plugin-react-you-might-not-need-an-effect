@@ -1,5 +1,8 @@
 # ESLint - React - You Might Not Need An Effect
 
+![NPM version](https://img.shields.io/npm/v/eslint-plugin-react-you-might-not-need-an-effect
+) ![NPM Downloads](https://img.shields.io/npm/dw/eslint-plugin-react-you-might-not-need-an-effect)
+
 ESLint plugin to catch when [You Might Not Need An Effect](https://react.dev/learn/you-might-not-need-an-effect) (and more) to make your code easier to follow, faster to run, and less error-prone. Highly recommended for new React developers as you learn its mental model, and even experienced developers may be surprised!
 
 The new [`eslint-plugin-react-hooks/set-state-in-effect`](https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect) flags synchronous `setState` calls inside effects, helping prevent unnecessary re-renders. However, unnecessary effects aren’t limited to synchronous `setState` calls. In contrast, this plugin:
