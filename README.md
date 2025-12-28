@@ -92,6 +92,7 @@ function Form() {
 
   const [fullName, setFullName] = useState('');
   useEffect(() => {
+    // ❌ Avoid storing derived state. Compute "fullName" directly during render, optionally with `useMemo` if it's expensive.
     setFullName(firstName + ' ' + lastName);
   }, [firstName, lastName]);
 }
@@ -106,6 +107,7 @@ function Form() {
   const [prefixedName, setPrefixedName] = useState();
 
   useEffect(() => {
+    // ❌ Avoid storing derived state. "prefixedName" is only set here, and thus could be computed directly during render.
     setPrefixedName(prefix + name)
   }, [prefix, name]);
 }
@@ -122,6 +124,7 @@ function Game() {
 
   useEffect(() => {
     if (round > 10) {
+      // ❌ Avoid chaining state changes. When possible, update all relevant state simultaneously.
       setIsGameOver(true);
     }
   }, [round]);
@@ -136,6 +139,7 @@ Disallow using state and an effect as an event handler:
 function ProductPage({ product, addToCart }) {
   useEffect(() => {
     if (product.isInCart) {
+      // ❌ Avoid using state and effects as an event handler. Instead, call the event handling code directly when the event occurs.
       showNotification(`Added ${product.name} to the shopping cart!`);
     }
   }, [product]);
@@ -152,6 +156,7 @@ function List({ items }) {
   const [selection, setSelection] = useState(null);
 
   useEffect(() => {
+    // ❌ Avoid adjusting state when a prop changes. Instead, adjust the state directly during render, or refactor your state to avoid this need entirely.
     setSelection(null);
   }, [items]);
 }
@@ -166,6 +171,7 @@ function List({ items }) {
   const [selection, setSelection] = useState(null);
 
   useEffect(() => {
+    // ❌ Avoid resetting all state when a prop changes. If "items" is a key, pass it as `key` instead so React will reset the component.
     setSelection(null);
   }, [items]);
 }
@@ -180,6 +186,7 @@ function Child({ onTextChanged }) {
   const [text, setText] = useState();
 
   useEffect(() => {
+    // ❌ Avoid passing live state to parents in an effect. Instead, lift the state to the parent and pass it down to the child as a prop.
     onTextChanged(text);
   }, [onTextChanged, text]);
 }
@@ -194,6 +201,7 @@ function Child({ onDataFetched }) {
   const { data } = useQuery('/data')
 
   useEffect(() => {
+    // ❌ Avoid passing data to parents in an effect. Instead, let the parent fetch the data itself and pass it down to the child as a prop.
     onDataFetched(data)
   }, [data, onDataFetched]);
 }
@@ -201,28 +209,43 @@ function Child({ onDataFetched }) {
 
 ### `no-pass-ref-to-parent` — [docs](https://react.dev/reference/react/forwardRef)
 
-Disallow passing refs to parents in an effect. Use `forwardRef` instead:
+Disallow passing refs to parents in an effect.
 
 ```js
 function Child({ onRef }) {
   const ref = useRef();
 
   useEffect(() => {
+    // ❌ Avoid passing refs to parents in an effect. Use `forwardRef` instead.
     onRef(ref.current);
   }, [onRef, ref.current]);
 }
 ```
 
-Disallow calling props inside callbacks registered on refs in an effect. Use `forwardRef` to register the callback in the parent instead.
+Disallow calling props inside callbacks registered on refs in an effect.
 
 ```js
 const Child = ({ onClicked }) => {
   const ref = useRef();
   useEffect(() => {
     ref.current.addEventListener('click', (event) => {
+      // ❌ Avoid calling props inside callbacks registered on refs in an effect. Use `forwardRef` to register the callback in the parent instead.
       onClicked(event);
     });
   }, [onClicked]);
+}
+```
+
+Disallow receiving refs from parents to use in an effect.
+
+```js
+const Child = ({ ref }) => {
+  useEffect(() => {
+    // ❌ Avoid receiving refs from parents to use in an effect. Use `forwardRef` instead.
+    ref.current.addEventListener('click', (event) => {
+      console.log('Clicked', event);
+    });
+  }, [ref]);
 }
 ```
 
@@ -235,6 +258,7 @@ function Component() {
   const [state, setState] = useState();
 
   useEffect(() => {
+    // ❌ Avoid initializing state in an effect. Instead, initialize "state"'s `useState()` with "Hello World". For SSR hydration, prefer `useSyncExternalStore()`.
     setState("Hello World");
   }, []);
 }
@@ -246,6 +270,7 @@ Disallow empty effects:
 
 ```js
 function Component() {
+  // ❌ This effect is empty and could be removed.
   useEffect(() => {}, []);
 }
 ```
