@@ -86,7 +86,7 @@ const findPropUsedToResetAllState = (
 
 const isSetStateToInitialValue = (context, setterRef) => {
   const setStateToValue = getCallExpr(setterRef).arguments[0];
-  const stateInitialValue = getUseStateDecl(context, setterRef).init
+  const stateInitialValue = getUseStateDecl(context, setterRef)?.init
     .arguments[0];
 
   // `useState()` (with no args) defaults to `undefined`,
