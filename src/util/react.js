@@ -53,15 +53,18 @@ export const isCustomHook = (node) =>
   node.id.name[3] === node.id.name[3].toUpperCase();
 
 /**
- * @param {Scope.Reference} ref
+ * @param {Rule.Node} node
  * @returns {boolean}
  */
-export const isUseState = (ref) =>
-  (ref.identifier.type === "Identifier" &&
-    ref.identifier.name === "useState") ||
-  (ref.identifier.parent.type === "MemberExpression" &&
-    ref.identifier.parent.object.name === "React" &&
-    ref.identifier.parent.property.name === "useState");
+export const isUseState = (node) =>
+  (node.type === "Identifier" && node.name === "useState") ||
+  (node.type === "MemberExpression" &&
+    node.object.name === "React" &&
+    node.property.name === "useState") ||
+  // Support passing `ref.identifier` directly for convenience
+  (node.parent.type === "MemberExpression" &&
+    node.parent.object.name === "React" &&
+    node.parent.property.name === "useState");
 
 /**
  * @param {Scope.Reference} ref
@@ -71,6 +74,8 @@ export const isState = (ref) =>
   ref.resolved?.defs.some(
     (def) =>
       def.node.type === "VariableDeclarator" &&
+      def.node.init?.type === "CallExpression" &&
+      isUseState(def.node.init.callee) &&
       def.node.id.type === "ArrayPattern" &&
       (def.node.id.elements.length === 1 ||
         def.node.id.elements.length === 2) &&
@@ -86,6 +91,8 @@ export const isStateSetter = (ref) =>
   ref.resolved?.defs.some(
     (def) =>
       def.node.type === "VariableDeclarator" &&
+      def.node.init?.type === "CallExpression" &&
+      isUseState(def.node.init.callee) &&
       def.node.id.type === "ArrayPattern" &&
       def.node.id.elements.length === 2 &&
       def.node.id.elements[1]?.type === "Identifier" &&
@@ -254,7 +261,7 @@ export const isRefCall = (context, ref) =>
  */
 export const getUseStateDecl = (context, ref) => {
   let node = getUpstreamRefs(context, ref).find((ref) =>
-    isUseState(ref),
+    isUseState(ref.identifier),
   )?.identifier;
   while (node && node.type !== "VariableDeclarator") {
     node = node.parent;

@@ -88,6 +88,42 @@ new MyRuleTester().run("no-reset-all-state-on-prop-change", rule, {
         }
       `,
     },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/55
+      name: "Set state differently in callback to state-like hook",
+      code: js`
+        const Foo = () => {
+          const [_0, setState] = useState(false);
+          const [_1, startTransition] = useTransition();
+
+          useEffect(() => {
+            startTransition(() => {
+              setState(true);
+            });
+          }, []);
+
+          return null;
+        };
+      `,
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/55
+      name: "Set state differently in callback to state-like hook",
+      code: js`
+        const Foo = () => {
+          const [_0, setState] = React.useState(false);
+          const [_1, startTransition] = React.useTransition();
+
+          useEffect(() => {
+            startTransition(() => {
+              setState(true);
+            });
+          }, []);
+
+          return null;
+        };
+      `,
+    },
   ],
   invalid: [
     {
