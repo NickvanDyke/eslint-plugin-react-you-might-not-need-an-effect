@@ -401,6 +401,49 @@ describe("recommended rules on real-world code", () => {
         }
       `,
       },
+      {
+        // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/57
+        name: "TanStack useInfinityQuery useInView",
+        code: js`
+          import React from 'react'
+          import { useInView } from 'react-intersection-observer'
+          import { useInfiniteQuery } from '@tanstack/react-query'
+
+          function Example() {
+            const { ref, inView } = useInView()
+
+            const {
+              status,
+              data,
+              error,
+              isFetching,
+              isFetchingNextPage,
+              isFetchingPreviousPage,
+              fetchNextPage,
+              fetchPreviousPage,
+              hasNextPage,
+              hasPreviousPage,
+            } = useInfiniteQuery({
+              queryKey: ['projects'],
+              queryFn: async ({
+                pageParam,
+              }) => {
+                const response = await fetch('/api/projects?cursor=' + pageParam)
+                return await response.json()
+              },
+              initialPageParam: 0,
+              getPreviousPageParam: (firstPage) => firstPage.previousId,
+              getNextPageParam: (lastPage) => lastPage.nextId,
+            })
+
+            React.useEffect(() => {
+              if (inView && hasNextPage && !isFetchingNextPage) {
+                fetchNextPage()
+              }
+            }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
+          }
+        `,
+      },
     ].forEach(({ name, code }) => {
       it(name, async () => {
         const results = await eslint.lintText(code);
