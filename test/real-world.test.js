@@ -444,6 +444,54 @@ describe("recommended rules on real-world code", () => {
           }
         `,
       },
+      {
+        // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/57
+        name: "TanStack useInfinityQuery useInView with state, prop and data in queryKey",
+        code: js`
+          import React from 'react'
+          import { useInView } from 'react-intersection-observer'
+          import { useInfiniteQuery } from '@tanstack/react-query'
+
+          function Example(props) {
+            const { ref, inView } = useInView()
+            const [state] = React.useState(0)
+            const search = useSearchParams()
+
+            const {
+              status,
+              data,
+              error,
+              isFetching,
+              isFetchingNextPage,
+              isFetchingPreviousPage,
+              fetchNextPage,
+              fetchPreviousPage,
+              hasNextPage,
+              hasPreviousPage,
+            } = useInfiniteQuery({
+              // Makes the plugin interpret fetchNextPage as a state/prop/data function
+              queryKey: ['projects', state, props, search],
+              queryFn: async ({
+                pageParam,
+              }) => {
+                const response = await fetch('/api/projects?cursor=' + pageParam)
+                return await response.json()
+              },
+              initialPageParam: 0,
+              getPreviousPageParam: (firstPage) => firstPage.previousId,
+              getNextPageParam: (lastPage) => lastPage.nextId,
+            })
+
+            React.useEffect(() => {
+              // TODO: Should maybe ideally also not flag no-event-handler here?
+              // if (inView && hasNextPage && !isFetchingNextPage) {
+                // Must have "void" so we can infer it's an async function
+                void fetchNextPage()
+              // }
+            }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
+          }
+        `,
+      },
     ].forEach(({ name, code }) => {
       it(name, async () => {
         const results = await eslint.lintText(code);

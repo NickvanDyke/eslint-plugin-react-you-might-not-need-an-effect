@@ -75,7 +75,10 @@ import globals from "globals";
 
 ### Suggested
 
-The plugin can provide more accurate analysis when you pass the correct dependencies to your effects — consider using [`react-hooks/exhaustive-deps`](https://www.npmjs.com/package/eslint-plugin-react-hooks).
+Consider enforcing these rules in your codebase for more accurate analysis.
+
+- [`react-hooks/exhaustive-deps`](https://www.npmjs.com/package/eslint-plugin-react-hooks): the plugin assumes your effects receive correct dependencies.
+- [`typescript-eslint/no-floating-promises`](https://typescript-eslint.io/rules/no-floating-promises/): helps the plugin infer calls to asynchronous functions.
 
 ## 🔎 Rules
 

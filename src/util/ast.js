@@ -173,6 +173,10 @@ export const isSynchronous = (node, within) => {
   } else if (
     // Obviously not immediate if async. I think this never occurs in isolation from the below conditions? But just in case for now.
     node.async ||
+    // Present when calling externally-defined async functions (`node.async` is only true on the function definition).
+    // We'll play it safe and assume that any state, props, etc. used in this function or its upstreams may be used asynchronously.
+    node.type === "AwaitExpression" ||
+    (node.type === "UnaryExpression" && node.operator === "void") ||
     // Inside a named or anonymous function that may be called later, either as a callback or by the developer.
     node.type === "FunctionDeclaration" ||
     node.type === "FunctionExpression" ||
