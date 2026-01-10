@@ -6,7 +6,10 @@ const assert = require("assert");
 // eslint-disable-next-line n/no-missing-require
 const plugin = require("../dist/index.cjs");
 
-describe("recommended config", () => {
+// Kinda duplicates `config.test.js` because legacy ESLint already `require`s the CJS build of the plugin.
+// But I guess this file verifies that users can `require` the CJS build directly for their config?
+// Idk, maybe delete.
+describe("CJS build", () => {
   const codeThatDerivesState = js`
     import { useState, useEffect } from "react";
 
@@ -20,7 +23,7 @@ describe("recommended config", () => {
     };
   `;
 
-  it("flat", async () => {
+  it("flat config", async () => {
     const results = await new ESLint({
       // Use `overrideConfig` and `overrideConfigFile: true` to ignore the project's config
       overrideConfigFile: true,
@@ -34,7 +37,7 @@ describe("recommended config", () => {
     );
   });
 
-  it("legacy", async () => {
+  it("legacy config", async () => {
     const results = await new LegacyESLint({
       overrideConfig: {
         extends: [
@@ -52,25 +55,6 @@ describe("recommended config", () => {
       results[0].messages
         .map((m) => m.ruleId)
         .includes("react-you-might-not-need-an-effect/no-derived-state"),
-    );
-  });
-
-  it("should not report no-derived-state when explicitly disabled", async () => {
-    const eslint = new ESLint({
-      overrideConfig: [
-        plugin.configs.recommended,
-        {
-          rules: {
-            "react-you-might-not-need-an-effect/no-derived-state": "off",
-          },
-        },
-      ],
-    });
-
-    const results = await eslint.lintText(codeThatDerivesState);
-    const ruleIds = results[0].messages.map((m) => m.ruleId);
-    assert.ok(
-      !ruleIds.includes("react-you-might-not-need-an-effect/no-derived-state"),
     );
   });
 });

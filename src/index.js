@@ -32,10 +32,12 @@ const plugin = {
   },
 };
 
-const recommendedRules = Object.keys(plugin.rules).reduce((acc, ruleName) => {
-  acc[plugin.meta.name + "/" + ruleName] = "warn";
-  return acc;
-}, {});
+const rules = (severity) =>
+  Object.keys(plugin.rules).reduce((acc, ruleName) => {
+    acc[plugin.meta.name + "/" + ruleName] = severity;
+    return acc;
+  }, {});
+
 const languageOptions = {
   globals: {
     // Required so we can resolve global references to their upstream global variables
@@ -48,21 +50,36 @@ const languageOptions = {
   },
 };
 
+const flatConfig = {
+  files: ["**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"],
+  plugins: {
+    // Object.assign above so we can reference `plugin` here
+    [plugin.meta.name]: plugin,
+  },
+  languageOptions,
+};
+
+const legacyConfig = {
+  plugins: [plugin.meta.name],
+  ...languageOptions,
+};
+
 Object.assign(plugin.configs, {
-  // flat config format
   recommended: {
-    files: ["**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"],
-    plugins: {
-      // Object.assign above so we can reference `plugin` here
-      [plugin.meta.name]: plugin,
-    },
-    rules: recommendedRules,
-    languageOptions,
+    ...flatConfig,
+    rules: rules("warn"),
+  },
+  strict: {
+    ...flatConfig,
+    rules: rules("error"),
   },
   "legacy-recommended": {
-    plugins: [plugin.meta.name],
-    rules: recommendedRules,
-    ...languageOptions,
+    ...legacyConfig,
+    rules: rules("warn"),
+  },
+  "legacy-strict": {
+    ...legacyConfig,
+    rules: rules("error"),
   },
 });
 

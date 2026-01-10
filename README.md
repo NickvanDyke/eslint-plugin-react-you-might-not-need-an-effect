@@ -31,14 +31,18 @@ yarn add -D eslint-plugin-react-you-might-not-need-an-effect
 
 ### Recommended
 
-Add the plugin's recommended config to your ESLint configuration file to enable every rule as a warning.
+Add the plugin's `recommended` config to your ESLint configuration file to enable every rule as a warning.
+
+Experimentally, use the `strict` config instead to enable every rule as an error.
 
 #### Legacy config (`.eslintrc`)
 
 ```js
 {
   "extends": [
-    "plugin:react-you-might-not-need-an-effect/legacy-recommended"
+    "plugin:react-you-might-not-need-an-effect/legacy-recommended",
+    // or
+    "plugin:react-you-might-not-need-an-effect/legacy-strict",
   ],
 }
 ```
@@ -49,13 +53,15 @@ Add the plugin's recommended config to your ESLint configuration file to enable 
 import reactYouMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect";
 
 export default [
-  reactYouMightNotNeedAnEffect.configs.recommended
+  reactYouMightNotNeedAnEffect.configs.recommended,
+  // or
+  reactYouMightNotNeedAnEffect.configs.strict,
 ];
 ```
 
 ### Custom
 
-If not using the recommended config, manually set your `languageOptions`:
+If not using an included config, manually set your `languageOptions`:
 
 ```js
 import globals from "globals";

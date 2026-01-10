@@ -4,7 +4,7 @@ import { js } from "./rule-tester.js";
 import assert from "assert";
 import plugin from "../src/index.js";
 
-describe("recommended config", () => {
+describe("config", () => {
   const codeThatDerivesState = js`
     import { useState, useEffect } from "react";
 
@@ -18,39 +18,43 @@ describe("recommended config", () => {
     };
   `;
 
-  it("flat", async () => {
-    const results = await new ESLint({
-      // Use `overrideConfig` and `overrideConfigFile: true` to ignore the project's config
-      overrideConfigFile: true,
-      overrideConfig: [plugin.configs.recommended],
-    }).lintText(codeThatDerivesState);
+  ["flat", "legacy"].forEach((configType) => {
+    ["recommended", "strict"].forEach((severity) => {
+      it(`${configType} - ${severity}`, async () => {
+        const eslint =
+          configType === "flat"
+            ? // Internally imports the ESM plugin
+              new ESLint({
+                // Use `overrideConfig` and `overrideConfigFile: true` to ignore the project's config
+                overrideConfigFile: true,
+                overrideConfig: [plugin.configs[severity]],
+              })
+            : // Internally requires the CJS plugin (from `dist`)
+              // NOTE: Thus must `yarn build` before running this test!
+              new LegacyESLint({
+                overrideConfig: {
+                  extends: [
+                    `plugin:react-you-might-not-need-an-effect/legacy-${severity}`,
+                  ],
+                  parserOptions: {
+                    // To support the syntax in the code under test
+                    ecmaVersion: 2020,
+                    sourceType: "module",
+                  },
+                },
+              });
+        const results = await eslint.lintText(codeThatDerivesState);
 
-    assert.ok(
-      results[0].messages
-        .map((m) => m.ruleId)
-        .includes("react-you-might-not-need-an-effect/no-derived-state"),
-    );
-  });
-
-  it("legacy", async () => {
-    const results = await new LegacyESLint({
-      overrideConfig: {
-        extends: [
-          "plugin:react-you-might-not-need-an-effect/legacy-recommended",
-        ],
-        parserOptions: {
-          // To support the syntax in the code under test
-          ecmaVersion: 2020,
-          sourceType: "module",
-        },
-      },
-    }).lintText(codeThatDerivesState);
-
-    assert.ok(
-      results[0].messages
-        .map((m) => m.ruleId)
-        .includes("react-you-might-not-need-an-effect/no-derived-state"),
-    );
+        assert.equal(
+          results[0].messages.find(
+            (m) =>
+              m.ruleId ===
+              "react-you-might-not-need-an-effect/no-derived-state",
+          )?.severity,
+          severity === "recommended" ? 1 : 2,
+        );
+      });
+    });
   });
 
   it("should not report no-derived-state when explicitly disabled", async () => {
@@ -66,9 +70,12 @@ describe("recommended config", () => {
     });
 
     const results = await eslint.lintText(codeThatDerivesState);
-    const ruleIds = results[0].messages.map((m) => m.ruleId);
-    assert.ok(
-      !ruleIds.includes("react-you-might-not-need-an-effect/no-derived-state"),
+    assert.equal(
+      results[0].messages.find(
+        (m) =>
+          m.ruleId === "react-you-might-not-need-an-effect/no-derived-state",
+      ),
+      undefined,
     );
   });
 });
