@@ -64,7 +64,7 @@ export default {
               // TODO: Ideally would use isState and isRef, not the hooks.
               // But because it goes to leaves. Must be some other way?
               !isUseState(ref.identifier) &&
-              !isProp(ref) &&
+              !isProp(context, ref) &&
               !isUseRef(ref) &&
               !isRefCurrent(ref) &&
               !isConstant(ref),

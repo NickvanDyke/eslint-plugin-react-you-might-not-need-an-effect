@@ -1,4 +1,9 @@
-import { getDownstreamRefs, getUpstreamRefs, isEventualCallTo } from "./ast.js";
+import {
+  getDownstreamRefs,
+  getUpstreamRefs,
+  isEventualCallTo,
+  getRef,
+} from "./ast.js";
 
 /**
  * @import {Scope,Rule} from 'eslint'
@@ -17,26 +22,44 @@ export const isReactFunctionalComponent = (node) =>
   node.id.name[0].toUpperCase() === node.id.name[0];
 
 /**
- * Excludes known pure HOCs like `memo` and `forwardRef`.
- * Basically this is meant to detect custom HOCs that may have side effects, particularly when using their props.
+ * Determines whether `node` is a React HOC, whose props are likely to have side effects.
  *
- * TODO: Will not detect when the component is defined normally and then exported wrapped in an HOC.
- * e.g. `const MyComponent = (props) => {...}; export default memo(MyComponent);`
+ * Heuristic: If the component variable or its function is wrapped in a function call other than known pure HOCs (`memo` and `forwardRef`).
  *
+ * @param {Rule.RuleContext} context
  * @param {Rule.Node} node
- * @returns {boolean}
  */
-export const isReactFunctionalHOC = (node) =>
-  node.type === "VariableDeclarator" &&
-  node.init &&
-  node.init.type === "CallExpression" &&
-  node.init.callee.type === "Identifier" &&
-  !["memo", "forwardRef"].includes(node.init.callee.name) &&
-  node.init.arguments.length > 0 &&
-  (node.init.arguments[0].type === "ArrowFunctionExpression" ||
-    node.init.arguments[0].type === "FunctionExpression") &&
-  node.id.type === "Identifier" &&
-  node.id.name[0].toUpperCase() === node.id.name[0];
+export const isReactFunctionalHOC = (context, node) => {
+  const knownPureHocs = ["memo", "forwardRef"];
+
+  // e.g. `const MyComponent = withRouter(() => ...)`
+  const isWrappedInline = (node) =>
+    node.type === "VariableDeclarator" &&
+    node.init.type === "CallExpression" &&
+    node.init.callee.type === "Identifier" &&
+    !knownPureHocs.includes(node.init.callee.name) &&
+    node.init.arguments.length > 0 &&
+    (node.init.arguments[0].type === "ArrowFunctionExpression" ||
+      node.init.arguments[0].type === "FunctionExpression");
+
+  // e.g. `export default withRouter(MyComponent);`
+  const isWrappedSeparately = (node) =>
+    getRef(context, node.id)
+      ?.resolved?.references.filter((ref) => {
+        const parent = ref.identifier.parent;
+        return (
+          parent?.type === "CallExpression" &&
+          parent.arguments.includes(ref.identifier)
+        );
+      })
+      .map((ref) => ref.identifier.parent)
+      .some((wrapper) => !knownPureHocs.includes(wrapper.callee.name)) ?? false;
+
+  return (
+    isReactFunctionalComponent(node) &&
+    (isWrappedInline(node) || isWrappedSeparately(node))
+  );
+};
 
 /**
  * @param {Rule.Node} node
@@ -102,10 +125,11 @@ export const isStateSetter = (ref) =>
 /**
  * Returns false for props of HOCs (e.g. `withRouter`) because they usually have side effects.
  *
+ * @param {Rule.RuleContext} context
  * @param {Scope.Reference} ref
  * @returns {boolean}
  */
-export const isProp = (ref) =>
+export const isProp = (context, ref) =>
   ref.resolved?.defs.some((def) => {
     const declaringNode =
       def.node.type === "ArrowFunctionExpression"
@@ -116,7 +140,7 @@ export const isProp = (ref) =>
     return (
       def.type === "Parameter" &&
       ((isReactFunctionalComponent(declaringNode) &&
-        !isReactFunctionalHOC(declaringNode)) ||
+        !isReactFunctionalHOC(context, declaringNode)) ||
         isCustomHook(declaringNode))
     );
   });
@@ -244,7 +268,7 @@ export const isStateSetterCall = (context, ref) =>
  * @returns {boolean} Whether this reference eventually calls a prop function or a method on a prop.
  */
 export const isPropCall = (context, ref) =>
-  isEventualCallTo(context, ref, isProp);
+  isEventualCallTo(context, ref, (ref) => isProp(context, ref));
 
 /**
  * @param {Rule.RuleContext} context

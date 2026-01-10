@@ -38,7 +38,7 @@ export default {
 
       const isSomeDepsProps = depsRefs
         .flatMap((ref) => getUpstreamRefs(context, ref))
-        .some((ref) => isProp(ref));
+        .some((ref) => isProp(context, ref));
 
       effectFnRefs
         .filter((ref) => isStateSetterCall(context, ref))
@@ -48,7 +48,7 @@ export default {
 
           // Avoid overlap with no-derived-state
           const isSomeArgsProps = getArgsUpstreamRefs(context, ref).some(
-            (ref) => isProp(ref),
+            (ref) => isProp(context, ref),
           );
 
           if (isSomeDepsProps && !isSomeArgsProps) {

@@ -82,6 +82,52 @@ new MyRuleTester().run("no-pass-live-state-to-parent", rule, {
       `,
     },
     {
+      name: "Pass internal state to weird HOC prop",
+      code: js`
+        const MyComponent = inject('ourStore')(observer(({ ourStore }) => {
+          const [option, setOption] = useState();
+
+          useEffect(() => {
+            ourStore.push(option);
+          }, [option]);
+        }));
+      `,
+    },
+    {
+      name: "Pass internal state to separately-wrapped HOC prop",
+      code: js`
+        import { withRouter } from 'react-router-dom';
+
+        const MyComponent = ({ history }) => {
+          const [option, setOption] = useState();
+
+          useEffect(() => {
+            history.push(option);
+          }, [option]);
+        };
+
+        const wrapped = withRouter(MyComponent);
+      `,
+    },
+    {
+      // https://github.com/NickvanDyke/eslint-plugin-react-you-might-not-need-an-effect/issues/46
+      name: "Pass internal state to weirdly-separately-wrapped HOC prop",
+      code: js`
+        import { withRouter } from 'react-router-dom';
+
+        const MyComponent = ({ history }) => {
+          const [option, setOption] = useState();
+
+          useEffect(() => {
+            history.push(option);
+          }, [option]);
+        };
+
+        const EnhancedComponent = inject('ourStore')(observer(MyComponent))
+        export default EnhancedComponent
+      `,
+    },
+    {
       name: "Pass external state to HOC prop",
       code: js`
         import { withRouter } from 'react-router-dom';

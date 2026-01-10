@@ -40,7 +40,7 @@ export default {
       const depsRefs = getEffectDepsRefs(context, node);
       if (!effectFnRefs || !depsRefs) return;
       // Skip custom hooks because they can't receive `key` like components can.
-      const containingNode = findContainingNode(node);
+      const containingNode = findContainingNode(context, node);
       if (containingNode && isCustomHook(containingNode)) return;
 
       const propUsedToResetAllState = findPropUsedToResetAllState(
@@ -75,12 +75,12 @@ const findPropUsedToResetAllState = (
     stateSetterRefs.length > 0 &&
     stateSetterRefs.every((ref) => isSetStateToInitialValue(context, ref)) &&
     stateSetterRefs.length ===
-      countUseStates(context, findContainingNode(useEffectNode));
+      countUseStates(context, findContainingNode(context, useEffectNode));
 
   return isAllStateReset
     ? depsRefs
         .flatMap((ref) => getUpstreamRefs(context, ref))
-        .find((ref) => isProp(ref))
+        .find((ref) => isProp(context, ref))
     : undefined;
 };
 
@@ -131,16 +131,16 @@ const countUseStates = (context, componentNode) => {
 // WARNING: Per the `isReactFunctionalComponent` etc. internals, this will return undefined for some non-idiomatic component definitions.
 // e.g. `function buildComponent(arg1, arg2) { return <div />; }`
 // Not sure we can account for that without introducing false positives, and those are rare and arguably bad practice.
-const findContainingNode = (node) => {
+const findContainingNode = (context, node) => {
   if (!node) {
     return undefined;
   } else if (
     isReactFunctionalComponent(node) ||
-    isReactFunctionalHOC(node) ||
+    isReactFunctionalHOC(context, node) ||
     isCustomHook(node)
   ) {
     return node;
   } else {
-    return findContainingNode(node.parent);
+    return findContainingNode(context, node.parent);
   }
 };

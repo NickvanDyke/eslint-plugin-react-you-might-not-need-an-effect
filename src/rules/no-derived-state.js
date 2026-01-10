@@ -56,7 +56,7 @@ export default {
             getUpstreamRefs(context, ref),
           );
           const isSomeArgsInternal = argsUpstreamRefs.some(
-            (ref) => isState(ref) || isProp(ref),
+            (ref) => isState(ref) || isProp(context, ref),
           );
 
           const isAllArgsInDeps =
