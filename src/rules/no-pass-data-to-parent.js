@@ -65,7 +65,7 @@ export default {
               // But because it goes to leaves. Must be some other way?
               !isUseState(ref.identifier) &&
               !isProp(context, ref) &&
-              !isUseRef(ref) &&
+              !isUseRef(ref.identifier) &&
               !isRefCurrent(ref) &&
               !isConstant(ref),
           );

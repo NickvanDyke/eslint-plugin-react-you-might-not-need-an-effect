@@ -90,6 +90,71 @@ export const isUseState = (node) =>
     node.parent.property.name === "useState");
 
 /**
+ * @param {Rule.Node} node
+ * @returns {boolean}
+ */
+export const isUseRef = (node) =>
+  (node.type === "Identifier" && node.name === "useRef") ||
+  (node.parent.type === "MemberExpression" &&
+    node.parent.object.name === "React" &&
+    node.parent.property.name === "useRef");
+
+/**
+ * Does not include `useLayoutEffect`.
+ * When used correctly, it interacts with the DOM = external system = (probably) valid effect.
+ * When used incorrectly, it's probably too difficult to accurately analyze anyway.
+ *
+ * @param {Rule.Node} node
+ * @returns {boolean}
+ */
+export const isUseEffect = (node) =>
+  node.type === "CallExpression" &&
+  ((node.callee.type === "Identifier" && node.callee.name === "useEffect") ||
+    (node.callee.type === "MemberExpression" &&
+      node.callee.object.name === "React" &&
+      node.callee.property.name === "useEffect"));
+
+/**
+ * @param {Rule.Node} node - The `useEffect` `CallExpression` node
+ * @returns {Rule.Node | undefined}
+ */
+export const getEffectFn = (node) => {
+  const effectFn = node.arguments[0];
+  if (
+    effectFn?.type !== "ArrowFunctionExpression" &&
+    effectFn?.type !== "FunctionExpression"
+  ) {
+    return undefined;
+  }
+
+  return effectFn;
+};
+
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Rule.Node} node - The `useEffect` `CallExpression` node
+ * @returns {Scope.Reference[] | undefined}
+ */
+export const getEffectFnRefs = (context, node) => {
+  const effectFn = getEffectFn(node);
+  return effectFn ? getDownstreamRefs(context, effectFn) : undefined;
+};
+
+/**
+ * @param {Rule.RuleContext} context
+ * @param {Rule.Node} node - The `useEffect` `CallExpression` node
+ * @returns {Scope.Reference[] | undefined}
+ */
+export function getEffectDepsRefs(context, node) {
+  const depsArr = node.arguments[1];
+  if (depsArr?.type !== "ArrayExpression") {
+    return undefined;
+  }
+
+  return getDownstreamRefs(context, depsArr);
+}
+
+/**
  * @param {Scope.Reference} ref
  * @returns {boolean}
  */
@@ -163,16 +228,6 @@ export const isConstant = (ref) =>
  * @param {Scope.Reference} ref
  * @returns {boolean}
  */
-export const isUseRef = (ref) =>
-  (ref.identifier.type === "Identifier" && ref.identifier.name === "useRef") ||
-  (ref.identifier.parent.type === "MemberExpression" &&
-    ref.identifier.parent.object.name === "React" &&
-    ref.identifier.parent.property.name === "useRef");
-
-/**
- * @param {Scope.Reference} ref
- * @returns {boolean}
- */
 export const isRef = (ref) =>
   ref.resolved?.defs.some(
     (def) =>
@@ -198,61 +253,6 @@ export const isRefCurrent = (ref) =>
   ref.identifier.parent.type === "MemberExpression" &&
   ref.identifier.parent.property.type === "Identifier" &&
   ref.identifier.parent.property.name === "current";
-
-/**
- * Does not include `useLayoutEffect`.
- * When used correctly, it interacts with the DOM = external system = (probably) valid effect.
- * When used incorrectly, it's probably too difficult to accurately analyze anyway.
- *
- * @param {Rule.Node} node
- * @returns {boolean}
- */
-export const isUseEffect = (node) =>
-  node.type === "CallExpression" &&
-  ((node.callee.type === "Identifier" && node.callee.name === "useEffect") ||
-    (node.callee.type === "MemberExpression" &&
-      node.callee.object.name === "React" &&
-      node.callee.property.name === "useEffect"));
-
-/**
- * @param {Rule.Node} node - The `useEffect` `CallExpression` node
- * @returns {Rule.Node | undefined}
- */
-export const getEffectFn = (node) => {
-  const effectFn = node.arguments[0];
-  if (
-    effectFn?.type !== "ArrowFunctionExpression" &&
-    effectFn?.type !== "FunctionExpression"
-  ) {
-    return undefined;
-  }
-
-  return effectFn;
-};
-
-/**
- * @param {Rule.RuleContext} context
- * @param {Rule.Node} node - The `useEffect` `CallExpression` node
- * @returns {Scope.Reference[] | undefined}
- */
-export const getEffectFnRefs = (context, node) => {
-  const effectFn = getEffectFn(node);
-  return effectFn ? getDownstreamRefs(context, effectFn) : undefined;
-};
-
-/**
- * @param {Rule.RuleContext} context
- * @param {Rule.Node} node - The `useEffect` `CallExpression` node
- * @returns {Scope.Reference[] | undefined}
- */
-export function getEffectDepsRefs(context, node) {
-  const depsArr = node.arguments[1];
-  if (depsArr?.type !== "ArrayExpression") {
-    return undefined;
-  }
-
-  return getDownstreamRefs(context, depsArr);
-}
 
 /**
  * @param {Rule.RuleContext} context
