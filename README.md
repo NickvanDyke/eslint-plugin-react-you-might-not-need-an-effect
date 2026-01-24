@@ -5,13 +5,14 @@
 
 ESLint plugin to catch when [You Might Not Need An Effect](https://react.dev/learn/you-might-not-need-an-effect) (and more) to make your code easier to follow, faster to run, and less error-prone. Highly recommended for new React developers as you learn its mental model, and even experienced developers may be surprised!
 
-The new [`eslint-plugin-react-hooks/set-state-in-effect`](https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect) flags synchronous `setState` calls inside effects, helping prevent unnecessary re-renders. However, unnecessary effects aren’t limited to synchronous `setState` calls. In contrast, this plugin:
+The new [`eslint-plugin-react-hooks/set-state-in-effect`](https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect) flags synchronous `setState` calls inside effects, helping prevent unnecessary re-renders. However, unnecessary _effects_ aren’t limited to this, as I'm sure we've all seen (or written 😅).
 
-1. Reports specific anti-patterns, providing actionable suggestions and links.
-2. Analyzes props and refs — the other half of misusing React internals in effects.
-3. Considers effects' dependencies, since when the effect runs influences its impact.
-4. Incorporates advanced heuristics to minimize false negatives and false positives.
-5. Obsesses over unusual logic and syntax — because you never know what might end up in an effect.
+This plugin does things a bit differently:
+
+1. **Actionable fixes:** Reports specific anti-patterns, with suggestions and links.
+2. **Deep analysis:** Analyzes props and refs, not just state calls.
+3. **Dependency-aware:** Considers _when_ an effect runs to determine if its logic is actually redundant.
+4. **Edge-case obsessed:** Focuses on unusual syntax and heuristics to keep the signal-to-noise ratio high.
 
 ## 📦 Installation
 
