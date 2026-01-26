@@ -5,14 +5,12 @@
 
 ESLint plugin to catch when [You Might Not Need An Effect](https://react.dev/learn/you-might-not-need-an-effect) (and more) to make your code easier to follow, faster to run, and less error-prone. Highly recommended for new React developers as you learn its mental model, and even experienced developers may be surprised!
 
-The new [`eslint-plugin-react-hooks/set-state-in-effect`](https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect) flags synchronous `setState` calls inside effects, helping prevent unnecessary re-renders. However, unnecessary _effects_ aren’t limited to this, as I'm sure we've all seen (or written 😅).
+- **Actionable fixes:** Reports specific anti-patterns, with suggestions and links.
+- **Deep analysis:** Analyzes state, props, refs, and their upstream sources.
+- **Dependency-aware:** Considers _when_ an effect runs to determine if its logic is actually redundant.
+- **Edge-case obsessed:** Focuses on unusual syntax and heuristics to keep the signal-to-noise ratio high.
 
-This plugin does things a bit differently:
-
-1. **Actionable fixes:** Reports specific anti-patterns, with suggestions and links.
-2. **Deep analysis:** Analyzes props and refs, not just state calls.
-3. **Dependency-aware:** Considers _when_ an effect runs to determine if its logic is actually redundant.
-4. **Edge-case obsessed:** Focuses on unusual syntax and heuristics to keep the signal-to-noise ratio high.
+> React's official [`eslint-plugin-react-hooks/set-state-in-effect`](https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect) rule flags synchronous `setState` calls inside effects, helping prevent unnecessary re-renders. However, unnecessary _effects_ aren’t limited to this, as I'm sure we've all seen (or written 😅).
 
 ## 📦 Installation
 
